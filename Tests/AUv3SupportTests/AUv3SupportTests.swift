@@ -1,0 +1,11 @@
+import XCTest
+@testable import AUv3Support
+
+final class AUv3SupportTests: XCTestCase {
+    func testExample() throws {
+        // This is an example of a functional test case.
+        // Use XCTAssert and related functions to verify your tests produce the correct
+        // results.
+        XCTAssertEqual(AUv3Support().text, "Hello, World!")
+    }
+}
