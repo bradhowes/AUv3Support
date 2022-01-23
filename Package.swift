@@ -9,30 +9,41 @@ let package = Package(
   products: [
     .library(
       name: "AUv3Support",
-      targets: ["AUv3Support"]),
+      // Generate static version in order to be used by app extension
+      type: .static,
+      targets: ["AUv3Support"])
   ],
   dependencies: [
     .package(name: "Knob", url: "https://github.com/bradhowes/Knob", .upToNextMajor(from: .init(1, 0, 0)))
-    // Dependencies declare other packages that this package depends on.
-    // .package(url: /* package url */, from: "1.0.0"),
   ],
   targets: [
-    // Targets are the basic building blocks of a package. A target can define a module or a test suite.
-    // Targets can depend on other targets in this package, and on products in packages this package depends on.
     .target(
       name: "AUv3Support",
-      dependencies: ["Knob"],
+      dependencies: [
+
+        // Depend on the static version in order to be used by app extension
+        .productItem(name: "KnobStatic", package: "Knob", condition: nil)
+      ],
       exclude: [
-        "Support/README.md",
+        "README.md",
         "User Interface/README.md"
       ],
       resources: [
-        .copy("Support/Audio/074_acoustic-guitar-strummy2.wav"),
-        .copy("Support/Audio/Sweet Strummer 02.caf")
+        .process("Resources")
       ]
     ),
     .testTarget(
       name: "AUv3SupportTests",
-      dependencies: ["AUv3Support"]),
+      dependencies: ["AUv3Support"],
+      resources: [
+        .copy("Resources")
+      ]
+    ),
+    .testTarget(
+      name: "KernelSupportTests",
+      dependencies: ["AUv3Support"],
+      cxxSettings: [
+        .unsafeFlags(["-std=c++17"])
+      ]),
   ]
 )
