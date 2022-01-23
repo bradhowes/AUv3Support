@@ -2,7 +2,7 @@
 
 import AudioToolbox
 
-@testable import AUv3Support
+@testable import AUv3Host
 import XCTest
 
 class MockAUAudioUnit: AUAudioUnitPresetsFacade {

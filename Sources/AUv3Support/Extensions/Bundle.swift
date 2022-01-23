@@ -1,4 +1,4 @@
-// Copyright © 2021 Brad Howes. All rights reserved.
+// Copyright © 2022 Brad Howes. All rights reserved.
 
 import Foundation
 import AVFAudio
@@ -15,7 +15,7 @@ private extension Bundle {
 }
 
 public extension Bundle {
-  
+
   /// Obtain the bundle identifier or "" if there is not one
   static var bundleID: String { Bundle.main.bundleIdentifier?.lowercased() ?? "" }
 
@@ -64,22 +64,4 @@ public extension Bundle {
   var auExtensionUrl: URL? { builtInPlugInsURL?.appendingPathComponent(auExtensionName) }
   /// Obtain the Apple Store ID for the component
   var appStoreId: String { info(for: "APP_STORE_ID") }
-}
-
-public extension Bundle {
-
-  static func audioFileResource(name: String) -> AVAudioFile {
-    let parts = name.split(separator: .init("."))
-    let filename = String(parts[0])
-    let ext = String(parts[1])
-
-    let bundles = Bundle.allBundles + [Bundle.module]
-    for bundle in bundles {
-      if let url = bundle.url(forResource: filename, withExtension: ext) {
-        return try! AVAudioFile(forReading: url)
-      }
-    }
-
-    fatalError("\(filename).\(ext) missing from bundle")
-  }
 }

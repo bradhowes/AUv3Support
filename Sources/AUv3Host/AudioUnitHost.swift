@@ -1,5 +1,6 @@
 // Copyright © 2021 Brad Howes. All rights reserved.
 
+import AUv3Support
 import AVFoundation
 import os.log
 

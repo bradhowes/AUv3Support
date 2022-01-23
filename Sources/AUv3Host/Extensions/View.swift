@@ -1,5 +1,7 @@
 // Copyright © 2021 Brad Howes. All rights reserved.
 
+import AUv3Support
+
 #if os(macOS)
 import AppKit
 #elseif os(iOS)
