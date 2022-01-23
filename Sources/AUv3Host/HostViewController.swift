@@ -41,9 +41,9 @@ open class HostViewController: UIViewController {
 
 // MARK: - View Management
 
-public extension HostViewController {
+extension HostViewController {
 
-  override func viewDidLoad() {
+  override open func viewDidLoad() {
     super.viewDidLoad()
 
     let version = Bundle.main.releaseVersionNumber
@@ -57,7 +57,7 @@ public extension HostViewController {
     instructions.layer.cornerRadius = 16
   }
 
-  override func viewWillAppear(_ animated: Bool) {
+  override open func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
 
     playButton.setImage(UIImage(named: "stop"), for: [.highlighted, .selected])
@@ -66,29 +66,29 @@ public extension HostViewController {
     audioUnitHost.delegate = self
   }
 
-  func stopPlaying() {
+  open func stopPlaying() {
     audioUnitHost.cleanup()
   }
 }
 
 // MARK: - Actions
 
-public extension HostViewController {
+extension HostViewController {
 
-  @IBAction func togglePlay(_ sender: UIButton) {
+  @IBAction open func togglePlay(_ sender: UIButton) {
     let isPlaying = audioUnitHost.togglePlayback()
     sender.isSelected = isPlaying
     sender.tintColor = isPlaying ? .systemYellow : .systemTeal
   }
 
-  @IBAction func toggleBypass(_ sender: UIButton) {
+  @IBAction open func toggleBypass(_ sender: UIButton) {
     let wasBypassed = auAudioUnit?.shouldBypassEffect ?? false
     let isBypassed = !wasBypassed
     auAudioUnit?.shouldBypassEffect = isBypassed
     sender.isSelected = isBypassed
   }
 
-  @IBAction func visitAppStore(_ sender: UIButton) {
+  @IBAction open func visitAppStore(_ sender: UIButton) {
     let appStoreId = Bundle.main.appStoreId
     guard let url = URL(string: "https://itunes.apple.com/app/id\(appStoreId)") else {
       fatalError("Expected a valid URL")
@@ -96,11 +96,11 @@ public extension HostViewController {
     UIApplication.shared.open(url, options: [:], completionHandler: nil)
   }
 
-  @IBAction func useFactoryPreset(_ sender: UISegmentedControl? = nil) {
+  @IBAction open func useFactoryPreset(_ sender: UISegmentedControl? = nil) {
     userPresetsManager?.makeCurrentPreset(number: presetSelection.selectedSegmentIndex)
   }
 
-  @IBAction func dismissInstructions(_ sender: Any) {
+  @IBAction open func dismissInstructions(_ sender: Any) {
     instructions.isHidden = true
     UserDefaults.standard.set(true, forKey: showedInitialAlert)
   }
@@ -110,14 +110,14 @@ public extension HostViewController {
 
 extension HostViewController: AudioUnitHostDelegate {
 
-  public func connected(audioUnit: AVAudioUnit, viewController: ViewController) {
+  open func connected(audioUnit: AVAudioUnit, viewController: ViewController) {
     userPresetsManager = .init(for: audioUnit.auAudioUnit)
     avAudioUnit = audioUnit
     audioUnitViewController = viewController
     connectFilterView(audioUnit, viewController)
   }
 
-  public func failed(error: AudioUnitHostError) {
+  open func failed(error: AudioUnitHostError) {
     let message = "Unable to load the AUv3 component. \(error.description)"
     let controller = UIAlertController(title: "AUv3 Failure", message: message, preferredStyle: .alert)
     present(controller, animated: true)
@@ -126,9 +126,9 @@ extension HostViewController: AudioUnitHostDelegate {
 
 // MARK: - Private
 
-private extension HostViewController {
+extension HostViewController {
 
-  func showInstructions() {
+  open func showInstructions() {
 #if !Dev
     if UserDefaults.standard.bool(forKey: showedInitialAlert) {
       instructions.isHidden = true
@@ -141,7 +141,7 @@ private extension HostViewController {
     userPresetsManager?.makeCurrentPreset(number: 0)
   }
 
-  private func connectFilterView(_ audioUnit: AVAudioUnit, _ viewController: ViewController) {
+  open func connectFilterView(_ audioUnit: AVAudioUnit, _ viewController: ViewController) {
     containerView.addSubview(viewController.view)
     viewController.view.pinToSuperviewEdges()
 
@@ -159,7 +159,7 @@ private extension HostViewController {
     }
   }
 
-  func connectParametersToControls(_ audioUnit: AUAudioUnit) {
+  open func connectParametersToControls(_ audioUnit: AUAudioUnit) {
     guard let parameterTree = audioUnit.parameterTree else {
       fatalError("FilterAudioUnit does not define any parameters.")
     }
@@ -180,13 +180,13 @@ private extension HostViewController {
     })
   }
 
-  func usePreset(number: Int) {
+  open func usePreset(number: Int) {
     guard let userPresetManager = userPresetsManager else { return }
     userPresetManager.makeCurrentPreset(number: number)
     updatePresetMenu()
   }
 
-  func updatePresetMenu() {
+  private func updatePresetMenu() {
     guard let userPresetsManager = userPresetsManager else { return }
     let active = userPresetsManager.audioUnit.currentPreset?.number ?? Int.max
 
@@ -217,14 +217,14 @@ private extension HostViewController {
     }
   }
 
-  func updateView() {
+  private func updateView() {
     guard let auAudioUnit = auAudioUnit else { return }
     updatePresetMenu()
     updatePresetSelection(auAudioUnit)
     audioUnitHost.save()
   }
 
-  func updatePresetSelection(_ auAudioUnit: AUAudioUnit) {
+  private func updatePresetSelection(_ auAudioUnit: AUAudioUnit) {
     if let presetNumber = auAudioUnit.currentPreset?.number {
       os_log(.info, log: log, "updatePresetSelection: %d", presetNumber)
       presetSelection.selectedSegmentIndex = presetNumber
@@ -236,15 +236,15 @@ private extension HostViewController {
 
 // MARK: - Alerts and Prompts
 
-public extension HostViewController {
+extension HostViewController {
 
-  func notify(title: String, message: String) {
+  open func notify(title: String, message: String) {
     let controller = UIAlertController(title: title, message: message, preferredStyle: .alert)
     controller.addAction(UIAlertAction(title: "OK", style: .default))
     present(controller, animated: true)
   }
 
-  func yesOrNo(title: String, message: String, continuation: @escaping (UIAlertAction) -> Void) {
+  open func yesOrNo(title: String, message: String, continuation: @escaping (UIAlertAction) -> Void) {
     let controller = UIAlertController(title: title, message: message, preferredStyle: .alert)
     controller.addAction(.init(title: "Continue", style: .default, handler: continuation))
     controller.addAction(.init(title: "Cancel", style: .cancel))
