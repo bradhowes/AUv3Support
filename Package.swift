@@ -16,28 +16,16 @@ let package = Package(
       name: "AUv3Host",
       targets: ["AUv3Host"])
   ],
-  dependencies: [
-    .package(name: "Knob", url: "https://github.com/bradhowes/Knob", .upToNextMajor(from: .init(1, 0, 0)))
-  ],
   targets: [
     .target(
       name: "AUv3Host",
-      dependencies: [
-        "AUv3Support",
-        .productItem(name: "Knob", package: "Knob", condition: nil)
-      ],
+      dependencies: ["AUv3Support"],
       exclude: [],
-      resources: [
-        .process("Resources")
-      ]
+      resources: [.process("Resources")]
     ),
     .target(
       name: "AUv3Support",
-      dependencies: [
-
-        // Depend on the static version in order to be used by app extension
-        .productItem(name: "KnobStatic", package: "Knob", condition: nil)
-      ],
+      dependencies: [],
       exclude: [
         "README.md",
         "User Interface/README.md"

@@ -2,7 +2,24 @@
 
 import CoreAudioKit
 import os
-import Knob
+
+/**
+ Interface for an object that maintains a value between a range of min and max values.
+ */
+public protocol RangedControl: NSObject {
+
+  /// The minimum value that the control can represent
+  var minimumValue: Float { get set }
+
+  /// The maximum value that the control can represent
+  var maximumValue: Float { get set }
+
+  /// The current value of the control
+  var value: Float { get set }
+
+  /// The tag value for the control
+  var tag: Int { get }
+}
 
 /**
  Control for a float value parameter that contains a knob and text view / label to depict and modify the parameter.
@@ -18,7 +35,7 @@ public final class FloatParameterControl: NSObject {
   private lazy var logSliderMaxValuePower2Minus1 = Float(pow(2, logSliderMaxValue) - 1)
   private let parameterObserverToken: AUParameterObserverToken
   private let formatter: (AUValue) -> String
-  private let knob: Knob
+  private let knob: RangedControl
   private let label: Label
   private let useLogValues: Bool
   private var restoreNameTimer: Timer?
@@ -35,7 +52,7 @@ public final class FloatParameterControl: NSObject {
    - parameter logValues: true if showing log values
    */
   public init(parameterObserverToken: AUParameterObserverToken, parameter: AUParameter,
-              formatter: @escaping (AUValue) -> String, knob: Knob, label: Label, logValues: Bool) {
+              formatter: @escaping (AUValue) -> String, knob: RangedControl, label: Label, logValues: Bool) {
     self.parameterObserverToken = parameterObserverToken
     self.parameter = parameter
     self.formatter = formatter

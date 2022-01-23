@@ -16,5 +16,4 @@ Swift package containing useful code for AUv3 app extensions. Included:
 - User Interface -- collection of classes that I use to use knobs and switches to control runtime parameters of
   an AUv3 component.
 
-The code works on both iOS and macOS platforms. For now it depends on my [Knob](https://github.com/bradhowes/Knob)
-library, though there is no UI component to this library.
+The code works on both iOS and macOS platforms.
