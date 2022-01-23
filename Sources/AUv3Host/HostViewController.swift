@@ -7,7 +7,7 @@ import AVKit
 import UIKit
 import os.log
 
-public final class HostViewController: UIViewController {
+open class HostViewController: UIViewController {
   private static let log = Logging.logger("HostViewController")
   private var log: OSLog { Self.log }
 
