@@ -1,3 +1,3 @@
 # AUv3Support
 
-A description of this package.
+Common support code for AUv3 app extensions.
