@@ -1,3 +1,6 @@
+![SPM](https://img.shields.io/badge/SPM.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-A31F34.svg)](https://opensource.org/licenses/MIT)
+
 # AUv3Support
 
 Swift package containing useful code for AUv3 app extensions. Included:
