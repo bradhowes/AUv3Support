@@ -1,4 +1,4 @@
-// Copyright © 2021 Apple. All rights reserved.
+// Copyright © 2022 Brad Howes. All rights reserved.
 
 import AudioToolbox
 import Foundation
