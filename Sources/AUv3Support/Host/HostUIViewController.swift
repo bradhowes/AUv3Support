@@ -13,14 +13,16 @@ public struct HostViewConfig {
   let appStoreId: String
   let componentDescription: AudioComponentDescription
   let sampleLoop: AudioUnitLoader.SampleLoop
+  let appStoreVisitor: (URL) -> Void
 
   public init(name: String, version: String, appStoreId: String, componentDescription: AudioComponentDescription,
-              sampleLoop: AudioUnitLoader.SampleLoop) {
+              sampleLoop: AudioUnitLoader.SampleLoop, appStoreVisitor: @escaping (URL) -> Void) {
     self.name = name
     self.version = version
     self.appStoreId = appStoreId
     self.componentDescription = componentDescription
     self.sampleLoop = sampleLoop
+    self.appStoreVisitor = appStoreVisitor
   }
 }
 
@@ -60,8 +62,6 @@ public final class HostUIViewController: UIViewController {
 
   private var allParameterValuesObserverToken: NSKeyValueObservation?
   private var parameterTreeObserverToken: AUParameterObserverToken?
-
-  private var appStoreId: String?
 }
 
 // MARK: - View Management
@@ -71,7 +71,6 @@ extension HostUIViewController {
   public func setConfig(_ config: HostViewConfig) {
     log = .init(subsystem: config.name, category: "HostUIViewController")
     self.config = config
-    appStoreId = config.appStoreId
   }
 
   override public func viewDidLoad() {
@@ -82,6 +81,13 @@ extension HostUIViewController {
     bypassButton.isEnabled = false
     presetSelection.isEnabled = false
     userPresetsMenuButton.isEnabled = false
+
+    userPresetsMenuButton.isHidden = true
+    if #available(iOS 14, *) {
+      userPresetsMenuButton.isHidden = false
+      userPresetsMenuButton.showsMenuAsPrimaryAction = true
+    }
+
     presetName.text = ""
 
     presetSelection.setTitleTextAttributes([.foregroundColor: UIColor.white], for: .normal)
@@ -108,6 +114,7 @@ applications.
 
     audioUnitLoader = .init(name: config.name, componentDescription: config.componentDescription,
                             loop: config.sampleLoop)
+    audioUnitLoader.delegate = self
 
     let alwaysShow = true
     if UserDefaults.standard.bool(forKey: showedInitialAlert) == false || alwaysShow {
@@ -118,7 +125,6 @@ applications.
   override public func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
 
-    audioUnitLoader.delegate = self
     playButton.setImage(UIImage(named: "stop"), for: [.highlighted, .selected])
     bypassButton.setImage(UIImage(named: "bypassed"), for: [.highlighted, .selected])
   }
@@ -155,11 +161,12 @@ extension HostUIViewController {
   }
 
   @IBAction public func visitAppStore(_ sender: UIButton) {
-    // guard let appStoreId = self.appStoreId else { return }
-    // guard let url = URL(string: "https://itunes.apple.com/app/id\(appStoreId)") else {
-    // fatalError("Expected a valid URL")
-    // }
-    // UIApplication.shared.public(url, options: [:], completionHandler: nil)
+    guard let config = self.config else { return }
+    guard let url = URL(string: "https://itunes.apple.com/app/id\(config.appStoreId)") else {
+      fatalError("Expected a valid URL")
+    }
+
+    config.appStoreVisitor(url)
   }
 
   @IBAction public func useFactoryPreset(_ sender: UISegmentedControl? = nil) {
@@ -182,6 +189,7 @@ extension HostUIViewController: AudioUnitLoaderDelegate {
     avAudioUnit = audioUnit
     audioUnitViewController = viewController
     connectFilterView(audioUnit, viewController)
+    connectParametersToControls(audioUnit.auAudioUnit)
   }
 
   public func failed(error: AudioUnitLoaderError) {
@@ -260,8 +268,13 @@ extension HostUIViewController {
     updatePresetMenu()
   }
 
-  private func updatePresetMenu() {
-    guard let userPresetsManager = userPresetsManager else { return }
+  func updatePresetMenu() {
+    os_log(.debug, log: log, "updatePresetMenu BEGIN")
+    guard let userPresetsManager = userPresetsManager else {
+      os_log(.debug, log: log, "updatePresetMenu END - nil userPresetsManager")
+      return
+    }
+
     let active = userPresetsManager.audioUnit.currentPreset?.number ?? Int.max
 
     let factoryPresets = userPresetsManager.audioUnit.factoryPresetsNonNil.map { (preset: AUAudioUnitPreset) -> UIAction in
@@ -270,6 +283,7 @@ extension HostUIViewController {
       return action
     }
 
+    os_log(.debug, log: log, "updatePresetMenu - adding %d factory presets", factoryPresets.count)
     let factoryPresetsMenu = UIMenu(title: "Factory", options: .displayInline, children: factoryPresets)
 
     let userPresets = userPresetsManager.presetsOrderedByName.map { (preset: AUAudioUnitPreset) -> UIAction in
@@ -278,6 +292,8 @@ extension HostUIViewController {
       return action
     }
 
+    os_log(.debug, log: log, "updatePresetMenu - adding %d user presets", userPresets.count)
+
     let userPresetsMenu = UIMenu(title: "User", options: .displayInline, children: userPresets)
 
     let actionsGroup = UIMenu(title: "Actions", options: .displayInline,
@@ -285,10 +301,12 @@ extension HostUIViewController {
 
     let menu = UIMenu(title: "Presets", options: [], children: [userPresetsMenu, factoryPresetsMenu, actionsGroup])
 
-    if #available(iOS 14.0, *) {
+    if #available(iOS 14, *) {
       userPresetsMenuButton.menu = menu
       userPresetsMenuButton.showsMenuAsPrimaryAction = true
     }
+
+    os_log(.debug, log: log, "updatePresetMenu END")
   }
 
   private func updateView() {
