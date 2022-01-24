@@ -4,47 +4,27 @@
 import PackageDescription
 
 let package = Package(
-  name: "AUv3Support",
+  name: "AUv3SupportPackage",
   platforms: [.iOS(.v13), .macOS(.v10_15)],
   products: [
     .library(
-      name: "AUv3ComponentStatic",
-      // Generate static version in order to be used by app extension
+      name: "AUv3-Support-Static",
       type: .static,
-      targets: ["AUv3Component"]),
-    .library(
-      name: "AUv3Host",
-      targets: ["AUv3Host"])
+      targets: ["AUv3Support"])
   ],
   targets: [
     .target(
-      name: "AUv3Host",
-      dependencies: ["AUv3Support"],
-      exclude: [],
-      resources: [.process("Resources")]
-    ),
-    .target(
-      name: "AUv3Component",
-      dependencies: ["AUv3Support"],
-      exclude: [
-        "README.md",
-        "User Interface/README.md"
-      ]
-    ),
-    .target(
       name: "AUv3Support",
       dependencies: [],
-      exclude: []
+      exclude: [],
+      resources: [.process("Resources")],
+      swiftSettings: [
+        .define("APPLICATION_EXTENSION_API_ONLY=YES")
+      ]
     ),
     .testTarget(
       name: "AUv3SupportTests",
       dependencies: []
-    ),
-    .testTarget(
-      name: "KernelSupportTests",
-      dependencies: [],
-      cxxSettings: [
-        .unsafeFlags(["-std=c++17"])
-      ]),
+    )
   ]
 )

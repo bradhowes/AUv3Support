@@ -19,12 +19,27 @@ public final class SimplePlayEngine {
   /// True if engine is currently playing the audio file.
   public var isPlaying: Bool { player.isPlaying }
 
+  static func audioFileResource(name: String) -> AVAudioFile {
+    let parts = name.split(separator: .init("."))
+    let filename = String(parts[0])
+    let ext = String(parts[1])
+
+    let bundles = Bundle.allBundles + [Bundle.module]
+    for bundle in bundles {
+      if let url = bundle.url(forResource: filename, withExtension: ext) {
+        return try! AVAudioFile(forReading: url)
+      }
+    }
+
+    fatalError("\(filename).\(ext) missing from bundle")
+  }
+
   /**
    Create new audio processing setup, with an audio file player connected directly to the mixer for the main
    output device.
    */
   public init(audioFileName: String) {
-    self.file = Bundle.audioFileResource(name: audioFileName)
+    self.file = Self.audioFileResource(name: audioFileName)
     engine.attach(player)
     engine.connect(player, to: engine.mainMixerNode, format: file.processingFormat)
     engine.prepare()

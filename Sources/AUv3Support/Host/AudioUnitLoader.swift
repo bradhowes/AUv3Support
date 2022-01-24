@@ -2,7 +2,6 @@
 
 import AVFoundation
 import CoreAudioKit
-import AUv3Support
 import os.log
 
 /**
@@ -51,7 +50,7 @@ public protocol AudioUnitLoaderDelegate: AnyObject {
  send audio samples to the AudioUnit. Note that this class has no knowledge of any classes other than what Apple
  provides.
  */
-public final class AudioUnitLoader {
+public final class AudioUnitLoader: NSObject {
   private let log: OSLog
 
   /// AudioUnit controlled by the view controller
@@ -74,8 +73,8 @@ public final class AudioUnitLoader {
   private let playEngine: SimplePlayEngine
   private let locateQueue: DispatchQueue
   private let componentDescription: AudioComponentDescription
+  private let searchCriteria: AudioComponentDescription
 
-  private var notificationObserverToken: NSObjectProtocol?
   private var creationError: AudioUnitLoaderError? { didSet { notifyDelegate() } }
   private var detectionTimer: Timer?
 
@@ -98,7 +97,21 @@ public final class AudioUnitLoader {
     self.locateQueue = .init(label: name + ".LocateQueue", qos: .userInitiated)
     self.playEngine = .init(audioFileName: loop.rawValue)
     self.componentDescription = componentDescription
-    locate()
+    self.searchCriteria = AudioComponentDescription(componentType: componentDescription.componentType,
+                                                    componentSubType: componentDescription.componentSubType,
+                                                    componentManufacturer: componentDescription.componentManufacturer,
+                                                    componentFlags: 0,
+                                                    componentFlagsMask: 0)
+    super.init()
+
+    NotificationCenter.default.addObserver(self, selector: #selector(check(_:)),
+                                           name: AVAudioUnitComponentManager.registrationsChangedNotification,
+                                           object: nil)
+    locateQueue.async { self.locate() }
+  }
+
+  @objc func check(_ notification: Notification) {
+    locateQueue.async { self.locate() }
   }
 
   /**
@@ -107,62 +120,28 @@ public final class AudioUnitLoader {
    updates and try again.
    */
   private func locate() {
-    os_log(.debug, log: log, "locate")
-    locateQueue.async { [weak self] in
-      guard let self = self else { return }
+    os_log(.debug, log: log, "locate BEGIN")
+    let components = AVAudioUnitComponentManager.shared().components(matching: searchCriteria)
 
-      let description = AudioComponentDescription(componentType: self.componentDescription.componentType,
-                                                  componentSubType: 0,
-                                                  componentManufacturer: 0,
-                                                  componentFlags: 0,
-                                                  componentFlagsMask: 0)
+    os_log(.debug, log: self.log, "locate: found %d", components.count)
+    for (index, each) in components.enumerated() {
+      os_log(.debug, log: self.log, "[%d] %{public}s", index, each.audioComponentDescription.description)
 
-      let components = AVAudioUnitComponentManager.shared().components(matching: description)
-      os_log(.debug, log: self.log, "locate: found %d", components.count)
+      if each.audioComponentDescription.componentManufacturer == self.componentDescription.componentManufacturer,
+         each.audioComponentDescription.componentType == self.componentDescription.componentType,
+         each.audioComponentDescription.componentSubType == self.componentDescription.componentSubType {
+        os_log(.debug, log: self.log, "found match")
 
-      for each in components {
-        each.audioComponentDescription.log(self.log, type: .debug)
-        if each.audioComponentDescription.componentManufacturer == self.componentDescription.componentManufacturer,
-           each.audioComponentDescription.componentType == self.componentDescription.componentType,
-           each.audioComponentDescription.componentSubType == self.componentDescription.componentSubType {
-          os_log(.debug, log: self.log, "found match")
-          DispatchQueue.main.async {
-            self.createAudioUnit(each.audioComponentDescription)
-          }
-          return
+        NotificationCenter.default.removeObserver(self)
+
+        DispatchQueue.main.async {
+          self.createAudioUnit(each.audioComponentDescription)
         }
-      }
-
-      DispatchQueue.main.async {
-        self.checkAgain()
+        return
       }
     }
-  }
 
-  /**
-   Begin listening for updates from the AVAudioUnitComponentManager. When we get one, stop listening and attempt to
-   locate the AUv3 component we want.
-   */
-  private func checkAgain() {
-    os_log(.debug, log: log, "checkAgain")
-    let center = NotificationCenter.default
-
-    detectionTimer?.invalidate()
-    detectionTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { _ in
-      self.creationError = AudioUnitLoaderError.componentNotFound
-    }
-
-    notificationObserverToken = center.addObserver(
-      forName: AVAudioUnitComponentManager.registrationsChangedNotification, object: nil, queue: nil
-    ) { [weak self] _ in
-      guard let self = self else { return }
-      os_log(.debug, log: self.log, "checkAgain: notification")
-      let token = self.notificationObserverToken!
-      self.notificationObserverToken = nil
-      center.removeObserver(token)
-      self.detectionTimer?.invalidate()
-      self.locate()
-    }
+    os_log(.debug, log: log, "locate END")
   }
 
   /**

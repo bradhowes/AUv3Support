@@ -6,6 +6,7 @@ import UIKit
 public typealias Color = UIColor
 public typealias Label = UILabel
 public typealias Slider = UISlider
+public typealias Storyboard = UIStoryboard
 public typealias Switch = UISwitch
 public typealias View = UIView
 public typealias ViewController = UIViewController
@@ -16,6 +17,7 @@ import AppKit
 public typealias Color = NSColor
 public typealias Label = FocusAwareTextField
 public typealias Slider = NSSlider
+public typealias Storyboard = NSStoryboard
 public typealias Switch = NSSwitch
 public typealias View = NSView
 public typealias ViewController = NSViewController

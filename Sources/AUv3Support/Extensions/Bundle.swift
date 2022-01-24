@@ -1,7 +1,8 @@
 // Copyright © 2022 Brad Howes. All rights reserved.
 
 import Foundation
-import AVFAudio
+
+private class Tag {}
 
 private extension Bundle {
 
@@ -17,10 +18,10 @@ private extension Bundle {
 public extension Bundle {
 
   /// Obtain the bundle identifier or "" if there is not one
-  static var bundleID: String { Bundle.main.bundleIdentifier?.lowercased() ?? "" }
+  var bundleID: String { Bundle(for: Tag.self).bundleIdentifier?.lowercased() ?? "" }
 
   /// Obtain the build scheme that was used to generate the bundle. Returns " Dev" or " Staging" or ""
-  static var scheme: String {
+  var scheme: String {
     if bundleID.contains(".dev") { return " Dev" }
     if bundleID.contains(".staging") { return " Staging" }
     return ""
@@ -37,7 +38,7 @@ public extension Bundle {
 
   /// Obtain a version string with the following format: "Version V.B[ S]"
   /// where V is the releaseVersionNumber, B is the buildVersionNumber and S is the scheme.
-  var versionString: String { "Version \(releaseVersionNumber).\(buildVersionNumber)\(Self.scheme)" }
+  var versionString: String { "Version \(releaseVersionNumber).\(buildVersionNumber)\(scheme)" }
 
   // NOTE: for the following values to have meaningful values, one must define them in an Info.plist file for the
   // bundle where this file resides.

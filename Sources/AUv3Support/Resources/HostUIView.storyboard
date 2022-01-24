@@ -13,21 +13,21 @@
         <!--HostUI View Controller-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController modalPresentationStyle="fullScreen" id="BYZ-38-t0r" customClass="HostUIViewController" customModule="AUv3Host" sceneMemberID="viewController">
+                <viewController modalPresentationStyle="fullScreen" id="BYZ-38-t0r" customClass="HostUIViewController" customModule="AUv3Support" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleAspectFit" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="YiJ-1a-ELQ" userLabel="Controls Header View">
-                                <rect key="frame" x="8" y="0.0" width="359" height="67.5"/>
+                                <rect key="frame" x="8" y="0.0" width="359" height="73"/>
                                 <subviews>
-                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="center" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="6SP-IR-0pE" userLabel="Header">
-                                        <rect key="frame" x="53" y="8" width="253" height="59.5"/>
+                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="6SP-IR-0pE" userLabel="Header">
+                                        <rect key="frame" x="76.5" y="8" width="206" height="65"/>
                                         <subviews>
                                             <stackView opaque="NO" contentMode="scaleToFill" distribution="equalSpacing" alignment="center" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="2HW-yE-4lC" userLabel="Controls">
-                                                <rect key="frame" x="0.0" y="0.0" width="253" height="31"/>
+                                                <rect key="frame" x="0.0" y="0.0" width="206" height="31"/>
                                                 <subviews>
-                                                    <button opaque="NO" contentMode="scaleToFill" horizontalCompressionResistancePriority="751" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tzZ-pe-UL7">
+                                                    <button opaque="NO" contentMode="scaleToFill" horizontalCompressionResistancePriority="751" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tzZ-pe-UL7" userLabel="Play">
                                                         <rect key="frame" x="0.0" y="3" width="25" height="25"/>
                                                         <color key="tintColor" systemColor="systemTealColor"/>
                                                         <state key="normal" image="play">
@@ -35,10 +35,10 @@
                                                         </state>
                                                         <state key="selected" image="stop"/>
                                                         <connections>
-                                                            <action selector="togglePlay:" destination="BYZ-38-t0r" eventType="touchUpInside" id="kt8-zh-HcD"/>
+                                                            <action selector="togglePlay:" destination="BYZ-38-t0r" eventType="touchUpInside" id="d3O-og-qh3"/>
                                                         </connections>
                                                     </button>
-                                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="9za-g7-28Y">
+                                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="9za-g7-28Y" userLabel="Bypass">
                                                         <rect key="frame" x="41" y="3" width="25" height="25"/>
                                                         <color key="tintColor" systemColor="systemTealColor"/>
                                                         <state key="normal" image="enabled">
@@ -46,21 +46,11 @@
                                                         </state>
                                                         <state key="selected" image="bypassed"/>
                                                         <connections>
-                                                            <action selector="toggleBypass:" destination="BYZ-38-t0r" eventType="touchUpInside" id="AFb-Cz-SLh"/>
-                                                        </connections>
-                                                    </button>
-                                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aBM-QG-hno" userLabel="Review Button">
-                                                        <rect key="frame" x="82" y="2.5" width="31" height="26"/>
-                                                        <fontDescription key="fontDescription" type="system" pointSize="11"/>
-                                                        <state key="normal" title="v1.0.0">
-                                                            <color key="titleColor" systemColor="systemTealColor"/>
-                                                        </state>
-                                                        <connections>
-                                                            <action selector="visitAppStore:" destination="BYZ-38-t0r" eventType="touchUpInside" id="JGD-PT-szd"/>
+                                                            <action selector="toggleBypass:" destination="BYZ-38-t0r" eventType="touchUpInside" id="zxz-8V-4bO"/>
                                                         </connections>
                                                     </button>
                                                     <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="nh4-Vf-lfu">
-                                                        <rect key="frame" x="129" y="0.0" width="83" height="32"/>
+                                                        <rect key="frame" x="82" y="0.0" width="83" height="32"/>
                                                         <segments>
                                                             <segment title="1"/>
                                                             <segment title="2"/>
@@ -69,22 +59,37 @@
                                                         <color key="tintColor" systemColor="systemTealColor"/>
                                                         <color key="selectedSegmentTintColor" name="Progress"/>
                                                         <connections>
-                                                            <action selector="useFactoryPreset:" destination="BYZ-38-t0r" eventType="valueChanged" id="srl-LV-3yg"/>
+                                                            <action selector="useFactoryPreset:" destination="BYZ-38-t0r" eventType="valueChanged" id="hl3-eW-tTe"/>
                                                         </connections>
                                                     </segmentedControl>
                                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="VAJ-jX-V2g" userLabel="User Presets">
-                                                        <rect key="frame" x="228" y="3" width="25" height="25"/>
+                                                        <rect key="frame" x="181" y="3" width="25" height="25"/>
                                                         <color key="tintColor" systemColor="systemTealColor"/>
                                                         <state key="normal" image="user"/>
                                                     </button>
                                                 </subviews>
                                             </stackView>
-                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="presetName" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rex-SM-lPc">
-                                                <rect key="frame" x="80" y="39" width="93.5" height="20.5"/>
-                                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                                <color key="textColor" name="Labels"/>
-                                                <nil key="highlightedColor"/>
-                                            </label>
+                                            <stackView opaque="NO" contentMode="scaleToFill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="Urn-1t-R6l">
+                                                <rect key="frame" x="0.0" y="39" width="206" height="26"/>
+                                                <subviews>
+                                                    <button opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aBM-QG-hno" userLabel="Review Button">
+                                                        <rect key="frame" x="0.0" y="0.0" width="31" height="26"/>
+                                                        <fontDescription key="fontDescription" type="system" pointSize="11"/>
+                                                        <state key="normal" title="v1.0.0">
+                                                            <color key="titleColor" systemColor="systemTealColor"/>
+                                                        </state>
+                                                        <connections>
+                                                            <action selector="visitAppStore:" destination="BYZ-38-t0r" eventType="touchUpInside" id="DzG-8d-fUm"/>
+                                                        </connections>
+                                                    </button>
+                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="presetName" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rex-SM-lPc">
+                                                        <rect key="frame" x="39" y="0.0" width="167" height="26"/>
+                                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                        <color key="textColor" name="Labels"/>
+                                                        <nil key="highlightedColor"/>
+                                                    </label>
+                                                </subviews>
+                                            </stackView>
                                         </subviews>
                                     </stackView>
                                 </subviews>
@@ -95,7 +100,7 @@
                                 </constraints>
                             </view>
                             <containerView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="68k-M7-cHK">
-                                <rect key="frame" x="0.0" y="67.5" width="375" height="599.5"/>
+                                <rect key="frame" x="0.0" y="73" width="375" height="594"/>
                             </containerView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ygb-hY-iRR" userLabel="Instructions">
                                 <rect key="frame" x="17" y="177.5" width="341" height="312"/>
@@ -122,7 +127,7 @@ However, if you later delete this app from your device, the AUv3 component will 
                                                     <color key="titleColor" systemColor="systemOrangeColor"/>
                                                 </state>
                                                 <connections>
-                                                    <action selector="dismissInstructions:" destination="BYZ-38-t0r" eventType="touchUpInside" id="TMW-W7-H4d"/>
+                                                    <action selector="dismissInstructions:" destination="BYZ-38-t0r" eventType="touchUpInside" id="kVR-4y-Bzn"/>
                                                 </connections>
                                             </button>
                                         </subviews>
@@ -162,15 +167,15 @@ However, if you later delete this app from your device, the AUv3 component will 
                     <nil key="simulatedTopBarMetrics"/>
                     <nil key="simulatedBottomBarMetrics"/>
                     <connections>
-                        <outlet property="bypassButton" destination="9za-g7-28Y" id="Pvy-sY-JhH"/>
-                        <outlet property="containerView" destination="68k-M7-cHK" id="Vne-5l-42G"/>
-                        <outlet property="instructions" destination="ygb-hY-iRR" id="E5d-d5-2Iy"/>
-                        <outlet property="instructionsLabel" destination="SpA-lQ-J6u" id="C1B-cT-SDS"/>
-                        <outlet property="playButton" destination="tzZ-pe-UL7" id="Yxx-Rt-URy"/>
-                        <outlet property="presetName" destination="rex-SM-lPc" id="Vdr-P3-b9j"/>
-                        <outlet property="presetSelection" destination="nh4-Vf-lfu" id="0yu-hr-CRl"/>
-                        <outlet property="reviewButton" destination="aBM-QG-hno" id="Utq-fb-IoM"/>
-                        <outlet property="userPresetsMenuButton" destination="VAJ-jX-V2g" id="OHH-i1-ONE"/>
+                        <outlet property="bypassButton" destination="9za-g7-28Y" id="0Mt-GS-jcF"/>
+                        <outlet property="containerView" destination="68k-M7-cHK" id="0Me-mH-cpl"/>
+                        <outlet property="instructions" destination="ygb-hY-iRR" id="gtv-wM-UQH"/>
+                        <outlet property="instructionsLabel" destination="SpA-lQ-J6u" id="2xZ-qL-eSq"/>
+                        <outlet property="playButton" destination="tzZ-pe-UL7" id="P2w-jh-8r5"/>
+                        <outlet property="presetName" destination="rex-SM-lPc" id="spw-9a-iLe"/>
+                        <outlet property="presetSelection" destination="nh4-Vf-lfu" id="bAk-SR-XT6"/>
+                        <outlet property="reviewButton" destination="aBM-QG-hno" id="lzH-nO-OPI"/>
+                        <outlet property="userPresetsMenuButton" destination="VAJ-jX-V2g" id="DxV-Jf-mnz"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>

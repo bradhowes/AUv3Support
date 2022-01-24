@@ -24,7 +24,7 @@ public struct HostViewConfig {
   }
 }
 
-open class HostUIViewController: UIViewController {
+public final class HostUIViewController: UIViewController {
   private var log: OSLog!
 
   public var config: HostViewConfig?
@@ -38,16 +38,18 @@ open class HostUIViewController: UIViewController {
   public var auAudioUnit: AUAudioUnit? { avAudioUnit?.auAudioUnit }
   public var audioUnitViewController: UIViewController?
 
-  @IBOutlet public var presetSelection: UISegmentedControl!
-  @IBOutlet public var reviewButton: UIButton!
   @IBOutlet public var playButton: UIButton!
   @IBOutlet public var bypassButton: UIButton!
+  @IBOutlet public var reviewButton: UIButton!
+  @IBOutlet public var presetSelection: UISegmentedControl!
+  @IBOutlet public var userPresetsMenuButton: UIButton!
+  @IBOutlet weak var presetName: UILabel!
+
   @IBOutlet public var containerView: UIView!
+
   @IBOutlet public weak var instructions: UIView!
   @IBOutlet public weak var instructionsLabel: UILabel!
 
-  @IBOutlet public var userPresetsMenuButton: UIButton!
-  @IBOutlet weak var presetName: UILabel!
 
   private lazy var renameAction = UIAction(title: "Rename",
                                            handler: RenamePresetAction(self, completion: updatePresetMenu).start(_:))
@@ -68,23 +70,19 @@ extension HostUIViewController {
 
   public func setConfig(_ config: HostViewConfig) {
     log = .init(subsystem: config.name, category: "HostUIViewController")
-
+    self.config = config
     appStoreId = config.appStoreId
-    reviewButton.setTitle(config.version, for: .normal)
-    instructionsLabel.text =
-          """
-The AUv3 component '\(config.name)' is now available on your device and can be used in other AUv3 host apps such as GarageBand and AUM.
-
-You can continue to use this app to experiment, but you do not need to have it running in order to access the AUv3 component in other apps.
-
-If you delete this app from your device, the AUv3 component will no longer be available for use in other host applications.
-"""
-    audioUnitLoader = .init(name: config.name, componentDescription: config.componentDescription,
-                            loop: config.sampleLoop)
   }
 
-  override open func viewDidLoad() {
+  override public func viewDidLoad() {
     super.viewDidLoad()
+    guard let config = self.config else { fatalError() }
+
+    playButton.isEnabled = false
+    bypassButton.isEnabled = false
+    presetSelection.isEnabled = false
+    userPresetsMenuButton.isEnabled = false
+    presetName.text = ""
 
     presetSelection.setTitleTextAttributes([.foregroundColor: UIColor.white], for: .normal)
     presetSelection.setTitleTextAttributes([.foregroundColor: UIColor.black], for: .selected)
@@ -92,28 +90,44 @@ If you delete this app from your device, the AUv3 component will no longer be av
     instructions.layer.borderWidth = 4
     instructions.layer.borderColor = UIColor.systemOrange.cgColor
     instructions.layer.cornerRadius = 16
+
     instructions.isHidden = true
 
-    if #available(iOS 14.0, *) {
-    } else {
-      userPresetsMenuButton.isHidden = true
-    }
+    reviewButton.setTitle(config.version, for: .normal)
+    instructionsLabel.text =
+          """
+The AUv3 component '\(config.name)' is now available on your device and can be used in other AUv3 host apps such as \
+GarageBand and AUM.
 
-    guard UserDefaults.standard.bool(forKey: showedInitialAlert) == false else { return }
-    UserDefaults.standard.set(true, forKey: showedInitialAlert)
-    instructions.isHidden = false
+You can continue to use this app to experiment, but you do not need to have it running in order to access the AUv3 \
+component in other apps.
+
+If you delete this app from your device, the AUv3 component will no longer be available for use in other host \
+applications.
+"""
+
+    audioUnitLoader = .init(name: config.name, componentDescription: config.componentDescription,
+                            loop: config.sampleLoop)
+
+    let alwaysShow = true
+    if UserDefaults.standard.bool(forKey: showedInitialAlert) == false || alwaysShow {
+      instructions.isHidden = false
+    }
   }
 
-  override open func viewWillAppear(_ animated: Bool) {
+  override public func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
 
     audioUnitLoader.delegate = self
-
     playButton.setImage(UIImage(named: "stop"), for: [.highlighted, .selected])
     bypassButton.setImage(UIImage(named: "bypassed"), for: [.highlighted, .selected])
   }
 
-  open func stopPlaying() {
+  public func stopPlaying() {
+    playButton.isSelected = false
+    playButton.isEnabled = false
+    bypassButton.isEnabled = false
+    bypassButton.isSelected = false
     audioUnitLoader.cleanup()
   }
 }
@@ -122,34 +136,40 @@ If you delete this app from your device, the AUv3 component will no longer be av
 
 extension HostUIViewController {
 
-  @IBAction open func togglePlay(_ sender: UIButton) {
+  @IBAction public func togglePlay(_ sender: UIButton) {
     let isPlaying = audioUnitLoader.togglePlayback()
-    sender.isSelected = isPlaying
-    sender.tintColor = isPlaying ? .systemYellow : .systemTeal
+    bypassButton.isEnabled = isPlaying
+    playButton.isSelected = isPlaying
+    playButton.tintColor = isPlaying ? .systemYellow : .systemTeal
+
+    if !isPlaying {
+      bypassButton.isSelected = false
+    }
   }
 
-  @IBAction open func toggleBypass(_ sender: UIButton) {
+  @IBAction public func toggleBypass(_ sender: UIButton) {
     let wasBypassed = auAudioUnit?.shouldBypassEffect ?? false
     let isBypassed = !wasBypassed
     auAudioUnit?.shouldBypassEffect = isBypassed
     sender.isSelected = isBypassed
   }
 
-  @IBAction open func visitAppStore(_ sender: UIButton) {
-    guard let appStoreId = self.appStoreId else { return }
-    guard let url = URL(string: "https://itunes.apple.com/app/id\(appStoreId)") else {
-      fatalError("Expected a valid URL")
-    }
-    UIApplication.shared.open(url, options: [:], completionHandler: nil)
+  @IBAction public func visitAppStore(_ sender: UIButton) {
+    // guard let appStoreId = self.appStoreId else { return }
+    // guard let url = URL(string: "https://itunes.apple.com/app/id\(appStoreId)") else {
+    // fatalError("Expected a valid URL")
+    // }
+    // UIApplication.shared.public(url, options: [:], completionHandler: nil)
   }
 
-  @IBAction open func useFactoryPreset(_ sender: UISegmentedControl? = nil) {
+  @IBAction public func useFactoryPreset(_ sender: UISegmentedControl? = nil) {
     userPresetsManager?.makeCurrentPreset(number: presetSelection.selectedSegmentIndex)
     presetName.text = auAudioUnit?.factoryPresetsNonNil[presetSelection.selectedSegmentIndex].name
   }
 
-  @IBAction open func dismissInstructions(_ sender: Any) {
+  @IBAction public func dismissInstructions(_ sender: Any) {
     instructions.isHidden = true
+    UserDefaults.standard.set(true, forKey: showedInitialAlert)
   }
 }
 
@@ -157,14 +177,14 @@ extension HostUIViewController {
 
 extension HostUIViewController: AudioUnitLoaderDelegate {
 
-  open func connected(audioUnit: AVAudioUnit, viewController: UIViewController) {
+  public func connected(audioUnit: AVAudioUnit, viewController: UIViewController) {
     userPresetsManager = .init(for: audioUnit.auAudioUnit)
     avAudioUnit = audioUnit
     audioUnitViewController = viewController
     connectFilterView(audioUnit, viewController)
   }
 
-  open func failed(error: AudioUnitLoaderError) {
+  public func failed(error: AudioUnitLoaderError) {
     let message = "Unable to load the AUv3 component. \(error.description)"
     let controller = UIAlertController(title: "AUv3 Failure", message: message, preferredStyle: .alert)
     present(controller, animated: true)
@@ -175,7 +195,7 @@ extension HostUIViewController: AudioUnitLoaderDelegate {
 
 extension HostUIViewController {
 
-  open func showInstructions() {
+  public func showInstructions() {
 #if !Dev
     if UserDefaults.standard.bool(forKey: showedInitialAlert) {
       instructions.isHidden = true
@@ -188,13 +208,17 @@ extension HostUIViewController {
     userPresetsManager?.makeCurrentPreset(number: 0)
   }
 
-  open func connectFilterView(_ audioUnit: AVAudioUnit, _ viewController: UIViewController) {
+  public func connectFilterView(_ audioUnit: AVAudioUnit, _ viewController: UIViewController) {
     containerView.addSubview(viewController.view)
     viewController.view.pinToSuperviewEdges()
 
     addChild(viewController)
     view.setNeedsLayout()
     containerView.setNeedsLayout()
+
+    playButton.isEnabled = true
+    presetSelection.isEnabled = true
+    userPresetsMenuButton.isEnabled = true
 
     let presetCount = auAudioUnit?.factoryPresetsNonNil.count ?? 0
     while presetSelection.numberOfSegments < presetCount {
@@ -204,9 +228,12 @@ extension HostUIViewController {
     while presetSelection.numberOfSegments > presetCount {
       presetSelection.removeSegment(at: presetSelection.numberOfSegments - 1, animated: false)
     }
+
+    presetSelection.selectedSegmentIndex = 0
+    useFactoryPreset(nil)
   }
 
-  open func connectParametersToControls(_ audioUnit: AUAudioUnit) {
+  public func connectParametersToControls(_ audioUnit: AUAudioUnit) {
     guard let parameterTree = audioUnit.parameterTree else {
       fatalError("FilterAudioUnit does not define any parameters.")
     }
@@ -227,7 +254,7 @@ extension HostUIViewController {
     })
   }
 
-  open func usePreset(number: Int) {
+  public func usePreset(number: Int) {
     guard let userPresetManager = userPresetsManager else { return }
     userPresetManager.makeCurrentPreset(number: number)
     updatePresetMenu()
@@ -285,13 +312,13 @@ extension HostUIViewController {
 
 extension HostUIViewController {
 
-  open func notify(title: String, message: String) {
+  public func notify(title: String, message: String) {
     let controller = UIAlertController(title: title, message: message, preferredStyle: .alert)
     controller.addAction(UIAlertAction(title: "OK", style: .default))
     present(controller, animated: true)
   }
 
-  open func yesOrNo(title: String, message: String, continuation: @escaping (UIAlertAction) -> Void) {
+  public func yesOrNo(title: String, message: String, continuation: @escaping (UIAlertAction) -> Void) {
     let controller = UIAlertController(title: title, message: message, preferredStyle: .alert)
     controller.addAction(.init(title: "Continue", style: .default, handler: continuation))
     controller.addAction(.init(title: "Cancel", style: .cancel))
