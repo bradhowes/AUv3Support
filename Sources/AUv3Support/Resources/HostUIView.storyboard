@@ -62,7 +62,7 @@
                                                             <action selector="useFactoryPreset:" destination="BYZ-38-t0r" eventType="valueChanged" id="hl3-eW-tTe"/>
                                                         </connections>
                                                     </segmentedControl>
-                                                    <button opaque="NO" contentMode="scaleToFill" showsMenuAsPrimaryAction="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="VAJ-jX-V2g" userLabel="User Presets">
+                                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="VAJ-jX-V2g" userLabel="User Presets">
                                                         <rect key="frame" x="181" y="3" width="25" height="25"/>
                                                         <color key="tintColor" systemColor="systemTealColor"/>
                                                         <state key="normal" image="user"/>
