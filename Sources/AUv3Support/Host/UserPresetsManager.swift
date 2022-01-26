@@ -45,6 +45,8 @@ public class UserPresetsManager {
   /// The (user) presets from the component ordered by preset number in descending order (-1 first)
   public var presetsOrderedByNumber: [AUAudioUnitPreset] { presets.sorted { $0.number > $1.number } }
 
+  public var currentPreset: AUAudioUnitPreset? { audioUnit.currentPreset }
+  
   /// The (user) presets from the component ordered by preset name in ascending order
   public var presetsOrderedByName: [AUAudioUnitPreset] {
     presets.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
@@ -114,11 +116,10 @@ public class UserPresetsManager {
    - parameter name: the name to use for the preset
    - throws exception from AUAudioUnit
    */
-  public func create(name: String) throws -> AUAudioUnitPreset {
+  public func create(name: String) throws {
     let preset = AUAudioUnitPreset(number: nextNumber, name: name)
     try audioUnit.saveUserPreset(preset)
     audioUnit.currentPreset = preset
-    return preset
   }
 
   /**
