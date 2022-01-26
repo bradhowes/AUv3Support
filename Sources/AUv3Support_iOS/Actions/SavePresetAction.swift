@@ -4,14 +4,14 @@ import AUv3Support
 import AudioUnit
 import UIKit
 
-extension HostUIViewController {
+extension HostViewController {
 
   struct SavePresetAction {
-    let viewController: HostUIViewController
+    weak var viewController: HostViewController?
     let userPresetsManager: UserPresetsManager
     let completion: () -> Void
 
-    init(_ viewController: HostUIViewController, completion: @escaping () -> Void) {
+    init(_ viewController: HostViewController, completion: @escaping () -> Void) {
       self.viewController = viewController
       self.userPresetsManager = viewController.userPresetsManager!
       self.completion = completion
@@ -28,7 +28,7 @@ extension HostUIViewController {
       })
 
       controller.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-      viewController.present(controller, animated: true)
+      viewController?.present(controller, animated: true)
     }
 
     func checkIsUniquePreset(named name: String) {
@@ -37,7 +37,7 @@ extension HostUIViewController {
         return
       }
 
-      viewController.yesOrNo(title: "Existing Preset",
+      viewController?.yesOrNo(title: "Existing Preset",
                              message: "Do you wish to change the existing preset to have the current settings?") { _ in
         self.update(preset: existing)
       }
@@ -47,7 +47,7 @@ extension HostUIViewController {
       do {
         try userPresetsManager.create(name: name)
       } catch {
-        viewController.notify(title: "Save Error", message: error.localizedDescription)
+        viewController?.notify(title: "Save Error", message: error.localizedDescription)
       }
       completion()
     }
@@ -56,7 +56,7 @@ extension HostUIViewController {
       do {
         try userPresetsManager.update(preset: preset)
       } catch {
-        viewController.notify(title: "Update Error", message: error.localizedDescription)
+        viewController?.notify(title: "Update Error", message: error.localizedDescription)
       }
       completion()
     }

@@ -1,11 +1,7 @@
-//
-//  File.swift
-//  
-//
-//  Created by Brad Howes on 26/01/2022.
-//
+// Copyright © 2022 Brad Howes. All rights reserved.
 
-import Foundation
+import CoreAudioKit
+import AUv3Support
 
 public struct HostViewConfig {
   public let name: String

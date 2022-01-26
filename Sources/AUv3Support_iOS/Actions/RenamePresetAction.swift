@@ -3,14 +3,14 @@
 import AUv3Support
 import UIKit
 
-extension HostUIViewController {
+extension HostViewController {
 
   struct RenamePresetAction {
-    let viewController: HostUIViewController
+    weak var viewController: HostViewController?
     let userPresetsManager: UserPresetsManager
     let completion: () -> Void
 
-    init(_ viewController: HostUIViewController, completion: @escaping () -> Void) {
+    init(_ viewController: HostViewController, completion: @escaping () -> Void) {
       self.viewController = viewController
       self.userPresetsManager = viewController.userPresetsManager!
       self.completion = completion
@@ -28,14 +28,14 @@ extension HostUIViewController {
       })
 
       controller.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-      viewController.present(controller, animated: true)
+      viewController?.present(controller, animated: true)
     }
 
     func renamePreset(with name: String) {
       do {
         try userPresetsManager.renameCurrent(to: name)
       } catch {
-        viewController.notify(title: "Rename Error", message: error.localizedDescription)
+        viewController?.notify(title: "Rename Error", message: error.localizedDescription)
       }
       completion()
     }

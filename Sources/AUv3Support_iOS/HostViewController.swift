@@ -8,7 +8,7 @@ import os.log
 extension Shared {
 
   /// Access the storyboard that defines the HostUIView for the AUv3 host app
-  public static let hostUIViewStoryboard = Storyboard(name: "HostUIView", bundle: .module)
+  public static let hostViewStoryboard = Storyboard(name: "HostView", bundle: .module)
 
   /**
    Instantiate a new HostUIView and embed it into the view of the given view controller.
@@ -17,9 +17,9 @@ extension Shared {
    - parameter config: the configuration to use
    - returns: the HostUIViewController of the view that was embedded
    */
-  public static func embedHostUIView(into parent: ViewController, config: HostViewConfig) -> HostUIViewController {
+  public static func embedHostView(into parent: ViewController, config: HostViewConfig) -> HostViewController {
 
-    let hostViewController = hostUIViewStoryboard.instantiateInitialViewController() as! HostUIViewController
+    let hostViewController = hostViewStoryboard.instantiateInitialViewController() as! HostViewController
     hostViewController.setConfig(config)
 
     parent.view.addSubview(hostViewController.view)
@@ -32,7 +32,7 @@ extension Shared {
   }
 }
 
-public final class HostUIViewController: UIViewController {
+public final class HostViewController: UIViewController {
   private var log: OSLog!
 
   public var config: HostViewConfig?
@@ -59,12 +59,14 @@ public final class HostUIViewController: UIViewController {
   @IBOutlet public weak var instructionsLabel: UILabel!
 
 
+  private lazy var saveAction = UIAction(title: "Save",
+                                         handler: SavePresetAction(self, completion: updatePresetMenu).start(_:))
+  private lazy var updateAction = UIAction(title: "Update",
+                                           handler: UpdatePresetAction(self, completion: updatePresetMenu).start(_:))
   private lazy var renameAction = UIAction(title: "Rename",
                                            handler: RenamePresetAction(self, completion: updatePresetMenu).start(_:))
   private lazy var deleteAction = UIAction(title: "Delete",
                                            handler: DeletePresetAction(self, completion: updatePresetMenu).start(_:))
-  private lazy var saveAction = UIAction(title: "Save",
-                                         handler: SavePresetAction(self, completion: updatePresetMenu).start(_:))
 
   private var allParameterValuesObserverToken: NSKeyValueObservation?
   private var parameterTreeObserverToken: AUParameterObserverToken?
@@ -72,11 +74,11 @@ public final class HostUIViewController: UIViewController {
 
 // MARK: - View Management
 
-extension HostUIViewController {
+extension HostViewController {
 
   public func setConfig(_ config: HostViewConfig) {
     Shared.loggingSubsystem = config.name
-    log = Shared.logger("HostUIViewController")
+    log = Shared.logger("HostViewController")
     self.config = config
   }
 
@@ -154,7 +156,7 @@ applications.
 
 // MARK: - Actions
 
-extension HostUIViewController {
+extension HostViewController {
 
   @IBAction public func togglePlay(_ sender: UIButton) {
     os_log(.debug, log: log, "togglePlay BEGIN")
@@ -204,7 +206,7 @@ extension HostUIViewController {
 
 // MARK: - AudioUnitHostDelegate
 
-extension HostUIViewController: AudioUnitLoaderDelegate {
+extension HostViewController: AudioUnitLoaderDelegate {
 
   public func connected(audioUnit: AVAudioUnit, viewController: UIViewController) {
     os_log(.debug, log: log, "connected BEGIN")
@@ -226,7 +228,7 @@ extension HostUIViewController: AudioUnitLoaderDelegate {
 
 // MARK: - Private
 
-extension HostUIViewController {
+extension HostViewController {
 
   private func connectFilterView(_ audioUnit: AVAudioUnit, _ viewController: UIViewController) {
     os_log(.debug, log: log, "connectFilterView BEGIN")
@@ -315,7 +317,7 @@ extension HostUIViewController {
     let userPresetsMenu = UIMenu(title: "User", options: .displayInline, children: userPresets)
 
     let actionsGroup = UIMenu(title: "Actions", options: .displayInline,
-                              children: active < 0 ? [saveAction, renameAction, deleteAction] : [saveAction])
+                              children: active < 0 ? [saveAction, updateAction, renameAction, deleteAction] : [saveAction])
 
     let menu = UIMenu(title: "Presets", options: [], children: [userPresetsMenu, factoryPresetsMenu, actionsGroup])
 
@@ -351,7 +353,7 @@ extension HostUIViewController {
 
 // MARK: - Alerts and Prompts
 
-extension HostUIViewController {
+extension HostViewController {
 
   public func notify(title: String, message: String) {
     let controller = UIAlertController(title: title, message: message, preferredStyle: .alert)
