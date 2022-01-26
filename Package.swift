@@ -13,7 +13,11 @@ let package = Package(
     .library(
       name: "AUv3-Support-iOS",
       type: .static,
-      targets: ["AUv3Support_iOS"])
+      targets: ["AUv3Support_iOS"]),
+    .library(
+      name: "AUv3-Support-macOS",
+      type: .static,
+      targets: ["AUv3Support_macOS"])
   ],
   targets: [
     .target(
@@ -27,6 +31,15 @@ let package = Package(
     ),
     .target(
       name: "AUv3Support_iOS",
+      dependencies: ["AUv3Support"],
+      exclude: [],
+      resources: [.process("Resources")],
+      swiftSettings: [
+        .define("APPLICATION_EXTENSION_API_ONLY")
+      ]
+    ),
+    .target(
+      name: "AUv3Support_macOS",
       dependencies: ["AUv3Support"],
       exclude: [],
       resources: [.process("Resources")],
