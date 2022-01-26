@@ -1,14 +1,12 @@
-//
-//  File.swift
-//  
-//
-//  Created by Brad Howes on 24/01/2022.
-//
+// Copyright © 2022 Brad Howes. All rights reserved.
 
-import UIKit
+import Foundation
+import CoreAudioKit
 import os.log
 
-public enum Shared {
+public enum Shared {}
+
+extension Shared {
 
   /// The top-level identifier to use for logging
   public static var loggingSubsystem = "SimplyFlange"
@@ -20,28 +18,23 @@ public enum Shared {
    - returns: OSLog instance to use for subsystem logging
    */
   public static func logger(_ category: String) -> OSLog { .init(subsystem: loggingSubsystem, category: category) }
+}
 
-  /// Access the storyboard that defines the HostUIView for the AUv3 host app
-  public static let hostUIViewStoryboard = Storyboard(name: "HostUIView", bundle: .module)
+public struct HostViewConfig {
+  public let name: String
+  public let version: String
+  public let appStoreId: String
+  public let componentDescription: AudioComponentDescription
+  public let sampleLoop: AudioUnitLoader.SampleLoop
+  public let appStoreVisitor: (URL) -> Void
 
-  /**
-   Instantiate a new HostUIView and embed it into the view of the given view controller.
-
-   - parameter parent: the view controller to embed in
-   - parameter config: the configuration to use
-   - returns: the HostUIViewController of the view that was embedded
-   */
-  public static func embedHostUIView(into parent: ViewController, config: HostViewConfig) -> HostUIViewController {
-
-    let hostViewController = hostUIViewStoryboard.instantiateInitialViewController() as! HostUIViewController
-    hostViewController.setConfig(config)
-
-    parent.view.addSubview(hostViewController.view)
-    hostViewController.view.pinToSuperviewEdges()
-
-    parent.addChild(hostViewController)
-    parent.view.setNeedsLayout()
-
-    return hostViewController
+  public init(name: String, version: String, appStoreId: String, componentDescription: AudioComponentDescription,
+              sampleLoop: AudioUnitLoader.SampleLoop, appStoreVisitor: @escaping (URL) -> Void) {
+    self.name = name
+    self.version = version
+    self.appStoreId = appStoreId
+    self.componentDescription = componentDescription
+    self.sampleLoop = sampleLoop
+    self.appStoreVisitor = appStoreVisitor
   }
 }

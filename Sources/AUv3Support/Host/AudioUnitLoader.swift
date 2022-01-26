@@ -32,7 +32,7 @@ public enum AudioUnitLoaderError: Error {
  */
 public protocol AudioUnitLoaderDelegate: AnyObject {
   /**
-   Notification that the UIViewController in the AudioUnitHost has a wired AUAudioUnit
+   Notification that the view controller in the AudioUnitHost has a wired AUAudioUnit
    */
   func connected(audioUnit: AVAudioUnit, viewController: ViewController)
 

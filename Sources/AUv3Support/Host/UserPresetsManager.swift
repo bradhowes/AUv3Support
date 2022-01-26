@@ -114,10 +114,11 @@ public class UserPresetsManager {
    - parameter name: the name to use for the preset
    - throws exception from AUAudioUnit
    */
-  public func create(name: String) throws {
+  public func create(name: String) throws -> AUAudioUnitPreset {
     let preset = AUAudioUnitPreset(number: nextNumber, name: name)
     try audioUnit.saveUserPreset(preset)
     audioUnit.currentPreset = preset
+    return preset
   }
 
   /**

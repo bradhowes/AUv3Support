@@ -1,5 +1,4 @@
 // swift-tools-version:5.5
-// The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
@@ -10,7 +9,11 @@ let package = Package(
     .library(
       name: "AUv3-Support-Static",
       type: .static,
-      targets: ["AUv3Support"])
+      targets: ["AUv3Support"]),
+    .library(
+      name: "AUv3-Support-iOS",
+      type: .static,
+      targets: ["AUv3Support_iOS"])
   ],
   targets: [
     .target(
@@ -19,7 +22,16 @@ let package = Package(
       exclude: [],
       resources: [.process("Resources")],
       swiftSettings: [
-        .define("APPLICATION_EXTENSION_API_ONLY=YES")
+        .define("APPLICATION_EXTENSION_API_ONLY")
+      ]
+    ),
+    .target(
+      name: "AUv3Support_iOS",
+      dependencies: ["AUv3Support"],
+      exclude: [],
+      resources: [.process("Resources")],
+      swiftSettings: [
+        .define("APPLICATION_EXTENSION_API_ONLY")
       ]
     ),
     .testTarget(

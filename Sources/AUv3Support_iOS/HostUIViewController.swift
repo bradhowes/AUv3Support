@@ -1,28 +1,34 @@
 // Copyright © 2022 Brad Howes. All rights reserved.
 
-#if os(iOS)
-
-// import AUv3Support
+import AUv3Support
 import AVKit
 import UIKit
 import os.log
 
-public struct HostViewConfig {
-  let name: String
-  let version: String
-  let appStoreId: String
-  let componentDescription: AudioComponentDescription
-  let sampleLoop: AudioUnitLoader.SampleLoop
-  let appStoreVisitor: (URL) -> Void
+extension Shared {
 
-  public init(name: String, version: String, appStoreId: String, componentDescription: AudioComponentDescription,
-              sampleLoop: AudioUnitLoader.SampleLoop, appStoreVisitor: @escaping (URL) -> Void) {
-    self.name = name
-    self.version = version
-    self.appStoreId = appStoreId
-    self.componentDescription = componentDescription
-    self.sampleLoop = sampleLoop
-    self.appStoreVisitor = appStoreVisitor
+  /// Access the storyboard that defines the HostUIView for the AUv3 host app
+  public static let hostUIViewStoryboard = Storyboard(name: "HostUIView", bundle: .module)
+
+  /**
+   Instantiate a new HostUIView and embed it into the view of the given view controller.
+
+   - parameter parent: the view controller to embed in
+   - parameter config: the configuration to use
+   - returns: the HostUIViewController of the view that was embedded
+   */
+  public static func embedHostUIView(into parent: ViewController, config: HostViewConfig) -> HostUIViewController {
+
+    let hostViewController = hostUIViewStoryboard.instantiateInitialViewController() as! HostUIViewController
+    hostViewController.setConfig(config)
+
+    parent.view.addSubview(hostViewController.view)
+    hostViewController.view.pinToSuperviewEdges()
+
+    parent.addChild(hostViewController)
+    parent.view.setNeedsLayout()
+
+    return hostViewController
   }
 }
 
@@ -186,7 +192,7 @@ extension HostUIViewController {
   @IBAction public func useFactoryPreset(_ sender: UISegmentedControl? = nil) {
     os_log(.debug, log: log, "useFactoryPreset BEGIN - %d", presetSelection.selectedSegmentIndex)
     userPresetsManager?.makeCurrentPreset(number: presetSelection.selectedSegmentIndex)
-    presetName.text = auAudioUnit?.factoryPresetsNonNil[presetSelection.selectedSegmentIndex].name
+    // presetName.text = auAudioUnit?.factoryPresetsNonNil[presetSelection.selectedSegmentIndex].name
     os_log(.debug, log: log, "useFactoryPreset END")
   }
 
@@ -335,6 +341,7 @@ extension HostUIViewController {
     if let presetNumber = auAudioUnit.currentPreset?.number {
       os_log(.info, log: log, "updatePresetSelection: %d", presetNumber)
       presetSelection.selectedSegmentIndex = presetNumber
+      presetName.text = auAudioUnit.currentPreset?.name
     } else {
       presetSelection.selectedSegmentIndex = -1
     }
@@ -359,5 +366,3 @@ extension HostUIViewController {
     present(controller, animated: true)
   }
 }
-
-#endif
