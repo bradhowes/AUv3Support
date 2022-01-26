@@ -32,6 +32,11 @@ extension Shared {
   }
 }
 
+/**
+ A basic AudioUnit host that is used to showcase a specific audio unit. It handles locating the audio unit, wiring it up
+ to process audio, and it has controls for selecting and managing presets. All bits that are specific to a particular
+ AudioUnit are specified in the `HostViewConfig` struct.
+ */
 public final class HostViewController: UIViewController {
   private var log: OSLog!
 
@@ -137,7 +142,6 @@ applications.
   override public func viewWillAppear(_ animated: Bool) {
     os_log(.debug, log: log, "viewWillAppear BEGIN")
     super.viewWillAppear(animated)
-
     playButton.setImage(UIImage(named: "stop"), for: [.highlighted, .selected])
     bypassButton.setImage(UIImage(named: "bypassed"), for: [.highlighted, .selected])
     os_log(.debug, log: log, "viewWillAppear END")
@@ -194,7 +198,6 @@ extension HostViewController {
   @IBAction public func useFactoryPreset(_ sender: UISegmentedControl? = nil) {
     os_log(.debug, log: log, "useFactoryPreset BEGIN - %d", presetSelection.selectedSegmentIndex)
     userPresetsManager?.makeCurrentPreset(number: presetSelection.selectedSegmentIndex)
-    // presetName.text = auAudioUnit?.factoryPresetsNonNil[presetSelection.selectedSegmentIndex].name
     os_log(.debug, log: log, "useFactoryPreset END")
   }
 
@@ -228,9 +231,9 @@ extension HostViewController: AudioUnitLoaderDelegate {
 
 // MARK: - Private
 
-extension HostViewController {
+private extension HostViewController {
 
-  private func connectFilterView(_ audioUnit: AVAudioUnit, _ viewController: UIViewController) {
+  func connectFilterView(_ audioUnit: AVAudioUnit, _ viewController: UIViewController) {
     os_log(.debug, log: log, "connectFilterView BEGIN")
     containerView.addSubview(viewController.view)
     viewController.view.pinToSuperviewEdges()
@@ -242,7 +245,12 @@ extension HostViewController {
     playButton.isEnabled = true
     presetSelection.isEnabled = true
     userPresetsMenuButton.isEnabled = true
+    updatePresetSelectionControl()
+    useFactoryPreset(nil)
+    os_log(.debug, log: log, "connectFilterView END")
+  }
 
+  func updatePresetSelectionControl() {
     let presetCount = auAudioUnit?.factoryPresetsNonNil.count ?? 0
     while presetSelection.numberOfSegments < presetCount {
       let index = presetSelection.numberOfSegments + 1
@@ -253,11 +261,9 @@ extension HostViewController {
     }
 
     presetSelection.selectedSegmentIndex = 0
-    useFactoryPreset(nil)
-    os_log(.debug, log: log, "connectFilterView END")
   }
 
-  public func connectParametersToControls(_ audioUnit: AUAudioUnit) {
+  func connectParametersToControls(_ audioUnit: AUAudioUnit) {
     os_log(.debug, log: log, "connectParametersToControls BEGIN")
     guard let parameterTree = audioUnit.parameterTree else {
       fatalError("FilterAudioUnit does not define any parameters.")
@@ -280,7 +286,7 @@ extension HostViewController {
     os_log(.debug, log: log, "connectParametersToControls END")
   }
 
-  public func usePreset(number: Int) {
+  func usePreset(number: Int) {
     os_log(.debug, log: log, "usePreset BEGIN")
     guard let userPresetManager = userPresetsManager else { return }
     userPresetManager.makeCurrentPreset(number: number)
@@ -317,7 +323,9 @@ extension HostViewController {
     let userPresetsMenu = UIMenu(title: "User", options: .displayInline, children: userPresets)
 
     let actionsGroup = UIMenu(title: "Actions", options: .displayInline,
-                              children: active < 0 ? [saveAction, updateAction, renameAction, deleteAction] : [saveAction])
+                              children: active < 0 ?
+                              [saveAction, updateAction, renameAction, deleteAction] :
+                              [saveAction])
 
     let menu = UIMenu(title: "Presets", options: [], children: [userPresetsMenu, factoryPresetsMenu, actionsGroup])
 
@@ -329,7 +337,7 @@ extension HostViewController {
     os_log(.debug, log: log, "updatePresetMenu END")
   }
 
-  private func updateView() {
+  func updateView() {
     os_log(.debug, log: log, "updateView BEGIN")
     guard let auAudioUnit = auAudioUnit else { return }
     updatePresetMenu()
@@ -338,7 +346,7 @@ extension HostViewController {
     os_log(.debug, log: log, "updateView END")
   }
 
-  private func updatePresetSelection(_ auAudioUnit: AUAudioUnit) {
+  func updatePresetSelection(_ auAudioUnit: AUAudioUnit) {
     os_log(.debug, log: log, "updatePresetSelection BEGIN")
     if let presetNumber = auAudioUnit.currentPreset?.number {
       os_log(.info, log: log, "updatePresetSelection: %d", presetNumber)

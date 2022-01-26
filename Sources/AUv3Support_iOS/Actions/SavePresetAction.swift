@@ -6,7 +6,7 @@ import UIKit
 
 extension HostViewController {
 
-  struct SavePresetAction {
+  struct CreatePresetAction {
     weak var viewController: HostViewController?
     let userPresetsManager: UserPresetsManager
     let completion: () -> Void
@@ -18,9 +18,9 @@ extension HostViewController {
     }
 
     func start(_ action: UIAction) {
-      let controller = UIAlertController(title: "Save Preset", message: nil, preferredStyle: .alert)
+      let controller = UIAlertController(title: "New Preset", message: nil, preferredStyle: .alert)
       controller.addTextField { textField in textField.placeholder = "Preset Name" }
-      controller.addAction(UIAlertAction(title: "Save", style: .default) { _ in
+      controller.addAction(UIAlertAction(title: "Create", style: .default) { _ in
         guard let name = controller.textFields?.first?.text?.trimmingCharacters(in: .whitespaces) else { return }
         if !name.isEmpty {
           self.checkIsUniquePreset(named: name)
@@ -33,7 +33,7 @@ extension HostViewController {
 
     func checkIsUniquePreset(named name: String) {
       guard let existing = userPresetsManager.find(name: name) else {
-        save(under: name)
+        create(under: name)
         return
       }
 
@@ -43,7 +43,7 @@ extension HostViewController {
       }
     }
 
-    func save(under name: String) {
+    func create(under name: String) {
       do {
         try userPresetsManager.create(name: name)
       } catch {

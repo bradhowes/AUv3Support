@@ -11,6 +11,19 @@ enum UserMenuItem: Int {
   case delete
 }
 
+/**
+ Manages the preset menus in the macOS app. There are four menus that are managed by this class:
+ - user presets in menu bar
+ - user presets in pop-down button in main window title bar
+ - factory presets in menu bar
+ - factory presets in pop-down button in main window title bar
+
+ The user menu starts off with four actions:
+ - New -- create a new user preset using the current parameter settings
+ - Save -- update active user preset with new parameter settings
+ - Rename -- change the name of the active user preset
+ - Delete -- delete the active user preset
+ */
 public class PresetsMenuManager: NSObject {
   private let noCurrentPreset = Int.max
   private let commandTag = Int.max - 1
@@ -19,6 +32,13 @@ public class PresetsMenuManager: NSObject {
   private let appMenu: NSMenu
   private let userPresetsManager: UserPresetsManager
 
+  /**
+   Construct a new manager.
+
+   - parameter button: the `NSPopUpButton` whose menus we will manage
+   - parameter appMenu: the `NSMenu` from the app's menu bar whose sub menus we will manage
+   - parameter userPresetsManager: the manager for the user presets of the audio unit
+   */
   public init(button: NSPopUpButton, appMenu: NSMenu, userPresetsManager: UserPresetsManager) {
     self.button = button
     self.appMenu = appMenu
@@ -26,6 +46,9 @@ public class PresetsMenuManager: NSObject {
     super.init()
   }
 
+  /**
+   Populate the menus with the current presets.
+   */
   public func build() {
     guard let buttonMenu = button.menu else { fatalError() }
     populateUserPresetsMenu(appMenu.items[0].submenu!)
@@ -34,6 +57,9 @@ public class PresetsMenuManager: NSObject {
     populateFactoryPresetsMenu(buttonMenu.items[2].submenu!)
   }
 
+  /**
+   Update the menus to show the active preset.
+   */
   public func selectActive() {
     let activeNumber = userPresetsManager.audioUnit.currentPreset?.number ?? noCurrentPreset
     refreshUserPresetsMenu(appMenu.items[0].submenu, activeNumber: activeNumber)
@@ -45,23 +71,43 @@ public class PresetsMenuManager: NSObject {
 
 extension PresetsMenuManager {
 
+  /**
+   Make a preset active. The number of he preset is found in the NSMenuItem tag.
+
+   - parameter sender: the NSMenuItem that represents to preset to activate
+   */
   @IBAction func handlePresetMenuSelection(_ sender: NSMenuItem) {
     userPresetsManager.makeCurrentPreset(number: sender.tag)
     appMenu.items.forEach { $0.state = .off }
     sender.state = .on
   }
 
-  @IBAction func savePreset(_ sender: NSMenuItem) {
+  /**
+   Create a new user preset and make it active.
+
+   - parameter sender: the 'New' menu item
+   */
+  @IBAction func createPreset(_ sender: NSMenuItem) {
     guard let presetName = getNewPresetName(default: "Preset \(-userPresetsManager.nextNumber)") else { return }
     try? userPresetsManager.create(name: presetName)
     build()
   }
 
+  /**
+   Update the current user preset.
+
+   - parameter sender: the 'Update' menu item
+   */
   @IBAction func updatePreset(_ sender: NSMenuItem) {
     guard let activePreset = userPresetsManager.currentPreset, activePreset.number < 0 else { fatalError() }
     try? userPresetsManager.update(preset: activePreset)
   }
 
+  /**
+   Rename the current user preset.
+
+   - parameter sender: the 'Rename' menu item
+   */
   @IBAction func renamePreset(_ sender: NSMenuItem) {
     guard let activePreset = userPresetsManager.currentPreset else { fatalError() }
     guard let presetName = getRenamePresetName(existing: activePreset.name) else { return }
@@ -69,6 +115,11 @@ extension PresetsMenuManager {
     build()
   }
 
+  /**
+   Delete the current user preset.
+
+   - parameter sender: the 'Delete' menu item
+   */
   @IBAction func deletePreset(_ sender: NSMenuItem) {
     guard let activePreset = userPresetsManager.currentPreset else { fatalError() }
     if confirmDelete(name: activePreset.name) {
@@ -93,7 +144,7 @@ private extension PresetsMenuManager {
   func populateUserPresetsMenu(_ menu: NSMenu) {
     menu.removeAllItems()
 
-    menu.addItem(withTitle: "New", action: #selector(savePreset(_:)), keyEquivalent: "n")
+    menu.addItem(withTitle: "New", action: #selector(createPreset(_:)), keyEquivalent: "n")
     menu.addItem(withTitle: "Save", action: #selector(updatePreset(_:)), keyEquivalent: "s")
     menu.addItem(withTitle: "Rename", action: #selector(renamePreset(_:)), keyEquivalent: "r")
     menu.addItem(withTitle: "Delete", action: #selector(deletePreset(_:)), keyEquivalent: "")
