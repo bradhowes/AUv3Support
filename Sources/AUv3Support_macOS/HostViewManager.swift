@@ -21,6 +21,8 @@ public final class HostViewManager: NSObject {
   private var parameterTreeObserverToken: AUParameterObserverToken?
   private var allParameterValuesObserverToken: NSKeyValueObservation?
 
+  private var showingInitialPrompt = false
+
   public init(config: HostViewConfig) {
     Shared.loggingSubsystem = config.componentName
     self.log = Shared.logger("MainViewController")
@@ -28,8 +30,6 @@ public final class HostViewManager: NSObject {
     self.audioUnitLoader = .init(name: config.componentName, componentDescription: config.componentDescription,
                                  loop: config.sampleLoop)
     super.init()
-
-    self.audioUnitLoader.delegate = self
 
     config.playButton.target = self
     config.playButton.isEnabled = false
@@ -42,6 +42,8 @@ public final class HostViewManager: NSObject {
 
     config.bypassMenuItem.target = self
     config.bypassMenuItem.isEnabled = false
+
+    self.audioUnitLoader.delegate = self
   }
 }
 
@@ -49,7 +51,13 @@ extension HostViewManager {
 
   public func showInitialPrompt() {
     let showedAlertKey = "showedInitialAlert"
-    guard UserDefaults.standard.bool(forKey: showedAlertKey) == true else { return }
+    guard UserDefaults.standard.bool(forKey: showedAlertKey) == false else {
+      return
+    }
+
+    disablePlaying()
+    showingInitialPrompt = true
+
     UserDefaults.standard.set(true, forKey: showedAlertKey)
     let alert = NSAlert()
     alert.alertStyle = .informational
@@ -66,7 +74,12 @@ If you delete this app from your device, the AUv3 component will no longer be av
 applications.
 """
     alert.addButton(withTitle: "OK")
-    alert.beginSheetModal(for: config.viewController.view.window!){ _ in }
+    alert.beginSheetModal(for: config.viewController.view.window!){ _ in
+      DispatchQueue.main.async {
+        self.showingInitialPrompt = false
+        self.enablePlaying()
+      }
+    }
   }
 }
 
@@ -134,6 +147,18 @@ extension HostViewManager: NSWindowDelegate {
 
 extension HostViewManager {
 
+  private func enablePlaying() {
+    if userPresetsManager != nil && !showingInitialPrompt {
+      config.playButton.isEnabled = true
+      config.playMenuItem.isEnabled = true
+    }
+  }
+
+  private func disablePlaying() {
+    config.playButton.isEnabled = false
+    config.playMenuItem.isEnabled = false
+  }
+
   private func connectFilterView(_ audioUnit: AVAudioUnit, _ viewController: NSViewController) {
     os_log(.debug, log: log, "connectFilterView BEGIN")
     config.containerView.addSubview(viewController.view)
@@ -143,9 +168,7 @@ extension HostViewManager {
     config.viewController.view.needsLayout = true
     config.containerView.needsLayout = true
 
-    config.playButton.isEnabled = true
-    config.presetsButton.isEnabled = true
-    config.playMenuItem.isEnabled = true
+    enablePlaying()
 
     os_log(.debug, log: log, "connectFilterView END")
   }
