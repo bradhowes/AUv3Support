@@ -8,15 +8,12 @@ let package = Package(
   products: [
     .library(
       name: "AUv3-Support-Static",
-      type: .static,
       targets: ["AUv3Support"]),
     .library(
       name: "AUv3-Support-iOS",
-      type: .static,
       targets: ["AUv3Support_iOS"]),
     .library(
       name: "AUv3-Support-macOS",
-      type: .static,
       targets: ["AUv3Support_macOS"])
   ],
   targets: [
