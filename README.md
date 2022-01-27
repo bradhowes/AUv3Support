@@ -72,6 +72,6 @@ echo "-- END post-build.sh"
 
 To use, edit the Xcode scheme that builds your application (iOS or macOS). Click on the disclosure arrow (>) for the __Build__ activity and then click on "Post-actions". Create a new action by clicking on the "+" at the bottom of the panel window. Make it look like below:
 
-<img width="687" alt="Capto_Annotation" src="https://user-images.githubusercontent.com/686946/151394467-d5285482-c690-478a-ae19-8ea669496782.png">
+![Capto_Capture 2022-01-27_05-02-44_PM](https://user-images.githubusercontent.com/686946/151396388-225a8fb0-a47e-4f07-984f-f32843b31835.png)
 
-Be sure to add the script above to a "scripts" directory in your project folder, and make sure that it is executable.
+Be sure to add the script above to a "scripts" directory in your project folder, or just make sure that the path to the script is correct for your situation.
