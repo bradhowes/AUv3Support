@@ -98,8 +98,8 @@ public final class AudioUnitLoader: NSObject {
     self.playEngine = .init(audioFileName: loop.rawValue)
     self.componentDescription = componentDescription
     self.searchCriteria = AudioComponentDescription(componentType: componentDescription.componentType,
-                                                    componentSubType: componentDescription.componentSubType,
-                                                    componentManufacturer: componentDescription.componentManufacturer,
+                                                    componentSubType: 0,
+                                                    componentManufacturer: 0,
                                                     componentFlags: 0,
                                                     componentFlagsMask: 0)
     super.init()
@@ -120,7 +120,7 @@ public final class AudioUnitLoader: NSObject {
    updates and try again.
    */
   private func locate() {
-    os_log(.debug, log: log, "locate BEGIN")
+    os_log(.debug, log: log, "locate BEGIN - %{public}s", searchCriteria.description)
     let components = AVAudioUnitComponentManager.shared().components(matching: searchCriteria)
 
     os_log(.debug, log: self.log, "locate: found %d", components.count)
