@@ -32,10 +32,16 @@ public final class HostViewManager: NSObject {
     self.audioUnitLoader.delegate = self
 
     config.playButton.target = self
+    config.playButton.isEnabled = false
+
     config.bypassButton.target = self
+    config.bypassButton.isEnabled = false
 
     config.playMenuItem.target = self
+    config.playMenuItem.isEnabled = false
+
     config.bypassMenuItem.target = self
+    config.bypassMenuItem.isEnabled = false
   }
 }
 
@@ -139,6 +145,7 @@ extension HostViewManager {
 
     config.playButton.isEnabled = true
     config.presetsButton.isEnabled = true
+    config.playMenuItem.isEnabled = true
 
     os_log(.debug, log: log, "connectFilterView END")
   }
