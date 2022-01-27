@@ -25,3 +25,53 @@ In the AUv3-Suport-Static product:
 - UserPresetManager -- manages the user presets of an AUv3 component
 - Extensions -- various class extensions that makes life easier
 - Resources -- two audio files that can be played using the `SimplePlayEngine`
+
+# Usage Notes
+
+The packages here build just fine, but there are issues that crop up when the packages become dependencies in another project involves an app extension or has 
+a framework that depends on one of these packages which is then used as a dependeny itself (not clear on the exact conditions). In my particular case with AUv3 
+app extensions, the result is that the common framework that is shared between the app extension and the host app will embed within it a Swift package 
+dependency that is also present at the top-level of the host app. Apple rightly flags the duplication (plus some other issues) and refuses to upload the archive
+artifacts.
+
+The solution that works _for me_ is to have a Bash script run after the build step that deletes the embedded frameworks. Sounds scary, but it works and Apple 
+likes what it sees. More importantly, the apps run just fine on iOS and macOS after this framework culling. Here is the script I use: (`post-build.sh`):
+
+```
+#!/bin/bash
+set -eu
+
+echo "-- BEGIN post-build.sh"
+
+function process # TOP EMBED
+{
+    local TOP="${1}" EMBED="${2}"
+
+    cd "${CODESIGNING_FOLDER_PATH}/${TOP}"
+    ls -l
+
+    for DIR in *; do
+        BAD="${DIR}${EMBED}"
+        if [[ -d "${BAD}" ]]; then
+            echo "-- deleting '${BAD}'"
+            rm -rf "${BAD}"
+        fi
+    done
+}
+
+if [[ -d "${CODESIGNING_FOLDER_PATH}/Contents/Frameworks" ]]; then
+    # macOS paths
+    process "/Contents/Frameworks" "/Versions/A/Frameworks"
+elif [[ -d "${CODESIGNING_FOLDER_PATH}/Frameworks" ]]; then
+    # iOS paths
+    process "/Frameworks" "/Frameworks"
+fi
+
+echo "-- END post-build.sh"
+```
+
+To use, edit the Xcode scheme that builds your application (iOS or macOS). Click on the disclosure arrow (>) for the __Build__ activity and then click on "Post-actions". Create a new action by clicking on the "+" at the bottom of the panel window. Make it look like below:
+
+<img width="687" alt="Capto_Annotation" src="https://user-images.githubusercontent.com/686946/151394467-d5285482-c690-478a-ae19-8ea669496782.png">
+
+Be sure to add the script above to a "scripts" directory in your project folder, and make sure that it is executable.
