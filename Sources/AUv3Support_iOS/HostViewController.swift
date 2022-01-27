@@ -64,8 +64,8 @@ public final class HostViewController: UIViewController {
   @IBOutlet public weak var instructionsLabel: UILabel!
 
 
-  private lazy var saveAction = UIAction(title: "Save",
-                                         handler: SavePresetAction(self, completion: updatePresetMenu).start(_:))
+  private lazy var saveAction = UIAction(title: "New",
+                                         handler: CreatePresetAction(self, completion: updatePresetMenu).start(_:))
   private lazy var updateAction = UIAction(title: "Update",
                                            handler: UpdatePresetAction(self, completion: updatePresetMenu).start(_:))
   private lazy var renameAction = UIAction(title: "Rename",

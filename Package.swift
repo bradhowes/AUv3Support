@@ -32,7 +32,7 @@ let package = Package(
     .target(
       name: "AUv3Support_iOS",
       dependencies: ["AUv3Support"],
-      exclude: [],
+      exclude: ["README.md"],
       resources: [.process("Resources")],
       swiftSettings: [
         .define("APPLICATION_EXTENSION_API_ONLY")
@@ -41,8 +41,7 @@ let package = Package(
     .target(
       name: "AUv3Support_macOS",
       dependencies: ["AUv3Support"],
-      exclude: [],
-      resources: [.process("Resources")],
+      exclude: ["README.md"],
       swiftSettings: [
         .define("APPLICATION_EXTENSION_API_ONLY")
       ]
