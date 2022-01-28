@@ -6,6 +6,9 @@ import os.log
 extension AudioComponentDescription: CustomStringConvertible {
 
   public var description: String {
-    "<AudioComponentDescription type: '\(componentType.stringValue)', subtype: '\(componentSubType.stringValue)', manufacturer: '\(componentManufacturer.stringValue)' flags: \(componentFlags) mask: \(componentFlagsMask)>"
+    "<AudioComponentDescription type: '\(componentType.stringValue)' " +
+    "subtype: '\(componentSubType.stringValue)' " +
+    "manufacturer: '\(componentManufacturer.stringValue)' " +
+    "flags: \(componentFlags) mask: \(componentFlagsMask)>"
   }
 }

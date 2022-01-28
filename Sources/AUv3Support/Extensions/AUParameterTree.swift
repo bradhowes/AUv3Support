@@ -3,13 +3,12 @@
 import AVFoundation
 
 /**
- Protocol to attach to an enum that serves as the source of an AUv3 parameter addresses. This serves as a bridge to the
- AUParameterAddress value.
+ Protocol for entities that can provide an AUParameter's address value. Useful for enum types that represent parameters.
  */
-public protocol ParameterAddressEnum {
+public protocol ParameterAddressProvider {
 
-  /// Obtain the enum's raw value
-  var rawValue: UInt64 { get }
+  /// Obtain the parameter address value
+  var parameterAddress: AUParameterAddress { get }
 }
 
 public extension AUParameterTree {
@@ -21,8 +20,8 @@ public extension AUParameterTree {
    - returns: the found value
    */
   @inlinable
-  func parameter(withAddress address: ParameterAddressEnum) -> AUParameter? {
-    parameter(withAddress: address.rawValue)
+  func parameter(withAddress address: ParameterAddressProvider) -> AUParameter? {
+    parameter(withAddress: address.parameterAddress)
   }
 
   /**
@@ -41,11 +40,11 @@ public extension AUParameterTree {
    - returns: new AUParameter instance
    */
   @inlinable
-  class func createParameter(withIdentifier identifier: String, name: String, address: ParameterAddressEnum,
+  class func createParameter(withIdentifier identifier: String, name: String, address: ParameterAddressProvider,
                              min: AUValue, max: AUValue, unit: AudioUnitParameterUnit, unitName: String? = nil,
                              flags: AudioUnitParameterOptions = [.flag_IsReadable, .flag_IsWritable],
                              valueStrings: [String]? = nil, dependentParameters: [NSNumber]? = nil) -> AUParameter {
-    createParameter(withIdentifier: identifier, name: name, address: address.rawValue, min: min, max: max,
+    createParameter(withIdentifier: identifier, name: name, address: address.parameterAddress, min: min, max: max,
                     unit: unit, unitName: unitName, flags: flags, valueStrings: valueStrings,
                     dependentParameters: dependentParameters)
   }
