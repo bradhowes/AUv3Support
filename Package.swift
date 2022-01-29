@@ -1,4 +1,4 @@
-// swift-tools-version:5.5
+// swift-tools-version:5.3
 
 import PackageDescription
 
@@ -6,15 +6,9 @@ let package = Package(
   name: "AUv3SupportPackage",
   platforms: [.iOS(.v13), .macOS(.v10_15)],
   products: [
-    .library(
-      name: "AUv3-Support-Static",
-      targets: ["AUv3Support"]),
-    .library(
-      name: "AUv3-Support-iOS",
-      targets: ["AUv3Support_iOS"]),
-    .library(
-      name: "AUv3-Support-macOS",
-      targets: ["AUv3Support_macOS"])
+    .library(name: "AUv3-Support", targets: ["AUv3Support"]),
+    .library(name: "AUv3-Support-iOS", targets: ["AUv3Support_iOS"]),
+    .library(name: "AUv3-Support-macOS", targets: ["AUv3Support_macOS"])
   ],
   targets: [
     .target(
