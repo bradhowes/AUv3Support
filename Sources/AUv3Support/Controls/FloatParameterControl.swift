@@ -65,7 +65,7 @@ public final class FloatParameterControl: NSObject {
     self.label.text = parameter.displayName
 #if os(macOS)
     self.label.delegate = self
-    // self.label.onFocusChange = onFocusChanged
+    self.label.onFocusChange = onFocusChanged
 #endif
 
     if useLogValues {
