@@ -9,17 +9,17 @@ import os
 public final class BooleanParameterControl {
   private let log: OSLog
   private let parameterObserverToken: AUParameterObserverToken
-  private let _control: Switch
+  private let booleanControl: Switch
 
   public let parameter: AUParameter
-  public var control: NSObject { _control }
+  public var control: NSObject { booleanControl }
 
-  public init(parameterObserverToken: AUParameterObserverToken, parameter: AUParameter, control: Switch) {
+  public init(parameterObserverToken: AUParameterObserverToken, parameter: AUParameter, booleanControl: Switch) {
     self.log = Shared.logger("BooleanParameterControl")
     self.parameterObserverToken = parameterObserverToken
     self.parameter = parameter
-    self._control = control
-    control.isOn = parameter.value > 0.0 ? true : false
+    self.booleanControl = booleanControl
+    booleanControl.isOn = parameter.value > 0.0 ? true : false
   }
 }
 
@@ -32,7 +32,7 @@ extension BooleanParameterControl: AUParameterControl {
 
   public func parameterChanged() {
     os_log(.debug, log: log, "parameterChanged - %f", parameter.value)
-    _control.isOn = parameter.value > 0.0 ? true : false
+    booleanControl.isOn = parameter.value > 0.0 ? true : false
   }
 
   public func setEditedValue(_ value: AUValue) {
