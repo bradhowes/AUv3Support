@@ -2,11 +2,11 @@
 ![SPM](https://img.shields.io/badge/SPM-5.5-red.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-A31F34.svg)](https://opensource.org/licenses/MIT)
 
-# AUv3SupportPackage
+# AUv3Support
 
 Swift package containing useful code for AUv3 app extensions. There are three products so far:
 
-- AUv3-Support-Static -- collection of extensions and classes for both the AudioUnit components that is packaged
+- AUv3-Support -- collection of extensions and classes for both the AudioUnit components that is packaged
   as an AUv3 app extension and the host app that contains it. Because it will be linked to the AUv3 app
   extension, it must not link to or use any APIs that are forbidden by Apple for use by app extensions.
   This code works on both iOS and macOS platforms.
@@ -17,25 +17,96 @@ Swift package containing useful code for AUv3 app extensions. There are three pr
   macOS as it is for iOS. So far I have not been able to get a good load from a storyboard held in this package:
   menu items not connected to delegate slots, toolbar buttons not connected to the window.
 
-In the AUv3-Suport-Static product:
+In the AUv3-Support product:
 
 - AudioUnitLoader -- a basic AUv3 host that locates your AUv3 component and connects it up
 - SimplePlayEngine -- a simple AudioUnit graph that plays audio from a file and sends it through the loaded
   component and then to the speaker.
 - UserPresetManager -- manages the user presets of an AUv3 component
-- Extensions -- various class extensions that makes life easier
-- Resources -- two audio files that can be played using the `SimplePlayEngine`
+- Controls -- contains generic controls for working with AUParameters. There is a `BooleanParameterControl` that works
+with a UISwitch/NSSwitch control, and there is a `FloatParameterControl` that works with anything that can report out
+a floating-point value as well as the min/max ranges the value may have.
+- Extensions -- folder with sundry extensions that makes life easier
+- Resources -- audio files that can be played using the `SimplePlayEngine`
+
+# AUv3Support-iOS
+
+Contains most of what is needed for a simple AUv3 host that will load your AUv3 component, show its UI controls, and 
+allow you to play audio through it. The basics for getting it to work are:
+
+1. Create a `HostViewConfig` that contains values specific to your AUv3 component and then pass it to the
+`Shared.embedHostView` static function along with your app's main `UIViewController` instance.
+2. That's it. No step 2.
+
+# AUv3Support-macOS
+
+Unlike the above, this is a bit more involved because I have yet to get something simpler up and running. The big issue
+is getting the application's delegate, main window, and main view controller all established and functional when 
+instantiated from a package. So, until that is accomplished, one must pass a bucket-load of UI elements in a 
+`HostViewConfig` and instantiate a `HostViewManager` with it. This should be done as early as possible, but it cannot be
+done before the main view controller has a window assigned to it. So, the best option is to do something like below, 
+where we monitor for a window being set on the view. The only remaining task is to show the initial prompt to the user
+on first-time launch.
+
+```
+  override func viewDidLoad() {
+    super.viewDidLoad()
+
+    // When the window appears, we should be able to access all of the items from the storyboard.
+    windowObserver = view.observe(\.window) { _, _ in self.makeHostViewManager() }
+  }
+
+  func makeHostViewManager() {
+    guard let appDelegate = appDelegate,
+          appDelegate.presetsMenu != nil,
+          let windowController = windowController
+    else {
+      fatalError()
+    }
+
+    let bundle = Bundle.main
+    let audioUnitName = bundle.auBaseName
+    let componentDescription = AudioComponentDescription(componentType: bundle.auComponentType,
+                                                         componentSubType: bundle.auComponentSubtype,
+                                                         componentManufacturer: bundle.auComponentManufacturer,
+                                                         componentFlags: 0, componentFlagsMask: 0)
+    let config = HostViewConfig(componentName: audioUnitName, componentDescription: componentDescription,
+                                sampleLoop: .sample1,
+                                playButton: windowController.playButton,
+                                bypassButton: windowController.bypassButton,
+                                presetsButton: windowController.presetsButton,
+                                playMenuItem: appDelegate.playMenuItem,
+                                bypassMenuItem: appDelegate.bypassMenuItem,
+                                presetsMenu: appDelegate.presetsMenu,
+                                viewController: self, containerView: containerView)
+    hostViewManager = .init(config: config)
+  }
+  
+  override func viewDidAppear() {
+    super.viewDidAppear()
+    hostViewManager?.showInitialPrompt()
+  }
+```
+
+Not great, but not too cumbersome to use. And it is nice to have abstracted out all of the common functionality my 
+audio unit apps share.
 
 # Usage Notes
 
-The packages here build just fine, but there are issues that crop up when the packages become dependencies in another project involves an app extension or has 
-a framework that depends on one of these packages which is then used as a dependeny itself (not clear on the exact conditions). In my particular case with AUv3 
-app extensions, the result is that the common framework that is shared between the app extension and the host app will embed within it a Swift package 
-dependency that is also present at the top-level of the host app. Apple rightly flags the duplication (plus some other issues) and refuses to upload the archive
-artifacts.
+The packages here build just fine, and they work as-is when they direct dependencies to either other Swift packages or
+targets in an Xcode project that are *not* frameworks. When they *are* linked to a framework, there may be issues that 
+crop up which will break the build (not clear on the exact conditions). In my particular case with AUv3 app extensions, 
+the result was that the common framework that is shared between the app extension and the host app will embed within it 
+a Swift package dependency that is also present at the top-level of the host app. Apple rightly flags the duplication 
+(plus some other issues) and refuses to upload the archive artifacts.
 
-The solution that works _for me_ is to have a Bash script run after the build step that deletes the embedded frameworks. Sounds scary, but it works and Apple 
-likes what it sees. More importantly, the apps run just fine on iOS and macOS after this framework culling. Here is the script I use: (`post-build.sh`):
+The solution that works _for me_ was to have a Bash script run after the build step that deletes the embedded 
+frameworks. Sounds scary, but it works and Apple likes what it sees. More importantly, the apps run just fine on iOS 
+and macOS after this framework culling. Note again and well: if you use these directly with an app extension or app 
+target then you should not have any issues.
+
+Here is the script I use; it works for both macOS and iOS 
+projects: (`post-build.sh`):
 
 ```
 #!/bin/bash
@@ -70,8 +141,11 @@ fi
 echo "-- END post-build.sh"
 ```
 
-To use, edit the Xcode scheme that builds your application (iOS or macOS). Click on the disclosure arrow (>) for the __Build__ activity and then click on "Post-actions". Create a new action by clicking on the "+" at the bottom of the panel window. Make it look like below:
+To use, edit the Xcode scheme that builds your application (iOS or macOS). Click on the disclosure arrow (>) for
+the __Build__ activity and then click on "Post-actions". Create a new action by clicking on the "+" at the bottom of 
+the panel window. Make it look like below:
 
 ![Capto_Capture 2022-01-27_05-02-44_PM](https://user-images.githubusercontent.com/686946/151396388-225a8fb0-a47e-4f07-984f-f32843b31835.png)
 
-Be sure to add the script above to a "scripts" directory in your project folder, or just make sure that the path to the script is correct for your situation.
+Be sure to add the script above to a "scripts" directory in your project folder, or just make sure that the path to the 
+script is correct for your situation.

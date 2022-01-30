@@ -17,32 +17,32 @@ public protocol RangedControl: NSObject {
   /// The current value of the control
   var value: Float { get set }
 
-  /// The tag value for the control
+  /// The AUParameter address assigned to the control's tag attribute
   var tag: Int { get }
 }
 
 /**
- Control for a float value parameter that contains a knob and text view / label to depict and modify the parameter.
+ Control for a float value parameter that relies on a RangedControl that provides a value between a range of values.
  */
 public final class FloatParameterControl: NSObject {
   private let log: OSLog
 
   public let parameter: AUParameter
-  public var control: NSObject { return knob }
+  public var control: NSObject { return rangedControl }
 
   private let logSliderMinValue: Float = 0.0
   private let logSliderMaxValue: Float = 9.0
   private lazy var logSliderMaxValuePower2Minus1 = Float(pow(2, logSliderMaxValue) - 1)
   private let parameterObserverToken: AUParameterObserverToken
   private let formatter: (AUValue) -> String
-  private let knob: RangedControl
+  private let rangedControl: RangedControl
   private let label: Label
   private let useLogValues: Bool
   private var restoreNameTimer: Timer?
   private var hasActiveLabel: Bool = false
 
   /**
-   Construct a new instance that links together a Knob and a label to an AUParameter value.
+   Construct a new instance that links together a RangedControl and a label to an AUParameter value.
 
    - parameter parameterObserverToken: observer token to use when setting new values to protect against looping
    - parameter parameter: the parameter to control
@@ -52,12 +52,12 @@ public final class FloatParameterControl: NSObject {
    - parameter logValues: true if showing log values
    */
   public init(parameterObserverToken: AUParameterObserverToken, parameter: AUParameter,
-              formatter: @escaping (AUValue) -> String, knob: RangedControl, label: Label, logValues: Bool) {
+              formatter: @escaping (AUValue) -> String, rangedControl: RangedControl, label: Label, logValues: Bool) {
     self.log = Shared.logger("FloatParameterControl")
     self.parameterObserverToken = parameterObserverToken
     self.parameter = parameter
     self.formatter = formatter
-    self.knob = knob
+    self.rangedControl = rangedControl
     self.label = label
     self.useLogValues = logValues
     super.init()
@@ -69,14 +69,14 @@ public final class FloatParameterControl: NSObject {
 #endif
 
     if useLogValues {
-      knob.minimumValue = logSliderMinValue
-      knob.maximumValue = logSliderMaxValue
-      knob.value = logKnobLocation(for: parameter.value)
+      rangedControl.minimumValue = logSliderMinValue
+      rangedControl.maximumValue = logSliderMaxValue
+      rangedControl.value = logKnobLocation(for: parameter.value)
     }
     else {
-      knob.minimumValue = parameter.minValue
-      knob.maximumValue = parameter.maxValue
-      knob.value = parameter.value
+      rangedControl.minimumValue = parameter.minValue
+      rangedControl.maximumValue = parameter.maxValue
+      rangedControl.value = parameter.value
     }
   }
 }
@@ -89,13 +89,13 @@ extension FloatParameterControl: AUParameterControl {
    - parameter source: the source of the value
    */
   public func controlChanged(source: AUParameterValueProvider) {
-    os_log(.debug, log: log, "%{public}s %d controlChanged - %f", knob.pointer, knob.tag, source.value)
+    os_log(.debug, log: log, "%{public}s %d controlChanged - %f", rangedControl.pointer, rangedControl.tag, source.value)
 #if os(macOS)
     NSApp.keyWindow?.makeFirstResponder(nil)
 #endif
 
-    if knob !== source {
-      knob.value = source.value
+    if rangedControl !== source {
+      rangedControl.value = source.value
     }
 
     let value = useLogValues ? parameterValue(for: source.value) : source.value
@@ -111,7 +111,7 @@ extension FloatParameterControl: AUParameterControl {
    */
   public func parameterChanged() {
     showNewValue(parameter.value)
-    knob.value = useLogValues ? logKnobLocation(for: parameter.value) : parameter.value
+    rangedControl.value = useLogValues ? logKnobLocation(for: parameter.value) : parameter.value
   }
 
   /**
@@ -125,7 +125,7 @@ extension FloatParameterControl: AUParameterControl {
     os_log(.debug, log: log, "setEditedValue - using value: %f", newValue)
     parameter.setValue(newValue, originator: parameterObserverToken)
     showNewValue(newValue)
-    knob.value = useLogValues ? logKnobLocation(for: newValue) : newValue
+    rangedControl.value = useLogValues ? logKnobLocation(for: newValue) : newValue
   }
 }
 
