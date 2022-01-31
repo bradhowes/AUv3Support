@@ -6,7 +6,7 @@ import os.log
 
 open class AppDelegate: UIResponder, UIApplicationDelegate {
   private let log: OSLog
-  private var mainViewController: MainViewController?
+  private var stopPlayingBlock: (() -> Void)?
   public var window: UIWindow?
 
   public init(log: OSLog) {
@@ -14,8 +14,8 @@ open class AppDelegate: UIResponder, UIApplicationDelegate {
     super.init()
   }
 
-  public func setMainViewController(_ mainViewController: MainViewController) {
-    self.mainViewController = mainViewController
+  public func setStopPlayingBlock(_ block: @escaping () -> Void) {
+    self.stopPlayingBlock = block
   }
 
   public func application(_ application: UIApplication,
@@ -45,7 +45,7 @@ open class AppDelegate: UIResponder, UIApplicationDelegate {
 
   public func applicationWillResignActive(_ application: UIApplication) {
     os_log(.info, log: log, "applicationWillResignActive")
-    mainViewController?.stopPlaying()
+    stopPlayingBlock?()
   }
 
   public func applicationDidEnterBackground(_ application: UIApplication) {
@@ -62,6 +62,6 @@ open class AppDelegate: UIResponder, UIApplicationDelegate {
 
   public func applicationWillTerminate(_ application: UIApplication) {
     os_log(.info, log: log, "applicationWillTerminate")
-    mainViewController?.stopPlaying()
+    stopPlayingBlock?()
   }
 }
