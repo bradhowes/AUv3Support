@@ -264,10 +264,13 @@ public extension AudioUnitLoader {
   }
 
   private func doRestore(_ audioUnit: AUAudioUnit) {
+    os_log(.debug, log: log, "doRestore BEGIN")
 
     // Fetch all of the values to use before modifying AUv3 state.
     let lastState = UserDefaults.standard.dictionary(forKey: lastStateKey)
-    let lastPresetNumber = UserDefaults.standard.object(forKey: lastPresetNumberKey)
+    os_log(.debug, log: log, "doRestore - lastState: %{public}s", lastState.descriptionOrNil)
+    let lastPresetNumber = UserDefaults.standard.object(forKey: lastPresetNumberKey) as? NSNumber
+    os_log(.debug, log: log, "doRestore - lastPresetNumber: %{public}s", lastPresetNumber.descriptionOrNil)
 
     // Restore state of component
     if let lastState = lastState {
@@ -275,7 +278,7 @@ public extension AudioUnitLoader {
     }
 
     // Restore state of the `currentPreset` value.
-    if let lastPresetNumber = lastPresetNumber as? NSNumber {
+    if let lastPresetNumber = lastPresetNumber {
 
       // Locate the preset with the saved number. If number is negative, it is a user preset; else factory preset.
       // If not found, set `currentPreset` to nil.
