@@ -10,11 +10,12 @@ open class AppDelegate: UIResponder, UIApplicationDelegate {
   private var stopPlayingBlock: (() -> Void)?
   public var window: UIWindow?
 
-  public init(loggingSubsystem: String) {
-    Shared.loggingSubsystem = loggingSubsystem
+  override public init() {
     self.log = Shared.logger("AppDelegate")
+    super.init()
   }
 
+  
   public func setStopPlayingBlock(_ block: @escaping () -> Void) {
     self.stopPlayingBlock = block
   }
