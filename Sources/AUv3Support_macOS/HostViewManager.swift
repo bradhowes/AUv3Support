@@ -18,7 +18,6 @@ public final class HostViewManager: NSObject {
   private var auAudioUnit: AUAudioUnit? { avAudioUnit?.auAudioUnit }
   private var audioUnitViewController: NSViewController?
 
-  private var parameterTreeObserverToken: AUParameterObserverToken?
   private var allParameterValuesObserverToken: NSKeyValueObservation?
 
   private var showingInitialPrompt = false
@@ -99,6 +98,10 @@ extension HostViewManager: AudioUnitLoaderDelegate {
     audioUnitViewController = viewController
     connectFilterView(audioUnit, viewController)
     connectParametersToControls(audioUnit.auAudioUnit)
+
+    audioUnitLoader.restore()
+    updateView()
+
     os_log(.debug, log: log, "connected END")
   }
 
@@ -139,9 +142,6 @@ extension HostViewManager: NSWindowDelegate {
 
   public func windowWillClose(_ notification: Notification) {
     audioUnitLoader.cleanup()
-    guard let parameterTree = auAudioUnit?.parameterTree,
-          let parameterTreeObserverToken = parameterTreeObserverToken else { return }
-    parameterTree.removeParameterObserver(parameterTreeObserverToken)
   }
 }
 
@@ -175,33 +175,11 @@ extension HostViewManager {
 
   public func connectParametersToControls(_ audioUnit: AUAudioUnit) {
     os_log(.debug, log: log, "connectParametersToControls BEGIN")
-    guard let parameterTree = audioUnit.parameterTree else {
-      fatalError("FilterAudioUnit does not define any parameters.")
-    }
-
-    audioUnitLoader.restore()
-
-    allParameterValuesObserverToken = audioUnit.observe(\.allParameterValues) { [weak self] _, _ in
-      guard let self = self else { return }
+    allParameterValuesObserverToken = audioUnit.observe(\.allParameterValues) { [unowned self] _, _ in
       os_log(.debug, log: self.log, "allParameterValues changed")
-      DispatchQueue.main.async { self.updateView() }
+      self.updateView()
     }
-
-    parameterTreeObserverToken = parameterTree.token(byAddingParameterObserver: { [weak self] address, _ in
-      guard let self = self else { return }
-      os_log(.debug, log: self.log, "parameterTree changed - %d", address)
-      DispatchQueue.main.async { self.updateView() }
-    })
-
     os_log(.debug, log: log, "connectParametersToControls END")
-  }
-
-  private func updateView() {
-    os_log(.debug, log: log, "updateView BEGIN")
-    presetsMenuManager?.selectActive()
-    showPresetName()
-    audioUnitLoader.save()
-    os_log(.debug, log: log, "updateView END")
   }
 
   private func showPresetName() {
@@ -211,6 +189,14 @@ extension HostViewManager {
     } else {
       window.title = config.componentName
     }
+  }
+
+  private func updateView() {
+    os_log(.debug, log: log, "updateView BEGIN")
+    presetsMenuManager?.selectActive()
+    showPresetName()
+    audioUnitLoader.save()
+    os_log(.debug, log: log, "updateView END")
   }
 }
 
