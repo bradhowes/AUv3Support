@@ -13,7 +13,6 @@ open class AppDelegate: UIResponder, UIApplicationDelegate {
   public init(loggingSubsystem: String) {
     Shared.loggingSubsystem = loggingSubsystem
     self.log = Shared.logger("AppDelegate")
-    super.init()
   }
 
   public func setStopPlayingBlock(_ block: @escaping () -> Void) {
