@@ -394,7 +394,7 @@ extension HostViewController: ActionSupporter {
   }
 
   public func completeAction() {
-    updatePresetMenu()
+    DispatchQueue.main.async { self.updateView() }
   }
 }
 
