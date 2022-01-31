@@ -208,6 +208,15 @@ extension HostViewController: AudioUnitLoaderDelegate {
     audioUnitViewController = viewController
     connectFilterView(audioUnit, viewController)
     connectParametersToControls(audioUnit.auAudioUnit)
+
+    audioUnitLoader.restore()
+    if audioUnit.auAudioUnit.currentPreset == nil {
+      presetSelection.selectedSegmentIndex = 0
+      useFactoryPreset(nil)
+    }
+
+    updateView()
+
     os_log(.debug, log: log, "connected END")
   }
 
@@ -236,8 +245,6 @@ private extension HostViewController {
     presetSelection.isEnabled = true
     userPresetsMenuButton.isEnabled = true
     setPresetSelectionControlSegmentSize(audioUnit.auAudioUnit.factoryPresetsNonNil.count)
-    useFactoryPreset(nil)
-    updateView()
 
     os_log(.debug, log: log, "connectFilterView END")
   }
@@ -250,7 +257,6 @@ private extension HostViewController {
     while presetSelection.numberOfSegments > presetCount {
       presetSelection.removeSegment(at: presetSelection.numberOfSegments - 1, animated: false)
     }
-    presetSelection.selectedSegmentIndex = 0
   }
 
   func connectParametersToControls(_ audioUnit: AUAudioUnit) {
@@ -258,9 +264,6 @@ private extension HostViewController {
     guard let parameterTree = audioUnit.parameterTree else {
       fatalError("FilterAudioUnit does not define any parameters.")
     }
-
-    audioUnitLoader.restore()
-    updatePresetMenu()
 
     allParameterValuesObserverToken = audioUnit.observe(\.allParameterValues) { [weak self] _, _ in
       guard let self = self else { return }
