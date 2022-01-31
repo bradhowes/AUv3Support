@@ -235,13 +235,14 @@ private extension HostViewController {
     playButton.isEnabled = true
     presetSelection.isEnabled = true
     userPresetsMenuButton.isEnabled = true
-    updatePresetSelectionControl()
+    setPresetSelectionControlSegmentSize(audioUnit.auAudioUnit.factoryPresetsNonNil.count)
     useFactoryPreset(nil)
+    updateView()
+
     os_log(.debug, log: log, "connectFilterView END")
   }
 
-  func updatePresetSelectionControl() {
-    let presetCount = auAudioUnit?.factoryPresetsNonNil.count ?? 0
+  func setPresetSelectionControlSegmentSize(_ presetCount: Int) {
     while presetSelection.numberOfSegments < presetCount {
       let index = presetSelection.numberOfSegments + 1
       presetSelection.insertSegment(withTitle: "\(index)", at: index - 1, animated: false)
@@ -249,7 +250,6 @@ private extension HostViewController {
     while presetSelection.numberOfSegments > presetCount {
       presetSelection.removeSegment(at: presetSelection.numberOfSegments - 1, animated: false)
     }
-
     presetSelection.selectedSegmentIndex = 0
   }
 
