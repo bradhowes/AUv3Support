@@ -7,7 +7,7 @@ import AVFAudio
 import os.log
 
 public final class HostViewManager: NSObject {
-  private let log: OSLog
+  private let log = Shared.logger("HostViewManager")
   private let config: HostViewConfig
   private let audioUnitLoader: AudioUnitLoader
 
@@ -23,8 +23,6 @@ public final class HostViewManager: NSObject {
   private var showingInitialPrompt = false
 
   public init(config: HostViewConfig) {
-    Shared.loggingSubsystem = config.componentName
-    self.log = Shared.logger("MainViewController")
     self.config = config
     self.audioUnitLoader = .init(name: config.componentName, componentDescription: config.componentDescription,
                                  loop: config.sampleLoop)
