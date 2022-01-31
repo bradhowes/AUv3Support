@@ -245,13 +245,6 @@ public extension AudioUnitLoader {
       UserDefaults.standard.removeObject(forKey: lastStateKey)
     }
 
-    // Save the number of the current preset.
-    if let lastPresetNumber = audioUnit.currentPreset?.number {
-      UserDefaults.standard.set(lastPresetNumber, forKey: lastPresetNumberKey)
-    } else {
-      UserDefaults.standard.removeObject(forKey: lastPresetNumberKey)
-    }
-
     os_log(.debug, log: log, "doSave END")
   }
 
@@ -269,24 +262,10 @@ public extension AudioUnitLoader {
     // Fetch all of the values to use before modifying AUv3 state.
     let lastState = UserDefaults.standard.dictionary(forKey: lastStateKey)
     os_log(.debug, log: log, "doRestore - lastState: %{public}s", lastState.descriptionOrNil)
-    let lastPresetNumber = UserDefaults.standard.object(forKey: lastPresetNumberKey) as? NSNumber
-    os_log(.debug, log: log, "doRestore - lastPresetNumber: %{public}s", lastPresetNumber.descriptionOrNil)
 
     // Restore state of component
     if let lastState = lastState {
       audioUnit.fullStateForDocument = lastState
-    }
-
-    // Restore state of the `currentPreset` value.
-    if let lastPresetNumber = lastPresetNumber {
-
-      // Locate the preset with the saved number. If number is negative, it is a user preset; else factory preset.
-      // If not found, set `currentPreset` to nil.
-      let presetNumber = lastPresetNumber.intValue
-      audioUnit.currentPreset = (presetNumber >= 0 ? audioUnit.factoryPresetsNonNil : audioUnit.userPresets)
-        .first { $0.number == presetNumber }
-    } else {
-      audioUnit.currentPreset = nil
     }
   }
 }
