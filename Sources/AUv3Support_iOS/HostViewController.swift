@@ -341,13 +341,18 @@ private extension HostViewController {
 
   func updatePresetSelection(_ auAudioUnit: AUAudioUnit) {
     os_log(.debug, log: log, "updatePresetSelection BEGIN")
-    if let presetNumber = auAudioUnit.currentPreset?.number {
-      os_log(.info, log: log, "updatePresetSelection: %d", presetNumber)
-      presetSelection.selectedSegmentIndex = presetNumber
-      presetName.text = auAudioUnit.currentPreset?.name
-    } else {
+
+    guard let preset = auAudioUnit.currentPreset else {
+      presetName.text = ""
       presetSelection.selectedSegmentIndex = -1
+      os_log(.info, log: log, "updatePresetSelection END - nil preset")
+      return
     }
+
+    os_log(.info, log: log, "updatePresetSelection: %d", preset.number)
+    presetSelection.selectedSegmentIndex = preset.number >= 0 ? preset.number : -1
+    presetName.text = preset.name
+
     os_log(.debug, log: log, "updatePresetSelection END")
   }
 
