@@ -8,8 +8,8 @@ public enum Shared {}
 
 extension Shared {
 
-  /// The top-level identifier to use for logging
-  public static var loggingSubsystem: String!
+  /// The top-level identifier to use for logging.
+  private static var loggingSubsystem: String! = nil
 
   /**
    Create a new logger for a subsystem
@@ -17,5 +17,14 @@ extension Shared {
    - parameter category: the subsystem to log under
    - returns: OSLog instance to use for subsystem logging
    */
-  public static func logger(_ category: String) -> OSLog { .init(subsystem: loggingSubsystem, category: category) }
+  public static func logger(_ subsystem: String, _ category: String) -> OSLog {
+    precondition(loggingSubsystem == nil, "loggingSubsystem has already been set")
+    loggingSubsystem = subsystem
+    return .init(subsystem: loggingSubsystem, category: category)
+  }
+
+  public static func logger(_ category: String) -> OSLog {
+    precondition(loggingSubsystem != nil, "nil loggingSubsystem")
+    return .init(subsystem: loggingSubsystem, category: category)
+  }
 }
