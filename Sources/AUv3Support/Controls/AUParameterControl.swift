@@ -14,7 +14,7 @@ public protocol AUParameterValueProvider: AnyObject {
 /**
  Protocol for controls that represent parameter values and can edit them.
  */
-public protocol AUParameterControl {
+public protocol AUParameterControl: AnyObject {
 
   /// The AUParameter being edited by the control
   var parameter: AUParameter { get }
