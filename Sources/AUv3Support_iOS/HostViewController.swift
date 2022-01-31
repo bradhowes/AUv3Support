@@ -63,16 +63,6 @@ public final class HostViewController: UIViewController {
   @IBOutlet public weak var instructions: UIView!
   @IBOutlet public weak var instructionsLabel: UILabel!
 
-
-  private lazy var saveAction = UIAction(title: "New",
-                                         handler: CreatePresetAction(self, completion: updatePresetMenu).start(_:))
-  private lazy var updateAction = UIAction(title: "Update",
-                                           handler: UpdatePresetAction(self, completion: updatePresetMenu).start(_:))
-  private lazy var renameAction = UIAction(title: "Rename",
-                                           handler: RenamePresetAction(self, completion: updatePresetMenu).start(_:))
-  private lazy var deleteAction = UIAction(title: "Delete",
-                                           handler: DeletePresetAction(self, completion: updatePresetMenu).start(_:))
-
   private var allParameterValuesObserverToken: NSKeyValueObservation?
   private var parameterTreeObserverToken: AUParameterObserverToken?
 }
@@ -322,11 +312,14 @@ private extension HostViewController {
 
     let userPresetsMenu = UIMenu(title: "User", options: .displayInline, children: userPresets)
 
-    let actionsGroup = UIMenu(title: "Actions", options: .displayInline,
-                              children: active < 0 ?
-                              [saveAction, updateAction, renameAction, deleteAction] :
-                              [saveAction])
+    var actions = [makeCreatePresetAction(presetsManager: userPresetsManager)]
+    if active < 0 {
+      actions.append(makeUpdatePresetAction(presetsManager: userPresetsManager))
+      actions.append(makeRenamePresetAction(presetsManager: userPresetsManager))
+      actions.append(makeDeletePresetAction(presetsManager: userPresetsManager))
+    }
 
+    let actionsGroup = UIMenu(title: "Actions", options: .displayInline, children: actions)
     let menu = UIMenu(title: "Presets", options: [], children: [userPresetsMenu, factoryPresetsMenu, actionsGroup])
 
     if #available(iOS 14, *) {
@@ -357,12 +350,56 @@ private extension HostViewController {
     }
     os_log(.debug, log: log, "updatePresetSelection END")
   }
+
+  func makeCreatePresetAction(presetsManager: UserPresetsManager) -> UIAction {
+    .init(title: "New", handler: CreatePreset(self, presetsManager: presetsManager).start(_:))
+  }
+
+  func makeUpdatePresetAction(presetsManager: UserPresetsManager) -> UIAction {
+    .init(title: "Update", handler: UpdatePreset(self, presetsManager: presetsManager).start(_:))
+  }
+
+  func makeRenamePresetAction(presetsManager: UserPresetsManager) -> UIAction {
+    .init(title: "Rename", handler: RenamePreset(self, presetsManager: presetsManager).start(_:))
+  }
+
+  func makeDeletePresetAction(presetsManager: UserPresetsManager) -> UIAction {
+    UIAction(title: "Delete", handler: DeletePreset(self, presetsManager: presetsManager).start(_:))
+  }
 }
 
 // MARK: - Alerts and Prompts
 
-extension HostViewController {
+extension HostViewController: ActionSupporter {
 
+  public func askForName(title: String, placeholder: String, activity: String, _ closure: @escaping (String) -> Void) {
+    let controller = UIAlertController(title: title, message: nil, preferredStyle: .alert)
+    controller.addTextField { textField in textField.placeholder = placeholder }
+    controller.addAction(UIAlertAction(title: activity, style: .default) { _ in
+      guard let name = controller.textFields?.first?.text?.trimmingCharacters(in: .whitespaces), !name.isEmpty else {
+        return
+      }
+      closure(name)
+    })
+    controller.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+    present(controller, animated: true)
+  }
+
+  public func confirmAction(title: String, message: String, _ closure: @escaping () -> Void) {
+    yesOrNo(title: title, message: message) { _ in closure() }
+  }
+
+  public func notifyFailure(title: String, message: String) {
+    notify(title: title, message: message)
+  }
+
+  public func completeAction() {
+    updatePresetMenu()
+  }
+}
+
+extension HostViewController {
+  
   public func notify(title: String, message: String) {
     let controller = UIAlertController(title: title, message: message, preferredStyle: .alert)
     controller.addAction(UIAlertAction(title: "OK", style: .default))
