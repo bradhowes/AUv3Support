@@ -168,7 +168,7 @@ private extension FloatParameterEditor {
     let displayName = parameter.displayName
     let label = self.label
     restoreNameTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
-      os_log(.debug, log: self.log, "restoreName: %s", displayName)
+      os_log(.debug, log: self.log, "restoreName: %{public}s", displayName)
 #if os(iOS)
       UIView.transition(with: self.label, duration: 0.5, options: [.curveLinear, .transitionCrossDissolve]) {
         label.text = displayName
