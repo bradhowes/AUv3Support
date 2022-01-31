@@ -234,11 +234,11 @@ public extension AudioUnitLoader {
   }
 
   private func doSave(_ audioUnit: AUAudioUnit) {
+    os_log(.debug, log: log, "doSave BEGIN - %{public}s", audioUnit.currentPreset.descriptionOrNil)
 
     // Theoretically, we only need to save the full state if `currentPreset` is nil. However, it is possible that the
-    // preset is a user preset and is removed some time in the future by another application. So we always safe the
+    // preset is a user preset and is removed some time in the future by another application. So we always save the
     // full state here (if available).
-    //
     if let lastState = audioUnit.fullStateForDocument {
       UserDefaults.standard.set(lastState, forKey: lastStateKey)
     } else {
@@ -251,6 +251,8 @@ public extension AudioUnitLoader {
     } else {
       UserDefaults.standard.removeObject(forKey: lastPresetNumberKey)
     }
+
+    os_log(.debug, log: log, "doSave END")
   }
 
   /**
