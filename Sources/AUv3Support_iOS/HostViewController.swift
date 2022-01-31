@@ -71,7 +71,6 @@ public final class HostViewController: UIViewController {
 extension HostViewController {
 
   public func setConfig(_ config: HostViewConfig) {
-    Shared.loggingSubsystem = config.name
     log = Shared.logger("HostViewController")
     self.config = config
   }

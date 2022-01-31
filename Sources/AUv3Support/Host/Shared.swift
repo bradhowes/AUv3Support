@@ -9,7 +9,7 @@ public enum Shared {}
 extension Shared {
 
   /// The top-level identifier to use for logging
-  public static var loggingSubsystem = "SimplyFlange"
+  public static var loggingSubsystem: String!
 
   /**
    Create a new logger for a subsystem

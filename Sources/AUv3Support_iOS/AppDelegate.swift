@@ -1,5 +1,6 @@
 // Copyright © 2022 Brad Howes. All rights reserved.
 
+import AUv3Support
 import UIKit
 import AVKit
 import os.log
@@ -9,8 +10,9 @@ open class AppDelegate: UIResponder, UIApplicationDelegate {
   private var stopPlayingBlock: (() -> Void)?
   public var window: UIWindow?
 
-  public init(log: OSLog) {
-    self.log = log
+  public init(loggingSubsystem: String) {
+    Shared.loggingSubsystem = loggingSubsystem
+    self.log = Shared.logger("AppDelegate")
     super.init()
   }
 
