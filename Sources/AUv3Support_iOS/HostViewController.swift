@@ -402,7 +402,7 @@ extension HostViewController: ActionSupporter {
   }
 
   public func completeAction() {
-    DispatchQueue.main.async { self.updateView() }
+    self.updateView()
   }
 }
 

@@ -68,7 +68,6 @@ public final class AudioUnitLoader: NSObject {
   public weak var delegate: AudioUnitLoaderDelegate? { didSet { notifyDelegate() } }
 
   private let lastStateKey = "lastStateKey"
-  private let lastPresetNumberKey = "lastPresetNumberKey"
 
   private let playEngine: SimplePlayEngine
   private let locateQueue: DispatchQueue
@@ -230,40 +229,27 @@ public extension AudioUnitLoader {
    */
   func save() {
     guard let audioUnit = auAudioUnit else { return }
-    locateQueue.async { [weak self] in self?.doSave(audioUnit) }
-  }
+    os_log(.debug, log: log, "save BEGIN - %{public}s", audioUnit.currentPreset.descriptionOrNil)
 
-  private func doSave(_ audioUnit: AUAudioUnit) {
-    os_log(.debug, log: log, "doSave BEGIN - %{public}s", audioUnit.currentPreset.descriptionOrNil)
-
-    // Theoretically, we only need to save the full state if `currentPreset` is nil. However, it is possible that the
-    // preset is a user preset and is removed some time in the future by another application. So we always save the
-    // full state here (if available).
     if let lastState = audioUnit.fullStateForDocument {
       UserDefaults.standard.set(lastState, forKey: lastStateKey)
     } else {
       UserDefaults.standard.removeObject(forKey: lastStateKey)
     }
 
-    os_log(.debug, log: log, "doSave END")
+    os_log(.debug, log: log, "save END")
   }
 
   /**
    Restore the state of the AUv3 component using values found in UserDefaults.
    */
   func restore() {
-    guard let audioUnit = auAudioUnit else { return }
-    locateQueue.async { [weak self] in self?.doRestore(audioUnit) }
-  }
+    guard let audioUnit = auAudioUnit else { fatalError() }
+    os_log(.debug, log: log, "restore BEGIN")
 
-  private func doRestore(_ audioUnit: AUAudioUnit) {
-    os_log(.debug, log: log, "doRestore BEGIN")
-
-    // Fetch all of the values to use before modifying AUv3 state.
     let lastState = UserDefaults.standard.dictionary(forKey: lastStateKey)
-    os_log(.debug, log: log, "doRestore - lastState: %{public}s", lastState.descriptionOrNil)
+    os_log(.debug, log: log, "restore - lastState: %{public}s", lastState.descriptionOrNil)
 
-    // Restore state of component
     if let lastState = lastState {
       audioUnit.fullStateForDocument = lastState
     }
