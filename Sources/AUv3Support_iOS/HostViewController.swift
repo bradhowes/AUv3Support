@@ -261,21 +261,21 @@ private extension HostViewController {
 
   func connectParametersToControls(_ audioUnit: AUAudioUnit) {
     os_log(.debug, log: log, "connectParametersToControls BEGIN")
-    guard let parameterTree = audioUnit.parameterTree else {
-      fatalError("FilterAudioUnit does not define any parameters.")
-    }
+//    guard let parameterTree = audioUnit.parameterTree else {
+//      fatalError("FilterAudioUnit does not define any parameters.")
+//    }
 
     allParameterValuesObserverToken = audioUnit.observe(\.allParameterValues) { [weak self] _, _ in
       guard let self = self else { return }
       os_log(.debug, log: self.log, "allParameterValues changed")
       DispatchQueue.main.async { self.updateView() }
     }
-
-    parameterTreeObserverToken = parameterTree.token(byAddingParameterObserver: { [weak self] address, _ in
-      guard let self = self else { return }
-      os_log(.debug, log: self.log, "parameterTree changed - %d", address)
-      DispatchQueue.main.async { self.updateView() }
-    })
+//
+//    parameterTreeObserverToken = parameterTree.token(byAddingParameterObserver: { [weak self] address, _ in
+//      guard let self = self else { return }
+//      os_log(.debug, log: self.log, "parameterTree changed - %d", address)
+//      DispatchQueue.main.async { self.updateView() }
+//    })
     os_log(.debug, log: log, "connectParametersToControls END")
   }
 
