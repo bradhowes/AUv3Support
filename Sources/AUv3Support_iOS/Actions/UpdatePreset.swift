@@ -14,7 +14,7 @@ extension HostViewController {
       self.presetsManager = presetsManager
     }
 
-    func start(_ action: UIAction) {
+    func handler(_ action: UIAction) {
       guard let preset = presetsManager.currentPreset else { fatalError("nil current preset") }
       do {
         try presetsManager.update(preset: preset)

@@ -352,19 +352,19 @@ private extension HostViewController {
   }
 
   func makeCreatePresetAction(presetsManager: UserPresetsManager) -> UIAction {
-    .init(title: "New", handler: CreatePreset(self, presetsManager: presetsManager).start(_:))
+    .init(title: "New", handler: CreatePreset(self, presetsManager: presetsManager).handler(_:))
   }
 
   func makeUpdatePresetAction(presetsManager: UserPresetsManager) -> UIAction {
-    .init(title: "Update", handler: UpdatePreset(self, presetsManager: presetsManager).start(_:))
+    .init(title: "Update", handler: UpdatePreset(self, presetsManager: presetsManager).handler(_:))
   }
 
   func makeRenamePresetAction(presetsManager: UserPresetsManager) -> UIAction {
-    .init(title: "Rename", handler: RenamePreset(self, presetsManager: presetsManager).start(_:))
+    .init(title: "Rename", handler: RenamePreset(self, presetsManager: presetsManager).handler(_:))
   }
 
   func makeDeletePresetAction(presetsManager: UserPresetsManager) -> UIAction {
-    UIAction(title: "Delete", handler: DeletePreset(self, presetsManager: presetsManager).start(_:))
+    UIAction(title: "Delete", handler: DeletePreset(self, presetsManager: presetsManager).handler(_:))
   }
 }
 

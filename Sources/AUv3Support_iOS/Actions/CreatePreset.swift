@@ -15,7 +15,7 @@ extension HostViewController {
       self.presetsManager = presetsManager
     }
 
-    func start(_ action: UIAction) {
+    func handler(_ action: UIAction) {
       actionSupporter.askForName(title: "New Preset", placeholder: "Preset Name", activity: "Create") { name in
         self.checkIsUniquePreset(named: name)
       }

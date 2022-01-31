@@ -14,7 +14,7 @@ extension HostViewController {
       self.presetsManager = presetsManager
     }
 
-    func start(_ action: UIAction) {
+    func handler(_ action: UIAction) {
       actionSupporter.confirmAction(
         title: "Delete Preset", message: "Do you wish to delete the preset? This cannot be undone.", deletePreset)
     }

@@ -14,7 +14,7 @@ extension HostViewController {
       self.presetsManager = presetsManager
     }
 
-    func start(_ action: UIAction) {
+    func handler(_ action: UIAction) {
       guard let name = presetsManager.currentPreset?.name else { fatalError() }
       actionSupporter.askForName(title: "Rename Preset", placeholder: name, activity: "Rename") { name in
         self.renamePreset(with: name)
