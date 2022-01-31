@@ -3,7 +3,7 @@
 import AudioToolbox
 
 /**
- Protocol for controls that can provide a parameter value.
+ Protocol for UI controls that can provide a parameter value.
  */
 public protocol AUParameterValueProvider: AnyObject {
 
@@ -14,7 +14,7 @@ public protocol AUParameterValueProvider: AnyObject {
 /**
  Protocol for controls that represent parameter values and can edit them.
  */
-public protocol AUParameterControl: AnyObject {
+public protocol AUParameterEditor: AnyObject {
 
   /// The AUParameter being edited by the control
   var parameter: AUParameter { get }

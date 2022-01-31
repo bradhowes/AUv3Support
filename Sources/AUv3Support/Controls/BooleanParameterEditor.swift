@@ -4,9 +4,9 @@ import CoreAudioKit
 import os
 
 /**
- Control for a boolean parameter value that uses a switch element.
+ An editor for a boolean parameter value that uses a switch element.
  */
-public final class BooleanParameterControl {
+public final class BooleanParameterEditor {
   private let log: OSLog
   private let parameterObserverToken: AUParameterObserverToken
   private let booleanControl: Switch
@@ -23,7 +23,7 @@ public final class BooleanParameterControl {
   }
 }
 
-extension BooleanParameterControl: AUParameterControl {
+extension BooleanParameterEditor: AUParameterEditor {
 
   public func controlChanged(source: AUParameterValueProvider) {
     os_log(.debug, log: log, "controlChanged - %f", source.value)

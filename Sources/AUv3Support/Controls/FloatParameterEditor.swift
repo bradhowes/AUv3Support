@@ -22,9 +22,9 @@ public protocol RangedControl: NSObject {
 }
 
 /**
- Control for a float value parameter that relies on a RangedControl that provides a value between a range of values.
+ An editor for a float value parameter that relies on a RangedControl to provide a value between a range of values.
  */
-public final class FloatParameterControl: NSObject {
+public final class FloatParameterEditor: NSObject {
   private let log: OSLog
 
   public let parameter: AUParameter
@@ -53,7 +53,7 @@ public final class FloatParameterControl: NSObject {
    */
   public init(parameterObserverToken: AUParameterObserverToken, parameter: AUParameter,
               formatter: @escaping (AUValue) -> String, rangedControl: RangedControl, label: Label, logValues: Bool) {
-    self.log = Shared.logger("FloatParameterControl")
+    self.log = Shared.logger("FloatParameterEditor")
     self.parameterObserverToken = parameterObserverToken
     self.parameter = parameter
     self.formatter = formatter
@@ -81,7 +81,7 @@ public final class FloatParameterControl: NSObject {
   }
 }
 
-extension FloatParameterControl: AUParameterControl {
+extension FloatParameterEditor: AUParameterEditor {
 
   /**
    Update the controls using the value from the given value provider.
@@ -129,7 +129,7 @@ extension FloatParameterControl: AUParameterControl {
   }
 }
 
-private extension FloatParameterControl {
+private extension FloatParameterEditor {
 
 #if os(macOS)
   func onFocusChanged(hasFocus: Bool) {
@@ -183,7 +183,7 @@ private extension FloatParameterControl {
 }
 
 #if os(macOS)
-extension FloatParameterControl: NSTextFieldDelegate {
+extension FloatParameterEditor: NSTextFieldDelegate {
 
   public func controlTextDidEndEditing(_ obj: Notification) {
     os_log(.debug, log: log, "controlTextDidEndEditing")
