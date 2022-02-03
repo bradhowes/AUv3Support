@@ -7,7 +7,10 @@ import UIKit
 #endif
 
 public extension View {
-  
+
+  /**
+   Add constraints such that the edges of this view coincide with the edges of its parent.
+   */
   func pinToSuperviewEdges() {
     guard let superview = superview else { return }
     translatesAutoresizingMaskIntoConstraints = false

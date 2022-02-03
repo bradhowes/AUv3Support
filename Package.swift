@@ -39,7 +39,7 @@ let package = Package(
     ),
     .testTarget(
       name: "AUv3SupportTests",
-      dependencies: []
+      dependencies: ["AUv3Support"]
     )
   ]
 )

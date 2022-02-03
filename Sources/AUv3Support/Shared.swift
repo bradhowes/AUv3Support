@@ -4,8 +4,8 @@ import Foundation
 import CoreAudioKit
 import os.log
 
+/// Namespace for entities that are shared across package boundaries.
 public enum Shared {}
-
 extension Shared {
 
   /// The top-level identifier to use for logging.

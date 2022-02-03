@@ -18,7 +18,6 @@ public extension String {
 }
 
 public extension NSObject {
-
+  /// Obtain a pointer string value for the given object.
   var pointer: String { String.pointer(self) }
-
 }
