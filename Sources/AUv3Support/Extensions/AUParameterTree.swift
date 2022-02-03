@@ -11,8 +11,8 @@ public extension AUParameterTree {
    - returns: the found value
    */
   @inlinable
-  func parameter(withAddress address: ParameterAddressProvider) -> AUParameter? {
-    parameter(withAddress: address.parameterAddress)
+  func parameter(source: ParameterProvider) -> AUParameter? {
+    parameter(withAddress: source.parameterAddress)
   }
 
   /**
@@ -22,14 +22,15 @@ public extension AUParameterTree {
    - returns: new AUParameter instance
    */
   @inlinable
-  class func createParameter(from definition: ParameterDefinition) {
+  class func createParameter(from source: ParameterProvider) {
     var flags: AudioUnitParameterOptions = [.flag_IsReadable, .flag_IsWritable]
-    if definition.ramping {
+    if source.parameterRamping {
       flags.insert(.flag_CanRamp)
     }
-    createParameter(withIdentifier: definition.identifier, name: definition.localizedName,
-                    address: definition.addressProvider.parameterAddress, min: definition.maxValue,
-                    max: definition.maxValue, unit: definition.unit, unitName: definition.unitName, flags: flags,
+    let closedRange = source.parameterClosedRange
+    createParameter(withIdentifier: source.parameterIdentifier, name: source.parameterLocalizedName,
+                    address: source.parameterAddress, min: closedRange.lowerBound, max: closedRange.upperBound,
+                    unit: source.parameterUnit, unitName: source.parameterUnitName, flags: flags,
                     valueStrings: nil, dependentParameters: nil)
   }
 }
