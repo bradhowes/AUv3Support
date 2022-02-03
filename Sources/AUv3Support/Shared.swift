@@ -1,7 +1,5 @@
 // Copyright © 2022 Brad Howes. All rights reserved.
 
-import Foundation
-import CoreAudioKit
 import os.log
 
 /// Namespace for entities that are shared across package boundaries.
