@@ -2,7 +2,7 @@
 ![SPM](https://img.shields.io/badge/SPM-5.5-red.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-A31F34.svg)](https://opensource.org/licenses/MIT)
 
-# AUv3Support
+# Overview
 
 Swift package containing useful code for AUv3 app extensions. There are three products so far:
 
@@ -13,19 +13,23 @@ Swift package containing useful code for AUv3 app extensions. There are three pr
 - AUv3-Support-iOS -- classes that provide a simple AUv3 hosting environment for the AUv3 app extension.
   Provides an audio chain that sends a sample loop through the AUv3 audio unit and out to the speaker. Also
   provides for user preset management.
-- AUv3-Support-macOS -- similar to the above but for macOS. Unfortunately, the setup is not as straightfoward on
+- AUv3-Support-macOS -- similar to the above but for macOS. Unfortunately, the setup is not as straight-forward on
   macOS as it is for iOS. So far I have not been able to get a good load from a storyboard held in this package:
   menu items not connected to delegate slots, toolbar buttons not connected to the window.
 
-In the AUv3-Support product:
+# AUv3Support
 
+In the AUv3-Support product you will find various classes and extension to make things easier when working with AUv3
+components:
+
+- Editors -- a collection parameter editors that work on iOS and macOS via protocol conformance. They properly 
+update themselves when a audio unit loads a preset, and they properly communicate changes made the user. There is a 
+`BooleanParameterEditor` that works with a UISwitch/NSSwitch control, and there is a `FloatParameterEditor` that works 
+with anything that can report out a floating-point value as well as the min/max ranges the value may have.
 - AudioUnitLoader -- a basic AUv3 host that locates your AUv3 component and connects it up
 - SimplePlayEngine -- a simple AudioUnit graph that plays audio from a file and sends it through the loaded
   component and then to the speaker.
 - UserPresetManager -- manages the user presets of an AUv3 component
-- Controls -- contains generic controls for working with AUParameters. There is a `BooleanParameterControl` that works
-with a UISwitch/NSSwitch control, and there is a `FloatParameterControl` that works with anything that can report out
-a floating-point value as well as the min/max ranges the value may have.
 - Extensions -- folder with sundry extensions that makes life easier
 - Resources -- audio files that can be played using the `SimplePlayEngine`
 
@@ -36,7 +40,58 @@ allow you to play audio through it. The basics for getting it to work are:
 
 1. Create a `HostViewConfig` that contains values specific to your AUv3 component and then pass it to the
 `Shared.embedHostView` static function along with your app's main `UIViewController` instance.
-2. That's it. No step 2.
+2. Modify your `AppDelegate.swift` file to inherit from the AppDelegate found in this package. Something like this is
+good:
+```
+import UIKit
+import AUv3Support
+import AUv3Support_iOS
+import os.log
+
+@main
+final class AppDelegate: AUv3Support_iOS.AppDelegate {
+  // NOTE: this special form sets the subsystem name and must run before any other logger calls.
+  private let log: OSLog = Shared.logger(Bundle.main.auBaseName + "Host", "AppDelegate")
+}
+```
+3. Modify your `MainViewController.swift` to do the following:
+```
+import AUv3Support
+import AUv3Support_iOS
+import CoreAudioKit
+import UIKit
+
+final class MainViewController: UIViewController {
+
+  private var hostViewController: HostViewController!
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    
+    guard let delegate = UIApplication.shared.delegate as? AppDelegate else { fatalError() }
+
+    let bundle = Bundle.main
+    let component = AudioComponentDescription(componentType: bundle.auComponentType,
+                                              componentSubType: bundle.auComponentSubtype,
+                                              componentManufacturer: bundle.auComponentManufacturer,
+                                              componentFlags: 0, componentFlagsMask: 0)
+
+    let config = HostViewConfig(name: bundle.auBaseName, version: bundle.releaseVersionNumber,
+                                appStoreId: bundle.appStoreId,
+                                componentDescription: component, sampleLoop: .sample1) { url in
+      UIApplication.shared.open(url, options: [:], completionHandler: nil)
+    }
+
+    let hostViewController = Shared.embedHostView(into: self, config: config)
+    delegate.setStopPlayingBlock { hostViewController.stopPlaying() }
+    self.hostViewController = hostViewController
+  }
+}
+```
+4. Profit!
+
+The `Actions` folder contains flows for managing user presets such as creating, deleting and renaming. The `HostView` 
+storyboard holds a set of UI elements that are useful for a AUv3 demonstration app.
 
 # AUv3Support-macOS
 
