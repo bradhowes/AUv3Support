@@ -5,7 +5,7 @@ import AUv3Support
 import AudioToolbox
 
 enum UserMenuItem: Int {
-  case save
+  case save = 0 // Code expects that the commands start at the top of the menu
   case update
   case rename
   case delete
