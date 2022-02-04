@@ -259,10 +259,12 @@ private extension HostViewController {
 
   func connectParametersToControls(_ audioUnit: AUAudioUnit) {
     os_log(.debug, log: log, "connectParametersToControls BEGIN")
-    allParameterValuesObserverToken = audioUnit.observe(\.allParameterValues) { [unowned self] _, _ in
-      os_log(.debug, log: self.log, "allParameterValues changed - %d", Thread.isMainThread)
-      self.updateView()
+
+    allParameterValuesObserverToken = audioUnit.observe(\.allParameterValues) { _, _ in
+      os_log(.info, log: self.log, "allParameterValues changed")
+      DispatchQueue.performOnMain { self.updateView() }
     }
+
     os_log(.debug, log: log, "connectParametersToControls END")
   }
 
