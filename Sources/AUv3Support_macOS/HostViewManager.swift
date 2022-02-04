@@ -18,7 +18,7 @@ public final class HostViewManager: NSObject {
   private var auAudioUnit: AUAudioUnit? { avAudioUnit?.auAudioUnit }
   private var audioUnitViewController: NSViewController?
 
-  private var allParameterValuesObserverToken: NSKeyValueObservation?
+  private var currentPresetObserverToken: NSKeyValueObservation?
 
   private var showingInitialPrompt = false
 
@@ -173,10 +173,12 @@ extension HostViewManager {
 
   public func connectParametersToControls(_ audioUnit: AUAudioUnit) {
     os_log(.debug, log: log, "connectParametersToControls BEGIN")
-    allParameterValuesObserverToken = audioUnit.observe(\.allParameterValues) { [unowned self] _, _ in
-      os_log(.debug, log: self.log, "allParameterValues changed")
-      self.updateView()
+
+    currentPresetObserverToken = audioUnit.observe(\.currentPreset) { _, _ in
+      os_log(.debug, log: self.log, "currentPreset changed - %{public}s", audioUnit.currentPreset.descriptionOrNil)
+      DispatchQueue.main.async { self.updateView() }
     }
+
     os_log(.debug, log: log, "connectParametersToControls END")
   }
 

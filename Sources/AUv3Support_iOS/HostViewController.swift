@@ -63,8 +63,7 @@ public final class HostViewController: UIViewController {
   @IBOutlet public weak var instructions: UIView!
   @IBOutlet public weak var instructionsLabel: UILabel!
 
-  private var allParameterValuesObserverToken: NSKeyValueObservation?
-  private var parameterTreeObserverToken: AUParameterObserverToken?
+  private var currentPresetObserverToken: NSKeyValueObservation?
 }
 
 // MARK: - View Management
@@ -261,16 +260,10 @@ private extension HostViewController {
   func connectParametersToControls(_ audioUnit: AUAudioUnit) {
     os_log(.debug, log: log, "connectParametersToControls BEGIN")
 
-    allParameterValuesObserverToken = audioUnit.observe(\.allParameterValues) { _, _ in
-      os_log(.info, log: self.log, "allParameterValues changed")
+    currentPresetObserverToken = audioUnit.observe(\.currentPreset) { _, _ in
+      os_log(.info, log: self.log, "currentPreset changed")
       DispatchQueue.main.async { self.updateView() }
     }
-
-    parameterTreeObserverToken = audioUnit.parameterTree!.token(byAddingParameterObserver: { [weak self] address, _ in
-      guard let self = self else { return }
-      os_log(.info, log: self.log, "parameterTree changed - %d", address)
-      DispatchQueue.main.async { self.updateView() }
-    })
 
     os_log(.debug, log: log, "connectParametersToControls END")
   }
