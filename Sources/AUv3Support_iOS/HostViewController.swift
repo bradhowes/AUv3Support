@@ -262,7 +262,7 @@ private extension HostViewController {
 
     allParameterValuesObserverToken = audioUnit.observe(\.allParameterValues) { _, _ in
       os_log(.info, log: self.log, "allParameterValues changed")
-      DispatchQueue.performOnMain { self.updateView() }
+      DispatchQueue.main.async { self.updateView() }
     }
 
     os_log(.debug, log: log, "connectParametersToControls END")
