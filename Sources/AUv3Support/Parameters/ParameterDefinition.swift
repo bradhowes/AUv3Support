@@ -19,9 +19,11 @@ public struct ParameterDefinition {
   /// When true, a parameter should change to a new value over N samples in order to minimize audio noise due to
   /// discontinuities in the signal processing algorithms from large changes in a parameter value.
   let ramping: Bool
+  /// If true, show values on a log scale.
+  let logScale: Bool
 
   public init(_ identifier: String, localized: String, address: ParameterAddressProvider, range: ClosedRange<AUValue>,
-              unit: AudioUnitParameterUnit, unitName: String?, ramping: Bool) {
+              unit: AudioUnitParameterUnit, unitName: String?, ramping: Bool, logScale: Bool) {
     self.identifier = identifier
     self.localized = localized
     self.address = address.parameterAddress
@@ -29,6 +31,7 @@ public struct ParameterDefinition {
     self.unit = unit
     self.unitName = unitName
     self.ramping = ramping
+    self.logScale = logScale
   }
 
   /**
@@ -42,7 +45,7 @@ public struct ParameterDefinition {
   public static func defBool(_ identifier: String, localized: String,
                              address: ParameterAddressProvider) -> ParameterDefinition {
     .init(identifier, localized: localized, address: address, range: 0.0...1.0, unit: .boolean, unitName: nil,
-          ramping: false)
+          ramping: false, logScale: false)
   }
 
   /**
@@ -59,9 +62,9 @@ public struct ParameterDefinition {
    */
   public static func defFloat(_ identifier: String, localized: String, address: ParameterAddressProvider,
                               range: ClosedRange<AUValue>, unit: AudioUnitParameterUnit, unitName: String? = nil,
-                              ramping: Bool = true) -> ParameterDefinition {
+                              ramping: Bool = true, logScale: Bool = false) -> ParameterDefinition {
     .init(identifier, localized: localized, address: address, range: range, unit: unit, unitName: unitName,
-          ramping: ramping)
+          ramping: ramping, logScale: logScale)
   }
 
   /**
@@ -75,19 +78,17 @@ public struct ParameterDefinition {
   public static func defPercent(_ identifier: String, localized: String,
                                 address: ParameterAddressProvider) -> ParameterDefinition {
     .init(identifier, localized: localized, address: address, range: 0.0...100.0, unit: .percent, unitName: nil,
-          ramping: true)
+          ramping: true, logScale: false)
   }
 
   /// Obtain an AUParameter using the attributes in the definition.
   public var parameter: AUParameter {
     var flags: AudioUnitParameterOptions = [.flag_IsReadable, .flag_IsWritable]
-    if ramping {
-      flags.insert(.flag_CanRamp)
-    }
+    if ramping { flags.insert(.flag_CanRamp) }
+    if logScale { flags.insert(.flag_DisplayLogarithmic) }
     return AUParameterTree.createParameter(withIdentifier: identifier, name: localized,
                                            address: address, min: range.lowerBound,
                                            max: range.upperBound, unit: unit, unitName: unitName,
                                            flags: flags, valueStrings: nil, dependentParameters: nil)
   }
 }
-
