@@ -1,5 +1,7 @@
 // Copyright © 2022 Brad Howes. All rights reserved.
 
+#if os(iOS)
+
 /**
  Functionality required to support preset editing actions. Broken out here to remove dependency on UIViewController.
  */
@@ -40,3 +42,5 @@ public protocol ActionSupporter: AnyObject {
    */
   func completeAction()
 }
+
+#endif

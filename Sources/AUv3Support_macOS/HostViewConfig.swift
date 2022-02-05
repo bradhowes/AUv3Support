@@ -1,5 +1,7 @@
 // Copyright © 2022 Brad Howes. All rights reserved.
 
+#if os(macOS)
+
 import CoreAudioKit
 import AUv3Support
 import AppKit
@@ -37,3 +39,4 @@ public struct HostViewConfig {
   }
 }
 
+#endif

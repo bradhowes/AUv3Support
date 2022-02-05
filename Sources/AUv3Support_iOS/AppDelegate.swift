@@ -1,5 +1,7 @@
 // Copyright © 2022 Brad Howes. All rights reserved.
 
+#if os(iOS)
+
 import AUv3Support
 import UIKit
 import AVKit
@@ -15,7 +17,7 @@ open class AppDelegate: UIResponder, UIApplicationDelegate {
     super.init()
   }
 
-  
+
   public func setStopPlayingBlock(_ block: @escaping () -> Void) {
     self.stopPlayingBlock = block
   }
@@ -67,3 +69,5 @@ open class AppDelegate: UIResponder, UIApplicationDelegate {
     stopPlayingBlock?()
   }
 }
+
+#endif

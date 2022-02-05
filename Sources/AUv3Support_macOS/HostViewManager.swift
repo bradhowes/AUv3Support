@@ -1,5 +1,7 @@
 // Copyright © 2022 Brad Howes. All rights reserved.
 
+#if os(macOS)
+
 import AUv3Support
 import CoreAudioKit
 import Cocoa
@@ -213,3 +215,5 @@ extension HostViewManager {
     alert.beginSheetModal(for: config.viewController.view.window!){ _ in }
   }
 }
+
+#endif

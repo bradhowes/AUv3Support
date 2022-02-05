@@ -1,5 +1,7 @@
 // Copyright © 2022 Brad Howes. All rights reserved.
 
+#if os(iOS)
+
 import AUv3Support
 import UIKit
 
@@ -31,3 +33,5 @@ extension HostViewController {
     }
   }
 }
+
+#endif

@@ -1,5 +1,7 @@
 // Copyright © 2022 Brad Howes. All rights reserved.
 
+#if os(macOS)
+
 import Cocoa
 import AUv3Support
 import AudioToolbox
@@ -261,3 +263,5 @@ private extension Array where Element == NSMenuItem {
     self[index.rawValue]
   }
 }
+
+#endif

@@ -1,5 +1,7 @@
 // Copyright © 2022 Brad Howes. All rights reserved.
 
+#if os(iOS)
+
 import AUv3Support
 import AVKit
 import UIKit
@@ -396,7 +398,7 @@ extension HostViewController: ActionSupporter {
 }
 
 extension HostViewController {
-  
+
   public func notify(title: String, message: String) {
     let controller = UIAlertController(title: title, message: message, preferredStyle: .alert)
     controller.addAction(UIAlertAction(title: "OK", style: .default))
@@ -410,3 +412,5 @@ extension HostViewController {
     present(controller, animated: true)
   }
 }
+
+#endif

@@ -1,5 +1,7 @@
 // Copyright © 2022 Brad Howes. All rights reserved.
 
+#if os(iOS)
+
 import CoreAudioKit
 import AUv3Support
 
@@ -34,3 +36,5 @@ public struct HostViewConfig {
     self.appStoreVisitor = appStoreVisitor
   }
 }
+
+#endif
