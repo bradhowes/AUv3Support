@@ -52,6 +52,10 @@ public final class FilterAudioUnit: AUAudioUnit {
     }
     set {
       os_log(.info, log: log, "set currentPreset - %{public}s", newValue.descriptionOrNil)
+      guard _currentPreset != newValue else {
+        return
+      }
+
       if let preset = newValue {
         if preset.number >= 0 {
           os_log(.info, log: log, "factoryPreset %d", preset.number)
