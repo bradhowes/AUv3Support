@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.5
 
 import PackageDescription
 
@@ -8,9 +8,14 @@ let package = Package(
   products: [
     .library(name: "AUv3-Support", targets: ["AUv3Support"]),
     .library(name: "AUv3-Support-iOS", targets: ["AUv3Support_iOS"]),
-    .library(name: "AUv3-Support-macOS", targets: ["AUv3Support_macOS"])
+    .library(name: "AUv3-Support-macOS", targets: ["AUv3Support_macOS"]),
+    .library(name: "AUv3-DSP-Headers", targets: ["DSPHeaders"]),
   ],
   targets: [
+    .target(
+      name: "DSPHeaders",
+      exclude: ["README.md"]
+    ),
     .target(
       name: "AUv3Support",
       dependencies: [],
@@ -41,5 +46,6 @@ let package = Package(
       name: "AUv3SupportTests",
       dependencies: ["AUv3Support"]
     )
-  ]
+  ],
+  cxxLanguageStandard: .cxx17
 )

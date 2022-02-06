@@ -52,14 +52,14 @@ public final class FloatParameterEditor: NSObject {
    - parameter logValues: true if showing log values
    */
   public init(parameterObserverToken: AUParameterObserverToken, parameter: AUParameter,
-              formatter: @escaping (AUValue) -> String, rangedControl: RangedControl, label: Label, logValues: Bool) {
+              formatter: @escaping (AUValue) -> String, rangedControl: RangedControl, label: Label) {
     self.log = Shared.logger("FloatParameterEditor")
     self.parameterObserverToken = parameterObserverToken
     self.parameter = parameter
     self.formatter = formatter
     self.rangedControl = rangedControl
     self.label = label
-    self.useLogValues = logValues
+    self.useLogValues = parameter.flags.contains(.flag_DisplayLogarithmic)
     super.init()
 
     self.label.text = parameter.displayName
