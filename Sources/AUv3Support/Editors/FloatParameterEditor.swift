@@ -6,7 +6,7 @@ import os.log
 /**
  Interface for an object that maintains a value between a range of min and max values.
  */
-public protocol RangedControl: NSObject {
+public protocol RangedControl: TagHolder {
 
   /// The minimum value that the control can represent
   var minimumValue: Float { get set }
@@ -16,10 +16,9 @@ public protocol RangedControl: NSObject {
 
   /// The current value of the control
   var value: Float { get set }
-
-  /// The AUParameter address assigned to the control's tag attribute
-  var tag: Int { get }
 }
+
+extension Label: TagHolder {}
 
 /**
  An editor for a float value parameter that relies on a RangedControl to provide a value between a range of values.
@@ -62,6 +61,9 @@ public final class FloatParameterEditor: NSObject {
     self.useLogValues = parameter.flags.contains(.flag_DisplayLogarithmic)
     super.init()
 
+    rangedControl.setParameterAddress(parameter.address)
+    label.setParameterAddress(parameter.address)
+    
     self.label.text = parameter.displayName
 #if os(macOS)
     self.label.delegate = self
