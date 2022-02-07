@@ -51,6 +51,8 @@ struct RampingParameter {
     return value_;
   }
 
+  T internal() const { return get(); }
+
 private:
   T value_;
   T rampTarget_;
