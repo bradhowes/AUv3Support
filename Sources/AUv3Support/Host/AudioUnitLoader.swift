@@ -54,25 +54,20 @@ public final class AudioUnitLoader: NSObject {
 
   /// AudioUnit controlled by the view controller
   public private(set) var avAudioUnit: AVAudioUnit?
-
+  /// Convenience access to the wrapped auAudioUnit
   public var auAudioUnit: AUAudioUnit? { avAudioUnit?.auAudioUnit }
-
   /// View controller for the AudioUnit interface
   public private(set) var viewController: ViewController?
-
   /// True if the audio engine is currently playing
   public var isPlaying: Bool { playEngine.isPlaying }
-
   /// Delegate to signal when everything is wired up.
   public weak var delegate: AudioUnitLoaderDelegate? { didSet { notifyDelegate() } }
 
   private let lastStateKey = "lastStateKey"
-
   private let playEngine: SimplePlayEngine
   private let locateQueue: DispatchQueue
   private let componentDescription: AudioComponentDescription
   private let searchCriteria: AudioComponentDescription
-
   private var creationError: AudioUnitLoaderError? { didSet { notifyDelegate() } }
   private var detectionTimer: Timer?
 
@@ -230,7 +225,7 @@ public extension AudioUnitLoader {
     guard let audioUnit = auAudioUnit else { return }
     os_log(.debug, log: log, "save BEGIN - %{public}s", audioUnit.currentPreset.descriptionOrNil)
 
-    if let lastState = audioUnit.fullStateForDocument {
+    if let lastState = audioUnit.fullState {
       UserDefaults.standard.set(lastState, forKey: lastStateKey)
     } else {
       UserDefaults.standard.removeObject(forKey: lastStateKey)
@@ -250,7 +245,7 @@ public extension AudioUnitLoader {
     os_log(.debug, log: log, "restore - lastState: %{public}s", lastState.descriptionOrNil)
 
     if let lastState = lastState {
-      audioUnit.fullStateForDocument = lastState
+      audioUnit.fullState = lastState
     }
   }
 }
