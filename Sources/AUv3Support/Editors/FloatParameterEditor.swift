@@ -188,9 +188,32 @@ private extension FloatParameterEditor {
 extension FloatParameterEditor: NSTextFieldDelegate {
 
   public func controlTextDidEndEditing(_ obj: Notification) {
-    os_log(.debug, log: log, "controlTextDidEndEditing")
-    label.onFocusChange(false)
-    NSApp.keyWindow?.makeFirstResponder(nil)
+    os_log(.debug, log: log, "controlTextDidEndEditing BEGIN")
+    if let control = obj.object as? FocusAwareTextField {
+      os_log(.debug, log: log, "controlTextDidEndEditing - stop being first responder")
+      control.onFocusChange(false)
+      control.window?.makeFirstResponder(nil)
+    }
+    os_log(.debug, log: log, "controlTextDidEndEditing END")
+  }
+
+  /**
+   Detect use of ENTER or RETURN key and give up being first responder.
+
+   - parameter control: the editing control that is active
+   - parameter textView: the text view that is active
+   - parameter commandSelector: the command that is being interrogated
+   - returns: true if the command was handled by this routine, false otherwise
+   */
+  public func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+    os_log(.debug, log: log, "control:textView:doCommandBy BEGIN")
+    if (commandSelector == #selector(NSResponder.insertNewline(_:))) {
+      os_log(.debug, log: log, "control:textView:doCommandBy END - captured ENTER/RETURN")
+      control.window?.makeFirstResponder(nil)
+      return true
+    }
+    os_log(.debug, log: log, "control:textView:doCommandBy END")
+    return false
   }
 }
 #endif

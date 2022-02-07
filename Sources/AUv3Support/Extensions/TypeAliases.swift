@@ -1,5 +1,7 @@
 // Copyright © 2022 Brad Howes. All rights reserved.
 
+import os.log
+
 #if os(iOS)
 
 import UIKit
@@ -23,6 +25,8 @@ public typealias View = NSView
 public typealias ViewController = NSViewController
 
 public extension NSView {
+
+  /// Replicate the `backgroundColor` property found in `UIView`.
   var backgroundColor: NSColor? {
     get {
       guard let colorRef = self.layer?.backgroundColor else { return nil }
@@ -36,6 +40,8 @@ public extension NSView {
 }
 
 public extension NSTextField {
+
+  /// Replicate the `text` property found in `UILabel`.
   var text: String? {
     get { self.stringValue }
     set { self.stringValue = newValue ?? "" }
@@ -43,6 +49,8 @@ public extension NSTextField {
 }
 
 public extension NSSwitch {
+
+  /// Replicate the `isOn` property found in `UISwitch`.
   var isOn: Bool {
     get { state == .on }
     set { state = newValue ? .on : .off }
@@ -50,16 +58,49 @@ public extension NSSwitch {
 }
 
 /**
- This seems like a hack, but it works. Allow for others to identify when a NSTextField is the first responder. There
- are notifications from the NSWindow but this seems to be the easiest for AUv3 work.
+ Custom `NSTextField` that provides a way to convey an `onFocusChange` event to another party. This is done in two
+ parts:
+
+ - When the text field becomes the first responder and starts editing, it invokes `onFocusChange(true)`.
+ - When the text field ends editing, the *delegate* invokes `onFocusChange(false)` from `controlTextDidEndEditing`.
+ Also, it should probably capture ENTER/RETURN key events and give up first responder state when they are seen.
+
+ Here is an example delegate implementation that does the job:
+ ```
+ extension Controller: NSTextFieldDelegate {
+
+   public func controlTextDidEndEditing(_ obj: Notification) {
+     if let control = obj.object as? FocusAwareTextField {
+       control.onFocusChange(false)
+       control.window?.makeFirstResponder(nil)
+     }
+   }
+
+   public func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+     if (commandSelector == #selector(NSResponder.insertNewline(_:))) {
+       control.window?.makeFirstResponder(nil)
+       return true
+     }
+     return false
+   }
+ }
+```
  */
 final public class FocusAwareTextField: NSTextField {
-  
+
+  /**
+   Allow for others to identify when a NSTextField is the first responder. There are notifications from the NSWindow but
+   this seems to be the easiest for AUv3 work. Perhaps it is a hack, but it works and I know of no other way to
+   accomplish the same in Cocoa.
+   */
   public var onFocusChange: (Bool) -> Void = { _ in }
-  
+
   override public func becomeFirstResponder() -> Bool {
-    onFocusChange(true)
-    return super.becomeFirstResponder()
+    if super.becomeFirstResponder() {
+      onFocusChange(true)
+      return true
+    }
+    return false
   }
 }
 
