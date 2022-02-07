@@ -91,6 +91,14 @@ extension PresetsMenuManager {
    */
   @IBAction func createPreset(_ sender: NSMenuItem) {
     guard let presetName = getNewPresetName(default: "Preset \(-userPresetsManager.nextNumber)") else { return }
+    if let existing = userPresetsManager.find(name: presetName) {
+      let confirm = confirmReplace(name: presetName)
+      if confirm {
+        try? userPresetsManager.update(preset: existing)
+        build()
+      }
+      return
+    }
     try? userPresetsManager.create(name: presetName)
     build()
   }
@@ -239,6 +247,22 @@ private extension PresetsMenuManager {
       return value.isEmpty ? nil : value
     }
     return nil
+  }
+
+  func confirmReplace(name: String) -> Bool {
+    let prompt = NSAlert()
+    prompt.alertStyle = .warning
+    prompt.addButton(withTitle: "Cancel")
+    prompt.messageText = "Update Preset \"\(name)\"?"
+    prompt.informativeText = "There is already a preset with the name \"\(name)\". Confirm to update it."
+
+    let button = prompt.addButton(withTitle: "Update")
+    if #available(macOS 11.0, *) {
+      button.hasDestructiveAction = true
+    }
+
+    let response: NSApplication.ModalResponse = prompt.runModal()
+    return response == .OK
   }
 
   func confirmDelete(name: String) -> Bool {

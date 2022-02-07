@@ -5,6 +5,7 @@ import XCTest
 let logInit = Shared.logger("SubSystem", "Category")
 
 class MockAudioUnit: AUAudioUnitPresetsFacade {
+  private let log = Shared.logger("MockAudioUnit")
   var factoryPresetsNonNil: [AUAudioUnitPreset] = [.init(number: 0, name: "Zero"),
                                                    .init(number: 1, name: "One")
   ]
