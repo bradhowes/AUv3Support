@@ -66,6 +66,7 @@ public final class HostViewController: UIViewController {
   @IBOutlet public weak var instructionsLabel: UILabel!
 
   private var currentPresetObserverToken: NSKeyValueObservation?
+  private var userPresetsObserverToken: NSKeyValueObservation?
 }
 
 // MARK: - View Management
@@ -267,6 +268,11 @@ private extension HostViewController {
       DispatchQueue.main.async { self.updateView() }
     }
 
+    userPresetsObserverToken = audioUnit.observe(\.userPresets) { _, _ in
+      os_log(.info, log: self.log, "userPresets changed")
+      DispatchQueue.main.async { self.updatePresetMenu() }
+    }
+    
     os_log(.debug, log: log, "connectParametersToControls END")
   }
 

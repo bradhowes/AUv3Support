@@ -18,8 +18,8 @@ extension HostViewController {
     }
 
     func handler(_ action: UIAction) {
-      actionSupporter.askForName(title: "New Preset", placeholder: "Preset Name", activity: "Create") { name in
-        self.checkIsUniquePreset(named: name)
+      actionSupporter.askForName(title: "New Preset", placeholder: "Preset Name", activity: "Create") {
+        self.checkIsUniquePreset(named: $0)
       }
     }
 

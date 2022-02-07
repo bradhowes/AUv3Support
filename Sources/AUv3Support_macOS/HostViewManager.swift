@@ -21,6 +21,7 @@ public final class HostViewManager: NSObject {
   private var audioUnitViewController: NSViewController?
 
   private var currentPresetObserverToken: NSKeyValueObservation?
+  private var userPresetsObserverToken: NSKeyValueObservation?
 
   private var showingInitialPrompt = false
 
@@ -179,6 +180,11 @@ extension HostViewManager {
     currentPresetObserverToken = audioUnit.observe(\.currentPreset) { _, _ in
       os_log(.debug, log: self.log, "currentPreset changed - %{public}s", audioUnit.currentPreset.descriptionOrNil)
       DispatchQueue.main.async { self.updateView() }
+    }
+
+    userPresetsObserverToken = audioUnit.observe(\.userPresets) { _, _ in
+      os_log(.info, log: self.log, "userPresets changed")
+      DispatchQueue.main.async { self.presetsMenuManager?.build() }
     }
 
     os_log(.debug, log: log, "connectParametersToControls END")

@@ -5,6 +5,7 @@
 import Cocoa
 import AUv3Support
 import AudioToolbox
+import os.log
 
 enum UserMenuItem: Int {
   case save = 0 // Code expects that the commands start at the top of the menu
@@ -27,6 +28,7 @@ enum UserMenuItem: Int {
  - Delete -- delete the active user preset
  */
 public class PresetsMenuManager: NSObject {
+  private let log = Shared.logger("PresetsMenuManager")
   private let noCurrentPreset = Int.max
   private let commandTag = Int.max - 1
 
@@ -53,21 +55,26 @@ public class PresetsMenuManager: NSObject {
    */
   public func build() {
     guard let buttonMenu = button.menu else { fatalError() }
+    os_log(.debug, log: log, "build BEGIN")
     populateUserPresetsMenu(appMenu.items[0].submenu!)
     populateFactoryPresetsMenu(appMenu.items[1].submenu!)
     populateUserPresetsMenu(buttonMenu.items[1].submenu!)
     populateFactoryPresetsMenu(buttonMenu.items[2].submenu!)
+    selectActive()
+    os_log(.debug, log: log, "build END")
   }
 
   /**
    Update the menus to show the active preset.
    */
   public func selectActive() {
+    os_log(.debug, log: log, "selectActive BEGIN")
     let activeNumber = userPresetsManager.audioUnit.currentPreset?.number ?? noCurrentPreset
     refreshUserPresetsMenu(appMenu.items[0].submenu, activeNumber: activeNumber)
     refreshFactoryPresetsMenu(appMenu.items[1].submenu, activeNumber: activeNumber)
     refreshUserPresetsMenu(button.menu?.items[1].submenu, activeNumber: activeNumber)
     refreshFactoryPresetsMenu(button.menu?.items[2].submenu, activeNumber: activeNumber)
+    os_log(.debug, log: log, "selectActive END")
   }
 }
 
@@ -90,17 +97,22 @@ extension PresetsMenuManager {
    - parameter sender: the 'New' menu item
    */
   @IBAction func createPreset(_ sender: NSMenuItem) {
-    guard let presetName = getNewPresetName(default: "Preset \(-userPresetsManager.nextNumber)") else { return }
-    if let existing = userPresetsManager.find(name: presetName) {
-      let confirm = confirmReplace(name: presetName)
-      if confirm {
-        try? userPresetsManager.update(preset: existing)
-        build()
+    os_log(.debug, log: log, "createPreset BEGIN")
+    askForName(title: "New Preset", placeholder: "Preset \(-userPresetsManager.nextNumber)",
+               activity: "Create") { newName in
+      if let existing = self.userPresetsManager.find(name: newName) {
+        os_log(.debug, log: self.log, "createPreset - name exists")
+        self.confirmAction(title: "Update \"\(newName)\"?",
+                           message: "Do you wish to update the existing preset with current settings?") {
+          os_log(.debug, log: self.log, "createPreset - updating existing")
+          try? self.userPresetsManager.update(preset: existing)
+          os_log(.debug, log: self.log, "createPreset END")
+        }
+      } else {
+        try? self.userPresetsManager.create(name: newName)
+        os_log(.debug, log: self.log, "createPreset END")
       }
-      return
     }
-    try? userPresetsManager.create(name: presetName)
-    build()
   }
 
   /**
@@ -109,8 +121,10 @@ extension PresetsMenuManager {
    - parameter sender: the 'Update' menu item
    */
   @IBAction func updatePreset(_ sender: NSMenuItem) {
+    os_log(.debug, log: log, "updatePreset BEGIN")
     guard let activePreset = userPresetsManager.currentPreset, activePreset.number < 0 else { fatalError() }
     try? userPresetsManager.update(preset: activePreset)
+    os_log(.debug, log: log, "updatePreset END")
   }
 
   /**
@@ -119,10 +133,12 @@ extension PresetsMenuManager {
    - parameter sender: the 'Rename' menu item
    */
   @IBAction func renamePreset(_ sender: NSMenuItem) {
+    os_log(.debug, log: log, "renamePreset BEGIN")
     guard let activePreset = userPresetsManager.currentPreset else { fatalError() }
-    guard let presetName = getRenamePresetName(existing: activePreset.name) else { return }
-    try? userPresetsManager.renameCurrent(to: presetName)
-    build()
+    askForName(title: "Rename Preset", placeholder: activePreset.name, activity: "Rename") { newName in
+      try? self.userPresetsManager.renameCurrent(to: newName)
+      os_log(.debug, log: self.log, "renamePreset END")
+    }
   }
 
   /**
@@ -131,11 +147,15 @@ extension PresetsMenuManager {
    - parameter sender: the 'Delete' menu item
    */
   @IBAction func deletePreset(_ sender: NSMenuItem) {
+    os_log(.debug, log: log, "deletePreset BEGIN")
     guard let activePreset = userPresetsManager.currentPreset else { fatalError() }
-    if confirmDelete(name: activePreset.name) {
-      try? userPresetsManager.deleteCurrent()
-      build()
-    }
+    confirmAction(
+      title: "Delete \"\(activePreset.name)\" Preset",
+      message: "Do you wish to delete the preset? This cannot be undone.") {
+        try? self.userPresetsManager.deleteCurrent()
+        os_log(.debug, log: self.log, "deletePreset END")
+      }
+    os_log(.debug, log: log, "deletePreset END")
   }
 }
 
@@ -200,85 +220,48 @@ private extension PresetsMenuManager {
     }
   }
 
-  func getNewPresetName(default: String) -> String? {
+  func askForName(title: String, placeholder: String, activity: String, closure: @escaping (String) -> Void) {
     let prompt = NSAlert()
-
-    prompt.addButton(withTitle: "Continue")
+    prompt.addButton(withTitle: activity)
     prompt.buttons.last?.tag = NSApplication.ModalResponse.OK.rawValue
 
     prompt.addButton(withTitle: "Cancel")
     prompt.buttons.last?.tag = NSApplication.ModalResponse.cancel.rawValue
 
-    prompt.messageText = "New Preset Name"
-    prompt.informativeText = "Enter the name to use for the new preset"
+    prompt.messageText = title
+    prompt.informativeText = "Enter the preset name:"
 
     let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 24))
-    textField.stringValue = `default`
+    textField.stringValue = placeholder
     prompt.accessoryView = textField
     prompt.window.initialFirstResponder = textField
 
     let response: NSApplication.ModalResponse = prompt.runModal()
     if response == .OK {
       let value = textField.stringValue.trimmingCharacters(in: .whitespaces)
-      return value.isEmpty ? nil : value
+      if !value.isEmpty {
+        closure(value)
+      }
     }
-    return nil
   }
 
-  func getRenamePresetName(existing: String) -> String? {
+  func confirmAction(title: String, message: String, confirmed: @escaping () -> Void) {
     let prompt = NSAlert()
-    prompt.addButton(withTitle: "Continue")
-    prompt.buttons.last?.tag = NSApplication.ModalResponse.OK.rawValue
-
+    prompt.alertStyle = .warning
+    prompt.messageText = title
+    prompt.informativeText = message
     prompt.addButton(withTitle: "Cancel")
     prompt.buttons.last?.tag = NSApplication.ModalResponse.cancel.rawValue
-
-    prompt.messageText = "Change Preset Name"
-    prompt.informativeText = "Enter the new name for the preset"
-
-    let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 24))
-    textField.stringValue = existing
-    prompt.accessoryView = textField
-    prompt.window.initialFirstResponder = textField
+    prompt.addButton(withTitle: "Confirm")
+    prompt.buttons.last?.tag = NSApplication.ModalResponse.OK.rawValue
+    if #available(macOS 11.0, *) {
+      prompt.buttons.last?.hasDestructiveAction = true
+    }
 
     let response: NSApplication.ModalResponse = prompt.runModal()
     if response == .OK {
-      let value = textField.stringValue.trimmingCharacters(in: .whitespaces)
-      return value.isEmpty ? nil : value
+      confirmed()
     }
-    return nil
-  }
-
-  func confirmReplace(name: String) -> Bool {
-    let prompt = NSAlert()
-    prompt.alertStyle = .warning
-    prompt.addButton(withTitle: "Cancel")
-    prompt.messageText = "Update Preset \"\(name)\"?"
-    prompt.informativeText = "There is already a preset with the name \"\(name)\". Confirm to update it."
-
-    let button = prompt.addButton(withTitle: "Update")
-    if #available(macOS 11.0, *) {
-      button.hasDestructiveAction = true
-    }
-
-    let response: NSApplication.ModalResponse = prompt.runModal()
-    return response == .OK
-  }
-
-  func confirmDelete(name: String) -> Bool {
-    let prompt = NSAlert()
-    prompt.alertStyle = .warning
-    prompt.addButton(withTitle: "Cancel")
-    prompt.messageText = "Delete Preset \"\(name)\"?"
-    prompt.informativeText = "Confirm to delete the preset."
-
-    let button = prompt.addButton(withTitle: "Delete")
-    if #available(macOS 11.0, *) {
-      button.hasDestructiveAction = true
-    }
-
-    let response: NSApplication.ModalResponse = prompt.runModal()
-    return response == .OK
   }
 }
 

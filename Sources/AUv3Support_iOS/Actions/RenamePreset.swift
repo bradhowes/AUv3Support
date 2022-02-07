@@ -18,8 +18,8 @@ extension HostViewController {
 
     func handler(_ action: UIAction) {
       guard let name = presetsManager.currentPreset?.name else { fatalError() }
-      actionSupporter.askForName(title: "Rename Preset", placeholder: name, activity: "Rename") { name in
-        self.renamePreset(with: name)
+      actionSupporter.askForName(title: "Rename Preset", placeholder: name, activity: "Rename") {
+        self.renamePreset(with: $0)
       }
     }
 
