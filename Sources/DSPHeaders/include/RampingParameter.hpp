@@ -51,6 +51,12 @@ struct RampingParameter {
     return value_;
   }
 
+  /**
+   Obtain the current internal parameter value. This is the same as `get` but it will not be transformed into an
+   external representation.
+
+   @return the current internal parameter value
+   */
   T internal() const { return get(); }
 
 private:
