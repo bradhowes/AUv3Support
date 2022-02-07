@@ -132,6 +132,34 @@
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AUv3-DSP-Headers"
+               BuildableName = "AUv3-DSP-Headers"
+               BlueprintName = "AUv3-DSP-Headers"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "DSPHeaders"
+               BuildableName = "DSPHeaders"
+               BlueprintName = "DSPHeaders"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -147,6 +175,16 @@
                BlueprintIdentifier = "AUv3SupportTests"
                BuildableName = "AUv3SupportTests"
                BlueprintName = "AUv3SupportTests"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "DSPHeadersTests"
+               BuildableName = "DSPHeadersTests"
+               BlueprintName = "DSPHeadersTests"
                ReferencedContainer = "container:">
             </BuildableReference>
          </TestableReference>
