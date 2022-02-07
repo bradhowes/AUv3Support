@@ -3,7 +3,7 @@
 import AudioToolbox
 import AVFoundation
 import CoreAudioKit
-import os
+import os.log
 
 /**
  Derivation of AUAudioUnit that provides a Swift container for the C++ Kernel (by way of the Obj-C Bridge adapter).
@@ -16,9 +16,6 @@ import os
 public final class FilterAudioUnit: AUAudioUnit {
   private let log = Shared.logger("FilterAudioUnit")
 
-  /// Name of the component
-  // public static let componentName = Bundle(for: FilterAudioUnit.self).auComponentName
-
   public enum Failure: Swift.Error {
     case statusError(OSStatus)
     case unableToInitialize(String)
@@ -27,24 +24,135 @@ public final class FilterAudioUnit: AUAudioUnit {
   /// The signal processing kernel that performs the rendering of audio samples
   private var kernel: AudioRenderer?
   /// Runtime parameter definitions for the audio unit
-  public private(set) var parameters: ParameterSource?
+  private var parameters: ParameterSource?
+
   /// The associated view controller for the audio unit that shows the controls
   public weak var viewConfigurationManager: AudioUnitViewConfigurationManager?
-  /// Support one input bus
+
+  /// Initial sample rate
+  private let sampleRate: Double = 44100.0
+  /// Maximum number of channels to support
+  private let maxNumberOfChannels: UInt32 = 8
+  /// Maximum frames to render
+  private let maxFramesToRender: UInt32 = 512
+  /// The active preset in use
+  private var _currentPreset: AUAudioUnitPreset?
+  
+  private var inputBus: AUAudioUnitBus
+  private var outputBus: AUAudioUnitBus
+  
+  private lazy var _inputBusses: AUAudioUnitBusArray = AUAudioUnitBusArray(audioUnit: self, busType: .input,
+                                                                           busses: [inputBus])
+  private lazy var _outputBusses: AUAudioUnitBusArray = AUAudioUnitBusArray(audioUnit: self, busType: .output,
+                                                                            busses: [outputBus])
+  /**
+   Crete a new audio unit asynchronously.
+   
+   - parameter componentDescription: the component to instantiate
+   - parameter options: options for instantiation
+   - parameter completionHandler: closure to invoke upon creation or error
+   */
+  override public class func instantiate(with componentDescription: AudioComponentDescription,
+                                         options: AudioComponentInstantiationOptions = [],
+                                         completionHandler: @escaping (AUAudioUnit?, Error?) -> Void) {
+    do {
+      let auAudioUnit = try FilterAudioUnit(componentDescription: componentDescription, options: options)
+      completionHandler(auAudioUnit, nil)
+    } catch {
+      completionHandler(nil, error)
+    }
+  }
+
+  /**
+   Construct new instance, throwing exception if there is an error doing so.
+   
+   - parameter componentDescription: the component to instantiate
+   - parameter options: options for instantiation
+   */
+  override public init(componentDescription: AudioComponentDescription,
+                       options: AudioComponentInstantiationOptions = []) throws {
+    // Start with the default format. Host or downstream AudioUnit can change the format of the input/output bus
+    // objects later between calls to allocateRenderResources().
+    guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2) else {
+      os_log(.error, log: log, "failed to create AVAudioFormat format")
+      throw Failure.unableToInitialize(String(describing: AVAudioFormat.self))
+    }
+    
+    os_log(.debug, log: log, "format: %{public}s", format.description)
+    inputBus = try AUAudioUnitBus(format: format)
+    inputBus.maximumChannelCount = maxNumberOfChannels
+    
+    os_log(.debug, log: log, "creating output bus")
+    outputBus = try AUAudioUnitBus(format: format)
+    outputBus.maximumChannelCount = maxNumberOfChannels
+    
+    try super.init(componentDescription: componentDescription, options: options)
+    
+    os_log(.debug, log: log, "type: %{public}s, subtype: %{public}s, manufacturer: %{public}s flags: %x",
+           componentDescription.componentType.stringValue,
+           componentDescription.componentSubType.stringValue,
+           componentDescription.componentManufacturer.stringValue,
+           componentDescription.componentFlags)
+    
+    maximumFramesToRender = maxFramesToRender
+  }
+}
+
+// MARK: - Configuration
+
+extension FilterAudioUnit {
+
+  /**
+   Install the entity that provides the AUParameter definitions for the AUParameterTree. It also may hold factory
+   presets.
+
+   - parameter parameters: the parameter source to use
+   */
+  public func setParameters(_ parameters: ParameterSource) {
+    os_log(.debug, log: log, "setParameters BEGIN")
+    self.parameters = parameters
+    currentPreset = parameters.factoryPresets.first
+    os_log(.debug, log: log, "setParameters END")
+  }
+
+  /**
+   Install the rendering kernel to use.
+
+   - parameter kernel: the custom kernel to use for audio sample rendering
+   */
+  public func setKernel(_ kernel: AudioRenderer) {
+    os_log(.debug, log: log, "setKernel BEGIN")
+    self.kernel = kernel
+    kernel.startProcessing(inputBus.format, maxFramesToRender: maxFramesToRender)
+    os_log(.debug, log: log, "setKernel END")
+  }
+}
+
+// MARK: - AUv3 Properties
+
+extension FilterAudioUnit {
+  /// The input busses supported by the component. We only support one.
   override public var inputBusses: AUAudioUnitBusArray { _inputBusses }
-  /// Support one output bus
+  /// The output busses supported by the component. We only support one.
   override public var outputBusses: AUAudioUnitBusArray { _outputBusses }
-  /// Parameter tree containing filter parameter values
+  /// Parameter tree containing filter parameters that are exposed for external control. No setting is allowed.
   override public var parameterTree: AUParameterTree? {
     get { parameters?.parameterTree }
     set { fatalError("attempted to set new parameterTree") }
   }
-  
   /// Factory presets for the filter
   override public var factoryPresets: [AUAudioUnitPreset]? { parameters?.factoryPresets }
-  /// Announce support for user presets as well
+  /// Announce support for user presets
   override public var supportsUserPresets: Bool { true }
-  /// Preset get/set
+  /// Obtain the current bypass setting
+  override public var shouldBypassEffect: Bool { didSet { kernel?.setBypass(shouldBypassEffect); }}
+  /// Announce that the filter can work directly on upstream sample buffers
+  override public var canProcessInPlace: Bool { true }
+
+  /// Active preset management. Setting a non-nil value updates the components parameters to hold the values found in
+  /// the preset. Factory presets are done internally via the `ParameterSource.usePreset` function. User presets rely
+  /// on AUAudioUnit functionality to change the `AUParameter` values in the `AUParameterTree` via the `fullState`
+  /// property.
   @objc override public var currentPreset: AUAudioUnitPreset? {
     get {
       os_log(.info, log: log, "get currentPreset - %{public}s", _currentPreset.descriptionOrNil)
@@ -82,7 +190,8 @@ public final class FilterAudioUnit: AUAudioUnit {
       didChangeValue(for: \.currentPreset)
     }
   }
-  
+
+  /// Add current preset name and number to the state that is returned.
   override public var fullState: [String : Any]? {
     get {
       os_log(.info, log: log, "fullState GET")
@@ -100,7 +209,8 @@ public final class FilterAudioUnit: AUAudioUnit {
       os_log(.info, log: log, "fullState SET")
       os_log(.info, log: log, "value: %{public}s", newValue.descriptionOrNil)
       super.fullState = newValue
-      // Restore current preset if there was one.
+
+      // Restore *internal* current preset if there was one.
       if let newValue = newValue,
          let name = newValue[kAUPresetNameKey] as? String,
          let number = newValue[kAUPresetNumberKey] as? NSNumber {
@@ -109,98 +219,10 @@ public final class FilterAudioUnit: AUAudioUnit {
       }
     }
   }
-  
-  override public var shouldBypassEffect: Bool { didSet { kernel?.setBypass(shouldBypassEffect); }}
+}
+// MARK: - Rendering
 
-  // We don't have any additional state beyond what is in `fullState`.
-  // override public var fullStateForDocument: [String : Any]?
-
-  /// Announce that the filter can work directly on upstream sample buffers
-  override public var canProcessInPlace: Bool { true }
-  
-  /// Initial sample rate
-  private let sampleRate: Double = 44100.0
-  /// Maximum number of channels to support
-  private let maxNumberOfChannels: UInt32 = 8
-  /// Maximum frames to render
-  private let maxFramesToRender: UInt32 = 512
-  /// Objective-C bridge into the C++ kernel
-  private var _currentPreset: AUAudioUnitPreset? {
-    didSet { os_log(.debug, log: log, "* _currentPreset name: %{public}s", _currentPreset.descriptionOrNil) }
-  }
-  
-  private var inputBus: AUAudioUnitBus
-  private var outputBus: AUAudioUnitBus
-  
-  private lazy var _inputBusses: AUAudioUnitBusArray = { AUAudioUnitBusArray(audioUnit: self, busType: .input,
-                                                                             busses: [inputBus]) }()
-  private lazy var _outputBusses: AUAudioUnitBusArray = { AUAudioUnitBusArray(audioUnit: self, busType: .output,
-                                                                              busses: [outputBus]) }()
-  /**
-   Crete a new audio unit asynchronously.
-   
-   - parameter componentDescription: the component to instantiate
-   - parameter options: options for instantiation
-   - parameter completionHandler: closure to invoke upon creation or error
-   */
-  override public class func instantiate(with componentDescription: AudioComponentDescription,
-                                         options: AudioComponentInstantiationOptions = [],
-                                         completionHandler: @escaping (AUAudioUnit?, Error?) -> Void) {
-    do {
-      let auAudioUnit = try FilterAudioUnit(componentDescription: componentDescription, options: options)
-      completionHandler(auAudioUnit, nil)
-    } catch {
-      completionHandler(nil, error)
-    }
-  }
-  
-  /**
-   Construct new instance, throwing exception if there is an error doing so.
-   
-   - parameter componentDescription: the component to instantiate
-   - parameter options: options for instantiation
-   */
-  override public init(componentDescription: AudioComponentDescription,
-                       options: AudioComponentInstantiationOptions = []) throws {
-    // Start with the default format. Host or downstream AudioUnit can change the format of the input/output bus
-    // objects later between calls to allocateRenderResources().
-    guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2) else {
-      os_log(.error, log: log, "failed to create AVAudioFormat format")
-      throw Failure.unableToInitialize(String(describing: AVAudioFormat.self))
-    }
-    
-    os_log(.debug, log: log, "format: %{public}s", format.description)
-    inputBus = try AUAudioUnitBus(format: format)
-    inputBus.maximumChannelCount = maxNumberOfChannels
-    
-    os_log(.debug, log: log, "creating output bus")
-    outputBus = try AUAudioUnitBus(format: format)
-    outputBus.maximumChannelCount = maxNumberOfChannels
-    
-    try super.init(componentDescription: componentDescription, options: options)
-    
-    os_log(.debug, log: log, "type: %{public}s, subtype: %{public}s, manufacturer: %{public}s flags: %x",
-           componentDescription.componentType.stringValue,
-           componentDescription.componentSubType.stringValue,
-           componentDescription.componentManufacturer.stringValue,
-           componentDescription.componentFlags)
-    
-    maximumFramesToRender = maxFramesToRender
-  }
-
-  public func setParameters(_ parameters: ParameterSource) {
-    os_log(.debug, log: log, "setParameters BEGIN")
-    self.parameters = parameters
-    currentPreset = parameters.factoryPresets.first
-    os_log(.debug, log: log, "setParameters END")
-  }
-
-  public func setKernel(_ kernel: AudioRenderer) {
-    os_log(.debug, log: log, "setKernel BEGIN")
-    self.kernel = kernel
-    self.kernel?.startProcessing(inputBus.format, maxFramesToRender: maxFramesToRender)
-    os_log(.debug, log: log, "setKernel END")
-  }
+extension FilterAudioUnit {
 
   /**
    Take notice of input/output bus formats and prepare for rendering. If there are any errors getting things ready,
@@ -242,11 +264,16 @@ public final class FilterAudioUnit: AUAudioUnit {
     precondition(kernel != nil, "nil for kernel")
     return kernel!.internalRenderBlock()
   }
-  
+}
+
+// MARK: - Host View Management
+
+extension FilterAudioUnit {
+
   override public func parametersForOverview(withCount: Int) -> [NSNumber] {
     parameters?.parameters[0..<withCount].map { NSNumber(value: $0.address) } ?? []
   }
-  
+
   override public func supportedViewConfigurations(_ available: [AUAudioUnitViewConfiguration]) -> IndexSet {
     viewConfigurationManager?.supportedViewConfigurations(available) ?? IndexSet(integersIn: 0..<available.count)
   }

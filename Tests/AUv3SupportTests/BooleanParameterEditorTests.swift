@@ -36,7 +36,7 @@ final class BooleanParameterEditorTests: XCTestCase {
       changes[address] = value
     }
 
-    let paramToken = param.token(byAddingParameterObserver: paramObserver)
+    let _ = param.token(byAddingParameterObserver: paramObserver)
 
     let tree = AUParameterTree.createTree(withChildren: [param])
     let treeObserver = { (address: AUParameterAddress,  value: AUValue) in

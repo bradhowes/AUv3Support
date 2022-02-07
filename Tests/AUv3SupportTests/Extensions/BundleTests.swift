@@ -3,10 +3,12 @@
 import XCTest
 import AUv3Support
 
-class BundlePropertiesTests: XCTestCase {
+class BundleTests: XCTestCase {
+
   func testComponentAttributes() throws {
     let bundles = Bundle.allBundles
     print(bundles)
+    
 //    let bundle = Bundle(for: AudioUnitHost.self)
 //    XCTAssertEqual("LPF", bundle.auBaseName)
 //    XCTAssertEqual("B-Ray: SimplyLowPass", bundle.auComponentName)
