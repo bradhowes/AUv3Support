@@ -45,6 +45,13 @@ let package = Package(
     .testTarget(
       name: "AUv3SupportTests",
       dependencies: ["AUv3Support"]
+    ),
+    .testTarget(
+      name: "DSPHeadersTests",
+      dependencies: ["DSPHeaders"],
+      linkerSettings: [
+        .linkedFramework("AVFoundation")
+      ]
     )
   ],
   cxxLanguageStandard: .cxx17

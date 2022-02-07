@@ -5,22 +5,22 @@ import AudioUnit.AUParameters
  */
 public struct ParameterDefinition {
   /// The unique identifier for the parameter. According to Apple, this should never change in value across releases.
-  let identifier: String
+  public let identifier: String
   /// The localized display name for the parameter.
-  let localized: String
+  public let localized: String
   /// The unique address in the AUParameter tree for the parameter.
-  let address: AUParameterAddress
+  public let address: AUParameterAddress
   /// The min/max values the parameter can have (inclusive)
-  let range: ClosedRange<AUValue>
+  public let range: ClosedRange<AUValue>
   /// The unit type of the value
-  let unit: AudioUnitParameterUnit
+  public let unit: AudioUnitParameterUnit
   /// The unit name of the value (useful for custom units)
-  let unitName: String?
+  public let unitName: String?
   /// When true, a parameter should change to a new value over N samples in order to minimize audio noise due to
   /// discontinuities in the signal processing algorithms from large changes in a parameter value.
-  let ramping: Bool
+  public let ramping: Bool
   /// If true, show values on a log scale.
-  let logScale: Bool
+  public let logScale: Bool
 
   public init(_ identifier: String, localized: String, address: ParameterAddressProvider, range: ClosedRange<AUValue>,
               unit: AudioUnitParameterUnit, unitName: String?, ramping: Bool, logScale: Bool) {

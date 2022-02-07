@@ -46,12 +46,12 @@ public class UserPresetsManager {
   /// The (user) presets from the component ordered by preset number in descending order (-1 first)
   public var presetsOrderedByNumber: [AUAudioUnitPreset] { presets.sorted { $0.number > $1.number } }
 
-  public var currentPreset: AUAudioUnitPreset? { audioUnit.currentPreset }
-  
   /// The (user) presets from the component ordered by preset name in ascending order
   public var presetsOrderedByName: [AUAudioUnitPreset] {
     presets.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
   }
+
+  public var currentPreset: AUAudioUnitPreset? { audioUnit.currentPreset }
 
   /**
    Create new instance for the given AUv3 component
@@ -183,7 +183,7 @@ public class UserPresetsManager {
   /// Obtain the smallest user preset number that is not being used by any other preset.
   public var nextNumber: Int {
     let ordered = presetsOrderedByNumber
-    var number = ordered.first?.number ?? -1
+    var number = max(ordered.first?.number ?? -1, -1)
     for entry in ordered {
       if entry.number != number {
         break
