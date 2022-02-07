@@ -5,8 +5,8 @@
 #import <algorithm>
 #import <vector>
 
-#import "Biquad.h"
-#import "DSP.h"
+#import "Biquad.hpp"
+#import "DSP.hpp"
 
 /**
  Generates a phase-shift audio effect as described in "Designing Audio Effect Plugins in C++" by Will C. Pirkle (2019).

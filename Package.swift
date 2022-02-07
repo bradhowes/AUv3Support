@@ -49,6 +49,8 @@ let package = Package(
     .testTarget(
       name: "DSPHeadersTests",
       dependencies: ["DSPHeaders"],
+      exclude: ["Pirkle/README.md",
+                "Pirkle/readme.txt"],
       linkerSettings: [
         .linkedFramework("AVFoundation")
       ]
