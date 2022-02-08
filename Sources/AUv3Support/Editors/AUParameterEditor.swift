@@ -20,19 +20,19 @@ public protocol AUParameterEditor: AnyObject {
   var parameter: AUParameter { get }
 
   /**
-   Notification that the parameter should change due to a control change.
+   Notification that the parameter should change due to a widget control change.
 
    - parameter source: the control that caused the change
    */
   func controlChanged(source: AUParameterValueProvider)
 
   /**
-   Notification that the parameter's value changed somewhere else
+   Notification that the AUParameter value changed
    */
   func parameterChanged()
 
   /**
-   Apply a new value to both the controls and the parameter.
+   Apply a new value to both the control and the parameter.
 
    - parameter value: the new value to use
    */

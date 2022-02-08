@@ -10,18 +10,22 @@ public protocol BooleanControl: NSObject {
 /**
  An editor for a boolean parameter value that uses a switch element.
  */
-public final class BooleanParameterEditor {
+public final class BooleanParameterEditor: NSObject {
   private let log = Shared.logger("BooleanParameterControl")
-  private let parameterObserverToken: AUParameterObserverToken
   private let booleanControl: BooleanControl
 
   public let parameter: AUParameter
   public var control: NSObject { booleanControl }
+  private var parameterObserverToken: AUParameterObserverToken!
 
-  public init(parameterObserverToken: AUParameterObserverToken, parameter: AUParameter, booleanControl: BooleanControl) {
-    self.parameterObserverToken = parameterObserverToken
+  public init(parameter: AUParameter, booleanControl: BooleanControl) {
     self.parameter = parameter
     self.booleanControl = booleanControl
+    super.init()
+
+    parameterObserverToken = parameter.token(byAddingParameterObserver: { [weak self] _, _ in
+      self?.parameterChanged()
+    })
     booleanControl.isOn = parameter.value >= 0.5 ? true : false
   }
 }
@@ -29,17 +33,26 @@ public final class BooleanParameterEditor {
 extension BooleanParameterEditor: AUParameterEditor {
 
   public func controlChanged(source: AUParameterValueProvider) {
-    os_log(.debug, log: log, "controlChanged - %f", source.value)
-    parameter.setValue(source.value, originator: parameterObserverToken)
+    os_log(.info, log: log, "controlChanged - new: %f state: %d", source.value, booleanControl.isOn)
+
+    let value = source.value
+    if booleanControl !== source {
+      booleanControl.isOn = value >= 0.5 ? true : false
+    }
+
+    if value != parameter.value {
+      parameter.setValue(source.value, originator: parameterObserverToken)
+    }
   }
 
   public func parameterChanged() {
-    os_log(.debug, log: log, "parameterChanged - %f", parameter.value)
+    os_log(.info, log: log, "parameterChanged - %f", parameter.value)
     booleanControl.isOn = parameter.value >= 0.5 ? true : false
   }
 
   public func setEditedValue(_ value: AUValue) {
-    os_log(.debug, log: log, "setEditedValue - %f", value)
+    os_log(.info, log: log, "setEditedValue - %f", value)
     parameter.setValue(value, originator: parameterObserverToken)
+    booleanControl.isOn = value >= 0.5 ? true : false
   }
 }

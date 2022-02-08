@@ -32,34 +32,35 @@ public final class FloatParameterEditor: NSObject {
   private let logSliderMinValue: Float = 0.0
   private let logSliderMaxValue: Float = 9.0
   private lazy var logSliderMaxValuePower2Minus1 = Float(pow(2, logSliderMaxValue) - 1)
-  private let parameterObserverToken: AUParameterObserverToken
   private let formatter: (AUValue) -> String
   private let rangedControl: RangedControl
   private let label: Label
   private let useLogValues: Bool
   private var restoreNameTimer: Timer?
   private var hasActiveLabel: Bool = false
+  private var parameterObserverToken: AUParameterObserverToken!
 
   /**
    Construct a new instance that links together a RangedControl and a label to an AUParameter value.
 
-   - parameter parameterObserverToken: observer token to use when setting new values to protect against looping
    - parameter parameter: the parameter to control
    - parameter formatter: the formatter to use when converting values to strings
-   - parameter knob: the Knob instance to change value
+   - parameter rangedControl: the Knob instance to change value
    - parameter label: the Label to show the new value
-   - parameter logValues: true if showing log values
    */
-  public init(parameterObserverToken: AUParameterObserverToken, parameter: AUParameter,
-              formatter: @escaping (AUValue) -> String, rangedControl: RangedControl, label: Label) {
+  public init(parameter: AUParameter, formatter: @escaping (AUValue) -> String, rangedControl: RangedControl,
+              label: Label) {
     self.log = Shared.logger("FloatParameterEditor")
-    self.parameterObserverToken = parameterObserverToken
     self.parameter = parameter
     self.formatter = formatter
     self.rangedControl = rangedControl
     self.label = label
     self.useLogValues = parameter.flags.contains(.flag_DisplayLogarithmic)
     super.init()
+
+    self.parameterObserverToken = parameter.token(byAddingParameterObserver: { [weak self] _, _ in
+      self?.parameterChanged()
+    })
 
     rangedControl.setParameterAddress(parameter.address)
     label.setParameterAddress(parameter.address)
@@ -73,7 +74,7 @@ public final class FloatParameterEditor: NSObject {
     if useLogValues {
       rangedControl.minimumValue = logSliderMinValue
       rangedControl.maximumValue = logSliderMaxValue
-      rangedControl.value = logKnobLocation(for: parameter.value)
+      rangedControl.value = paramValueToControlLogValue(parameter.value)
     }
     else {
       rangedControl.minimumValue = parameter.minValue
@@ -91,29 +92,34 @@ extension FloatParameterEditor: AUParameterEditor {
    - parameter source: the source of the value
    */
   public func controlChanged(source: AUParameterValueProvider) {
-    os_log(.debug, log: log, "%{public}s %d controlChanged - %f", rangedControl.pointer, rangedControl.tag, source.value)
+    os_log(.info, log: log, "controlChanged BEGIN - address: %d value: %f", parameter.address, source.value)
 #if os(macOS)
     NSApp.keyWindow?.makeFirstResponder(nil)
 #endif
 
     if rangedControl !== source {
+      os_log(.info, log: log, "controlChanged - updating our control value")
       rangedControl.value = source.value
     }
 
-    let value = useLogValues ? parameterValue(for: source.value) : source.value
+    let value = useLogValues ? paramValueFromControlLogValue(source.value) : source.value
     showNewValue(value)
 
     if value != parameter.value {
+      os_log(.info, log: log, "controlChanged - setting AUParameter value")
       parameter.setValue(value, originator: parameterObserverToken)
     }
+    os_log(.info, log: log, "controlChanged END")
   }
 
   /**
    THe parameter changed by some means other than a control. Show the new value and update the knob.
    */
   public func parameterChanged() {
+    os_log(.info, log: log, "parameterChanged BEGIN - address: %d value: %f", parameter.address, parameter.value)
     showNewValue(parameter.value)
-    rangedControl.value = useLogValues ? logKnobLocation(for: parameter.value) : parameter.value
+    rangedControl.value = useLogValues ? paramValueToControlLogValue(parameter.value) : parameter.value
+    os_log(.info, log: log, "parameterChanged END")
   }
 
   /**
@@ -127,7 +133,8 @@ extension FloatParameterEditor: AUParameterEditor {
     os_log(.debug, log: log, "setEditedValue - using value: %f", newValue)
     parameter.setValue(newValue, originator: parameterObserverToken)
     showNewValue(newValue)
-    rangedControl.value = useLogValues ? logKnobLocation(for: newValue) : newValue
+    rangedControl.value = useLogValues ? paramValueToControlLogValue(newValue) : newValue
+    os_log(.debug, log: log, "setEditedValue END")
   }
 }
 
@@ -149,23 +156,40 @@ private extension FloatParameterEditor {
   }
 #endif
 
-  func logKnobLocation(for value: Float) -> Float {
+  /**
+   Convert an AUParameter value into a value to indicate on a control
+
+   - parameter value: the value from a parameter
+   - returns: the value to use in the control
+   */
+  func paramValueToControlLogValue(_ value: Float) -> Float {
     log2(((value - parameter.minValue) / (parameter.maxValue - parameter.minValue)) *
          logSliderMaxValuePower2Minus1 + 1.0)
   }
 
-  func parameterValue(for knobValue: AUValue) -> AUValue {
+  /**
+   Convert the indicator value of a control into an AUParameter value
+
+   - parameter knobValue: the value from a control
+   - returns: the value to store in AUParameter
+   */
+  func paramValueFromControlLogValue(_ knobValue: AUValue) -> AUValue {
     ((pow(2, knobValue) - 1) / logSliderMaxValuePower2Minus1) * (parameter.maxValue - parameter.minValue) +
     parameter.minValue
   }
 
   func showNewValue(_ value: AUValue) {
-    os_log(.debug, log: log, "showNewValue: %f", value)
-    label.text = formatter(value)
-    restoreName()
+    os_log(.info, log: log, "showNewValue BEGIN - %f", value)
+    let formattedValue = formatter(value)
+    DispatchQueue.main.async {
+      self.label.text = formattedValue
+      self.restoreName()
+    }
+    os_log(.info, log: log, "showNewValue END")
   }
 
   func restoreName() {
+    os_log(.info, log: log, "restoreName BEGIN")
     restoreNameTimer?.invalidate()
     let displayName = parameter.displayName
     let label = self.label
