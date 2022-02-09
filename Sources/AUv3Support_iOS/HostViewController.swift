@@ -84,10 +84,15 @@ extension HostViewController {
     guard let config = self.config else { fatalError() }
 
     playButton.isEnabled = false
+    playButton.tintColor = config.tintColor
+
     bypassButton.isEnabled = false
+    bypassButton.tintColor = config.tintColor
+
     presetSelection.isEnabled = false
     userPresetsMenuButton.isEnabled = false
-
+    userPresetsMenuButton.tintColor = config.tintColor
+    
     userPresetsMenuButton.isHidden = true
     if #available(iOS 14, *) {
       userPresetsMenuButton.isHidden = false
@@ -95,12 +100,14 @@ extension HostViewController {
     }
 
     presetName.text = ""
+    presetName.textColor = config.tintColor
 
+    presetSelection.selectedSegmentTintColor = config.tintColor
     presetSelection.setTitleTextAttributes([.foregroundColor: UIColor.white], for: .normal)
     presetSelection.setTitleTextAttributes([.foregroundColor: UIColor.black], for: .selected)
 
     instructions.layer.borderWidth = 4
-    instructions.layer.borderColor = UIColor.systemOrange.cgColor
+    instructions.layer.borderColor = config.tintColor.cgColor
     instructions.layer.cornerRadius = 16
 
     instructions.isHidden = true

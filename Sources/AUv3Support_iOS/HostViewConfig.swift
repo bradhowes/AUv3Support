@@ -14,6 +14,7 @@ public struct HostViewConfig {
   public let appStoreId: String
   public let componentDescription: AudioComponentDescription
   public let sampleLoop: AudioUnitLoader.SampleLoop
+  public let tintColor: UIColor
   public let appStoreVisitor: (URL) -> Void
 
   /**
@@ -24,15 +25,17 @@ public struct HostViewConfig {
    - parameter appStoreId: the app store ID for the audio unit
    - parameter componentDescription: the description of the audio unit used to find it on the device
    - parameter sampleLoop: the sample loop to play
+   - parameter tintColor: color to use for control tinting
    - parameter appStoreVisitor: the closure to invoke to visit the app store and view the page for the audio unit
    */
   public init(name: String, version: String, appStoreId: String, componentDescription: AudioComponentDescription,
-              sampleLoop: AudioUnitLoader.SampleLoop, appStoreVisitor: @escaping (URL) -> Void) {
+              sampleLoop: AudioUnitLoader.SampleLoop, tintColor: UIColor, appStoreVisitor: @escaping (URL) -> Void) {
     self.name = name
     self.version = version
     self.appStoreId = appStoreId
     self.componentDescription = componentDescription
     self.sampleLoop = sampleLoop
+    self.tintColor = tintColor
     self.appStoreVisitor = appStoreVisitor
   }
 }
