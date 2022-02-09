@@ -105,7 +105,7 @@ extension NSSwitch: AUParameterValueProvider, BooleanControl, TagHolder {
  }
 ```
  */
-final public class FocusAwareTextField: NSTextField {
+final public class FocusAwareTextField: NSTextField, TagHolder {
 
   /**
    Allow for others to identify when a NSTextField is the first responder. There are notifications from the NSWindow but
