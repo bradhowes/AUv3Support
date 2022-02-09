@@ -92,7 +92,7 @@ extension HostViewController {
     presetSelection.isEnabled = false
     userPresetsMenuButton.isEnabled = false
     userPresetsMenuButton.tintColor = config.tintColor
-    
+
     userPresetsMenuButton.isHidden = true
     if #available(iOS 14, *) {
       userPresetsMenuButton.isHidden = false
@@ -113,6 +113,8 @@ extension HostViewController {
     instructions.isHidden = true
 
     reviewButton.setTitle(config.version, for: .normal)
+    reviewButton.tintColor = config.tintColor
+    
     instructionsLabel.text =
           """
 The AUv3 component '\(config.name)' is now available on your device and can be used in other AUv3 host apps such as \
