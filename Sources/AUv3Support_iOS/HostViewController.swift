@@ -84,15 +84,9 @@ extension HostViewController {
     guard let config = self.config else { fatalError() }
 
     playButton.isEnabled = false
-    playButton.tintColor = config.tintColor
-
     bypassButton.isEnabled = false
-    bypassButton.tintColor = config.tintColor
-
     presetSelection.isEnabled = false
     userPresetsMenuButton.isEnabled = false
-    userPresetsMenuButton.tintColor = config.tintColor
-
     userPresetsMenuButton.isHidden = true
     if #available(iOS 14, *) {
       userPresetsMenuButton.isHidden = false
@@ -100,20 +94,16 @@ extension HostViewController {
     }
 
     presetName.text = ""
-    presetName.textColor = config.tintColor
 
-    presetSelection.selectedSegmentTintColor = config.tintColor
     presetSelection.setTitleTextAttributes([.foregroundColor: UIColor.white], for: .normal)
     presetSelection.setTitleTextAttributes([.foregroundColor: UIColor.black], for: .selected)
 
     instructions.layer.borderWidth = 4
-    instructions.layer.borderColor = config.tintColor.cgColor
     instructions.layer.cornerRadius = 16
 
     instructions.isHidden = true
 
     reviewButton.setTitle(config.version, for: .normal)
-    reviewButton.tintColor = config.tintColor
 
     instructionsLabel.text =
           """
@@ -130,6 +120,8 @@ applications.
     audioUnitLoader = .init(name: config.name, componentDescription: config.componentDescription,
                             loop: config.sampleLoop)
     audioUnitLoader.delegate = self
+
+    applyTheme()
 
     let alwaysShow = false
     if UserDefaults.standard.bool(forKey: showedInitialAlert) == false || alwaysShow {
@@ -150,9 +142,9 @@ applications.
   public func stopPlaying() {
     os_log(.debug, log: log, "stopPlaying BEGIN")
     playButton.isSelected = false
-    playButton.isEnabled = false
-    bypassButton.isEnabled = false
+    playButton.isEnabled = auAudioUnit != nil
     bypassButton.isSelected = false
+    bypassButton.isEnabled = auAudioUnit != nil
     audioUnitLoader.cleanup()
     os_log(.debug, log: log, "stopPlaying END")
   }
@@ -172,6 +164,7 @@ extension HostViewController {
     if !isPlaying {
       bypassButton.isSelected = false
     }
+    
     os_log(.debug, log: log, "togglePlay END")
   }
 
@@ -241,6 +234,20 @@ extension HostViewController: AudioUnitLoaderDelegate {
 // MARK: - Private
 
 private extension HostViewController {
+
+  func applyTheme() {
+    guard let config = self.config else { fatalError() }
+    playButton.tintColor = config.tintColor
+    bypassButton.tintColor = config.tintColor
+    userPresetsMenuButton.tintColor = config.tintColor
+    presetName.textColor = config.tintColor
+    presetSelection.selectedSegmentTintColor = config.tintColor
+
+    instructions.layer.borderColor = config.tintColor.cgColor
+    instructionsLabel.textColor = config.tintColor
+
+    reviewButton.setTitleColor(config.tintColor, for: .normal)
+  }
 
   func connectFilterView(_ audioUnit: AVAudioUnit, _ viewController: UIViewController) {
     os_log(.debug, log: log, "connectFilterView BEGIN")
