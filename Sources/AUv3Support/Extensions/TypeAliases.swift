@@ -55,6 +55,14 @@ public extension NSSwitch {
     get { state == .on }
     set { state = newValue ? .on : .off }
   }
+
+  // Attempt at tinting a la UISwitch. Not exact but not too bad either.
+  func setTint(_ color: NSColor) {
+    wantsLayer = true
+    layer?.backgroundColor = color.cgColor
+    layer?.masksToBounds = true
+    layer?.cornerRadius = 10
+  }
 }
 
 /**
