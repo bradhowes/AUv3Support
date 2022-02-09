@@ -200,6 +200,15 @@ extension FilterAudioUnit {
     }
   }
 
+  /**
+   Clear `currentPreset` if it holds a factory preset.
+   */
+  public func clearCurrentPresetIfFactoryPreset() {
+    if let preset = currentPreset, preset.number >= 0 {
+      currentPreset = nil
+    }
+  }
+
   /// Add current preset name and number to the state that is returned.
   override public var fullState: [String : Any]? {
     get {

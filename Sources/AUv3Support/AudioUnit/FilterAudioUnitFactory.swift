@@ -19,13 +19,11 @@ public enum FilterAudioUnitFactory {
   public static func create(componentDescription: AudioComponentDescription,
                             parameters: ParameterSource,
                             kernel: AudioRenderer,
-                            currentPresetMonitor: CurrentPresetMonitor?,
                             viewConfigurationManager: AudioUnitViewConfigurationManager?) throws -> FilterAudioUnit {
     parameters.setParameterHandler(kernel)
     let audioUnit = try FilterAudioUnit(componentDescription: componentDescription, options: [.loadOutOfProcess])
     audioUnit.setParameters(parameters)
     audioUnit.setKernel(kernel)
-    audioUnit.currentPresetMonitor = currentPresetMonitor
     audioUnit.viewConfigurationManager = viewConfigurationManager
     return audioUnit
   }

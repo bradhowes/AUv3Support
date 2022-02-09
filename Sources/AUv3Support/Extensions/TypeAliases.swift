@@ -1,5 +1,6 @@
 // Copyright © 2022 Brad Howes. All rights reserved.
 
+import AudioUnit
 import os.log
 
 #if os(iOS)
@@ -12,6 +13,12 @@ public typealias Storyboard = UIStoryboard
 public typealias Switch = UISwitch
 public typealias View = UIView
 public typealias ViewController = UIViewController
+
+extension UIView: TagHolder {}
+
+extension UISwitch: AUParameterValueProvider, BooleanControl {
+  public var value: AUValue { isOn ? 1.0 : 0.0 }
+}
 
 #elseif os(macOS)
 
@@ -63,6 +70,10 @@ public extension NSSwitch {
     layer?.masksToBounds = true
     layer?.cornerRadius = 10
   }
+}
+
+extension NSSwitch: AUParameterValueProvider, BooleanControl, TagHolder {
+  public var value: AUValue { isOn ? 1.0 : 0.0 }
 }
 
 /**

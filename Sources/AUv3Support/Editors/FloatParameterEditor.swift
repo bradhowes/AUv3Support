@@ -18,8 +18,6 @@ public protocol RangedControl: TagHolder {
   var value: Float { get set }
 }
 
-extension Label: TagHolder {}
-
 /**
  An editor for a float value parameter that relies on a RangedControl to provide a value between a range of values.
  */
