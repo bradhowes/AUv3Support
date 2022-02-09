@@ -114,7 +114,7 @@ extension HostViewController {
 
     reviewButton.setTitle(config.version, for: .normal)
     reviewButton.tintColor = config.tintColor
-    
+
     instructionsLabel.text =
           """
 The AUv3 component '\(config.name)' is now available on your device and can be used in other AUv3 host apps such as \
@@ -167,7 +167,7 @@ extension HostViewController {
     let isPlaying = audioUnitLoader.togglePlayback()
     bypassButton.isEnabled = isPlaying
     playButton.isSelected = isPlaying
-    playButton.tintColor = isPlaying ? .systemYellow : .systemTeal
+    playButton.tintColor = isPlaying ? .systemYellow : config?.tintColor
 
     if !isPlaying {
       bypassButton.isSelected = false
