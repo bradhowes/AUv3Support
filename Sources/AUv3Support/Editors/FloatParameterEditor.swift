@@ -87,12 +87,14 @@ public final class FloatParameterEditor: NSObject {
 extension FloatParameterEditor: AUParameterEditor {
 
   /**
-   Update the controls using the value from the given value provider.
+   The user changed something. Make the change to the parameter. This should always run on the main thread.
 
    - parameter source: the source of the value
    */
   public func controlChanged(source: AUParameterValueProvider) {
     os_log(.info, log: log, "controlChanged BEGIN - address: %d value: %f", parameter.address, source.value)
+    precondition(Thread.isMainThread, "controlChanged found running on non-main thread")
+
 #if os(macOS)
     NSApp.keyWindow?.makeFirstResponder(nil)
 #endif
@@ -113,22 +115,31 @@ extension FloatParameterEditor: AUParameterEditor {
   }
 
   /**
-   THe parameter changed by some means other than a control. Show the new value and update the knob.
+   The parameter changed, perhaps due to a preset change or some external means. There is no expectation that it is
+   running on the main thread.
    */
   public func parameterChanged() {
     os_log(.info, log: log, "parameterChanged BEGIN - address: %d value: %f", parameter.address, parameter.value)
-    showNewValue(parameter.value)
-    rangedControl.value = useLogValues ? paramValueToControlLogValue(parameter.value) : parameter.value
+    DispatchQueue.main.async(execute: handleParameterChanged)
     os_log(.info, log: log, "parameterChanged END")
   }
 
+  private func handleParameterChanged() {
+    precondition(Thread.isMainThread, "handleParameterChanged found running on non-main thread")
+    showNewValue(parameter.value)
+    rangedControl.value = useLogValues ? paramValueToControlLogValue(parameter.value) : parameter.value
+  }
+
   /**
-   Change the parameter using a value that came entering a text value.
+   Change the parameter using a value that came entering a text value. This should always run on the main thread since
+   it comes after editing the parameter value.
 
    - parameter value: the new value to use.
    */
   public func setEditedValue(_ value: AUValue) {
     os_log(.debug, log: log, "setEditedValue BEGIN - value: %f", value)
+    precondition(Thread.isMainThread, "setEditedValue found running on non-main thread")
+
     let newValue = value.clamp(to: parameter.minValue...parameter.maxValue)
     os_log(.debug, log: log, "setEditedValue - using value: %f", newValue)
     parameter.setValue(newValue, originator: parameterObserverToken)
@@ -178,17 +189,15 @@ private extension FloatParameterEditor {
     parameter.minValue
   }
 
-  func showNewValue(_ value: AUValue) {
+  private func showNewValue(_ value: AUValue) {
     os_log(.info, log: log, "showNewValue BEGIN - %f", value)
     let formattedValue = formatter(value)
-    DispatchQueue.main.async {
-      self.label.text = formattedValue
-      self.restoreName()
-    }
+    self.label.text = formattedValue
+    self.restoreName()
     os_log(.info, log: log, "showNewValue END")
   }
 
-  func restoreName() {
+  private func restoreName() {
     os_log(.info, log: log, "restoreName BEGIN")
     restoreNameTimer?.invalidate()
     let displayName = parameter.displayName
