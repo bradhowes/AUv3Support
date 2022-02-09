@@ -40,6 +40,10 @@ public final class FloatParameterEditor: NSObject {
   private var hasActiveLabel: Bool = false
   private var parameterObserverToken: AUParameterObserverToken!
 
+  #if os(iOS)
+  private var valueEditor: ValueEditor!
+  #endif
+
   /**
    Construct a new instance that links together a RangedControl and a label to an AUParameter value.
 
@@ -83,6 +87,26 @@ public final class FloatParameterEditor: NSObject {
     }
   }
 }
+
+#if os(iOS)
+
+extension FloatParameterEditor {
+
+  public func setValueEditor(valueEditor: ValueEditor, tapToEdit: UIView) {
+    self.valueEditor = valueEditor
+    let gesture = UITapGestureRecognizer(target: self, action: #selector(beginEditing))
+    gesture.numberOfTouchesRequired = 1
+    gesture.numberOfTapsRequired = 1
+    tapToEdit.addGestureRecognizer(gesture)
+    tapToEdit.isUserInteractionEnabled = true
+  }
+
+  @objc private func beginEditing(_ sender: UITapGestureRecognizer) {
+    valueEditor.beginEditing(editor: self)
+  }
+}
+
+#endif
 
 extension FloatParameterEditor: AUParameterEditor {
 

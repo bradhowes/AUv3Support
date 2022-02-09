@@ -21,3 +21,18 @@ public protocol AudioUnitViewConfigurationManager: AnyObject {
    */
   func selectViewConfiguration(_ viewConfiguration: AUAudioUnitViewConfiguration)
 }
+
+public extension AudioUnitViewConfigurationManager {
+
+  func supportedViewConfigurations(_ available: [AUAudioUnitViewConfiguration]) -> IndexSet {
+    var indexSet = IndexSet()
+    for (index, viewConfiguration) in available.enumerated() {
+      if viewConfiguration.width > 0 && viewConfiguration.height > 0 {
+        indexSet.insert(index)
+      }
+    }
+    return indexSet
+  }
+
+  func selectViewConfiguration(_ viewConfiguration: AUAudioUnitViewConfiguration) {}
+}

@@ -4,7 +4,7 @@ import AVKit
 /**
  Protocol for a kernel that can perform audio sample rendering.
  */
-@objc public protocol AudioRenderer {
+@objc public protocol AudioRenderer: AUParameterHandler {
 
   /**
    Start processing.

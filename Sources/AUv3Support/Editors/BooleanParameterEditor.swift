@@ -26,7 +26,8 @@ public final class BooleanParameterEditor: NSObject {
     parameterObserverToken = parameter.token(byAddingParameterObserver: { [weak self] _, _ in
       self?.parameterChanged()
     })
-    booleanControl.isOn = parameter.value >= 0.5 ? true : false
+
+    setState(parameter.value)
   }
 }
 
@@ -34,6 +35,7 @@ extension BooleanParameterEditor: AUParameterEditor {
 
   public func controlChanged(source: AUParameterValueProvider) {
     os_log(.info, log: log, "controlChanged - new: %f state: %d", source.value, booleanControl.isOn)
+    precondition(Thread.isMainThread, "controlChanged found running on non-main thread")
 
     let value = source.value
     if booleanControl !== source {
@@ -47,12 +49,22 @@ extension BooleanParameterEditor: AUParameterEditor {
 
   public func parameterChanged() {
     os_log(.info, log: log, "parameterChanged - %f", parameter.value)
-    booleanControl.isOn = parameter.value >= 0.5 ? true : false
+    DispatchQueue.main.async(execute: handleParameterChanged)
+  }
+
+  private func handleParameterChanged() {
+    precondition(Thread.isMainThread, "handleParameterChanged found running on non-main thread")
+    setState(parameter.value)
   }
 
   public func setEditedValue(_ value: AUValue) {
     os_log(.info, log: log, "setEditedValue - %f", value)
+    precondition(Thread.isMainThread, "setEditedValue found running on non-main thread")
     parameter.setValue(value, originator: parameterObserverToken)
+    setState(value)
+  }
+
+  private func setState(_ value: AUValue) {
     booleanControl.isOn = value >= 0.5 ? true : false
   }
 }

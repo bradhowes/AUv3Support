@@ -29,15 +29,24 @@ public final class FilterAudioUnit: AUAudioUnit {
   /// The associated view controller for the audio unit that shows the controls
   public weak var viewConfigurationManager: AudioUnitViewConfigurationManager?
 
+  public weak var currentPresetMonitor: CurrentPresetMonitor?
+
   /// Initial sample rate
   private let sampleRate: Double = 44100.0
   /// Maximum number of channels to support
   private let maxNumberOfChannels: UInt32 = 8
   /// Maximum frames to render
   private let maxFramesToRender: UInt32 = 512
-  /// The active preset in use
-  private var _currentPreset: AUAudioUnitPreset?
-  
+
+  /// The active preset in use. This is the backing value for the `currentPreset` property.
+  private var _currentPreset: AUAudioUnitPreset? {
+    didSet {
+      if oldValue != _currentPreset {
+        currentPresetMonitor?.currentPresetChanged(_currentPreset)
+      }
+    }
+  }
+
   private var inputBus: AUAudioUnitBus
   private var outputBus: AUAudioUnitBus
   
