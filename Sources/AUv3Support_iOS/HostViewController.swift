@@ -145,6 +145,8 @@ applications.
     playButton.isEnabled = auAudioUnit != nil
     bypassButton.isSelected = false
     bypassButton.isEnabled = auAudioUnit != nil
+    presetSelection.isEnabled = auAudioUnit != nil
+
     audioUnitLoader.cleanup()
     os_log(.debug, log: log, "stopPlaying END")
   }
@@ -164,7 +166,7 @@ extension HostViewController {
     if !isPlaying {
       bypassButton.isSelected = false
     }
-    
+
     os_log(.debug, log: log, "togglePlay END")
   }
 
@@ -261,6 +263,7 @@ private extension HostViewController {
     playButton.isEnabled = true
     presetSelection.isEnabled = true
     userPresetsMenuButton.isEnabled = true
+
     setPresetSelectionControlSegmentSize(audioUnit.auAudioUnit.factoryPresetsNonNil.count)
 
     os_log(.debug, log: log, "connectFilterView END")
