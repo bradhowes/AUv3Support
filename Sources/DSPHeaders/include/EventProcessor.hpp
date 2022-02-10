@@ -44,19 +44,19 @@ public:
   bool isBypassed() { return bypassed_; }
 
   /**
-   Begin processing with the given format and channel count.
+   Update kernel and buffers to support the given format.
 
    @param format the sample format to expect
    @param maxFramesToRender the maximum number of frames to expect on input
    */
-  void startProcessing(AVAudioFormat* format, AUAudioFrameCount maxFramesToRender) {
+  void setRenderingFormat(AVAudioFormat* format, AUAudioFrameCount maxFramesToRender) {
     inputBuffer_.allocateBuffers(format, maxFramesToRender);
   }
 
   /**
-   Stop processing. Free up any resources that were used during rendering.
+   Rendering has stopped. Free up any resources it used.
    */
-  void stopProcessing() { inputBuffer_.releaseBuffers(); }
+  void renderingStopped() { inputBuffer_.releaseBuffers(); }
 
   /**
    Process events and render a given number of frames. Events and rendering are interleaved if necessary so that

@@ -127,7 +127,7 @@ extension FilterAudioUnit {
     currentPreset = parameters.factoryPresets.first
 
     // NOTE: this is needed here. Not sure why yet...
-    kernel.startProcessing(outputBus.format, maxFramesToRender: maxFramesToRender)
+    kernel.setRenderingFormat(outputBus.format, maxFramesToRender: maxFramesToRender)
 
     os_log(.debug, log: log, "configure END")
   }
@@ -268,7 +268,7 @@ extension FilterAudioUnit {
       throw NSError(domain: NSOSStatusErrorDomain, code: Int(kAudioUnitErr_FailedInitialization), userInfo: nil)
     }
 
-    kernel.startProcessing(outputBus.format, maxFramesToRender: maximumFramesToRender)
+    kernel.setRenderingFormat(outputBus.format, maxFramesToRender: maximumFramesToRender)
 
     // Configure parameter value setting to use internal `scheduleParameterBlock` instead of direct updates to kernel.
     let rampDurationInSeconds = 0.02
@@ -291,7 +291,7 @@ extension FilterAudioUnit {
 
     super.deallocateRenderResources()
 
-    kernel.stopProcessing()
+    kernel.renderingStopped()
     parameters.parameterTree.implementorValueObserver = kernel.set(_:value:)
 
     os_log(.debug, log: log, "deallocateRenderResources END")
