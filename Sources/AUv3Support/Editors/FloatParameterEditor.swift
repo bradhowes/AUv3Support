@@ -213,8 +213,7 @@ private extension FloatParameterEditor {
 
   private func showNewValue(_ value: AUValue) {
     os_log(.info, log: log, "showNewValue BEGIN - %f", value)
-    let formattedValue = formatter(value)
-    self.label.text = formattedValue
+    self.label.text = formatter(value)
     self.restoreName()
     os_log(.info, log: log, "showNewValue END")
   }

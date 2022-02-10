@@ -50,10 +50,9 @@ public final class FilterAudioUnit: AUAudioUnit {
   private var inputBus: AUAudioUnitBus
   private var outputBus: AUAudioUnitBus
   
-  private lazy var _inputBusses: AUAudioUnitBusArray = AUAudioUnitBusArray(audioUnit: self, busType: .input,
-                                                                           busses: [inputBus])
-  private lazy var _outputBusses: AUAudioUnitBusArray = AUAudioUnitBusArray(audioUnit: self, busType: .output,
-                                                                            busses: [outputBus])
+  private lazy var _inputBusses: AUAudioUnitBusArray = .init(audioUnit: self, busType: .input, busses: [inputBus])
+  private lazy var _outputBusses: AUAudioUnitBusArray = .init(audioUnit: self, busType: .output, busses: [outputBus])
+
   /**
    Crete a new audio unit asynchronously.
    
@@ -112,28 +111,25 @@ public final class FilterAudioUnit: AUAudioUnit {
 extension FilterAudioUnit {
 
   /**
-   Install the entity that provides the AUParameter definitions for the AUParameterTree. It also may hold factory
-   presets.
+   Install the entity that provides the AUParameter definitions for the AUParameterTree (it also may hold factory
+   presets) and the entity that performs the actual audio sample rendering for the audio unit.
 
    - parameter parameters: the parameter source to use
+   - parameter kernel: the rendering kernel to use
    */
-  public func setParameters(_ parameters: ParameterSource) {
-    os_log(.debug, log: log, "setParameters BEGIN")
+  public func configure(parameters: ParameterSource, kernel: AudioRenderer) {
+    os_log(.debug, log: log, "configure BEGIN")
+
+    self.kernel = kernel
+    parameters.parameterTree.implementorValueObserver = kernel.set(_:value:)
+    parameters.parameterTree.implementorValueProvider = kernel.get(_:)
+
     self.parameters = parameters
     currentPreset = parameters.factoryPresets.first
-    os_log(.debug, log: log, "setParameters END")
-  }
 
-  /**
-   Install the rendering kernel to use.
-
-   - parameter kernel: the custom kernel to use for audio sample rendering
-   */
-  public func setKernel(_ kernel: AudioRenderer) {
-    os_log(.debug, log: log, "setKernel BEGIN")
-    self.kernel = kernel
     kernel.startProcessing(inputBus.format, maxFramesToRender: maxFramesToRender)
-    os_log(.debug, log: log, "setKernel END")
+
+    os_log(.debug, log: log, "setParameters END")
   }
 }
 
@@ -180,7 +176,7 @@ extension FilterAudioUnit {
           _currentPreset = preset
           didChangeValue(for: \.currentPreset)
           os_log(.info, log: log, "updating parameters")
-          parameters?.usePreset(preset)
+          parameters?.useFactoryPreset(preset)
           return
         }
 
@@ -214,9 +210,14 @@ extension FilterAudioUnit {
     get {
       os_log(.info, log: log, "fullState GET")
 
-      // The AUAudioUnit class will provide the current settings from the AUParameterTree. We only add any preset info.
+      // The AUAudioUnit property will return a binary encoding of the parameter tree. It is decodable, but still the
+      // format has not been published. For now, we will use it but a better implementation would be to encode/decode
+      // our own format and rely on that instead of the binary blob that AUAudioUnit provides us.
       var value = super.fullState ?? [String: Any]()
       if let preset = _currentPreset {
+
+        // Record into the state the active preset name and number. This will allow us to recover it later when given
+        // a fullState dictionary.
         value[kAUPresetNameKey] = preset.name
         value[kAUPresetNumberKey] = preset.number
       }
@@ -229,9 +230,9 @@ extension FilterAudioUnit {
       super.fullState = newValue
 
       // Restore *internal* current preset if there was one.
-      if let newValue = newValue,
-         let name = newValue[kAUPresetNameKey] as? String,
-         let number = newValue[kAUPresetNumberKey] as? NSNumber {
+      if let state = newValue,
+         let name = state[kAUPresetNameKey] as? String,
+         let number = state[kAUPresetNumberKey] as? NSNumber {
         os_log(.info, log: log, "name %{public}s number %d", name, number.intValue)
         _currentPreset = AUAudioUnitPreset(number: number.intValue, name: name)
       }
@@ -248,10 +249,12 @@ extension FilterAudioUnit {
    */
   override public func allocateRenderResources() throws {
     os_log(.info, log: log, "allocateRenderResources")
+    try super.allocateRenderResources()
+
     os_log(.debug, log: log, "inputBus format: %{public}s", inputBus.format.description)
     os_log(.debug, log: log, "outputBus format: %{public}s", outputBus.format.description)
     os_log(.debug, log: log, "maximumFramesToRender: %d", maximumFramesToRender)
-    
+
     if outputBus.format.channelCount != inputBus.format.channelCount {
       os_log(.error, log: log, "unequal channel count")
       setRenderResourcesAllocated(false)
@@ -262,18 +265,39 @@ extension FilterAudioUnit {
       throw NSError(domain: NSOSStatusErrorDomain, code: Int(kAudioUnitErr_FailedInitialization), userInfo: nil)
     }
 
-    // Communicate to the kernel the new formats being used
-    kernel?.startProcessing(inputBus.format, maxFramesToRender: maximumFramesToRender)
-    try super.allocateRenderResources()
+    if let kernel = self.kernel,
+       let parameters = self.parameters {
+
+      // Communicate to the kernel the new formats being used
+      kernel.startProcessing(inputBus.format, maxFramesToRender: maximumFramesToRender)
+
+      // Ramp parameter changes over 20 milliseconds using AudioUnit functionality rather than just directly changing
+      // it in the kernel. Perhaps better if this is moved into the kernel, but I think we are safe here, relying on
+      // AudioUnit tech to properly present the change in a thread-safe manner to the kernel.
+      let rampTime = AUAudioFrameCount(0.02 * outputBus.format.sampleRate)
+      let scheduleParameter = scheduleParameterBlock
+      parameters.parameterTree.implementorValueObserver = { param, value in
+        scheduleParameter(AUEventSampleTimeImmediate, rampTime, param.address, value);
+      }
+    }
   }
-  
+
   /**
    Rendering has stopped -- tear down stuff that was supporting it.
    */
   override public func deallocateRenderResources() {
     os_log(.debug, log: log, "before super.deallocateRenderResources")
-    kernel?.stopProcessing()
+
     super.deallocateRenderResources()
+
+    if let kernel = kernel,
+       let parameters = parameters {
+
+      // Not processing audio anymore. Go back to setting parameter values directly in the kernel.
+      kernel.stopProcessing()
+      parameters.parameterTree.implementorValueObserver = kernel.set(_:value:)
+    }
+
     os_log(.debug, log: log, "after super.deallocateRenderResources")
   }
   

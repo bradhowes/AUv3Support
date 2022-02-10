@@ -20,10 +20,8 @@ public enum FilterAudioUnitFactory {
                             parameters: ParameterSource,
                             kernel: AudioRenderer,
                             viewConfigurationManager: AudioUnitViewConfigurationManager?) throws -> FilterAudioUnit {
-    parameters.setParameterHandler(kernel)
     let audioUnit = try FilterAudioUnit(componentDescription: componentDescription, options: [.loadOutOfProcess])
-    audioUnit.setParameters(parameters)
-    audioUnit.setKernel(kernel)
+    audioUnit.configure(parameters: parameters, kernel: kernel)
     audioUnit.viewConfigurationManager = viewConfigurationManager
     return audioUnit
   }

@@ -16,16 +16,9 @@ public protocol ParameterSource {
   var parameters: [AUParameter] { get }
 
   /**
-   Install a delegate that conforms to the `AUParameterHandler` protocol.
-
-   - parameter parameterHandler: the handler to install
-   */
-  func setParameterHandler(_ parameterHandler: AUParameterHandler)
-
-  /**
    Apply the parameter settings found in the given factory preset.
 
    - parameter preset: the preset to apply
    */
-  func usePreset(_ preset: AUAudioUnitPreset)
+  func useFactoryPreset(_ preset: AUAudioUnitPreset)
 }
