@@ -1,6 +1,7 @@
 // Copyright © 2022 Brad Howes. All rights reserved.
 
 import AVFoundation
+import os.log
 
 /**
  Wrapper around AVAudioEngine that manages its wiring with an AVAudioUnit instance.
@@ -9,6 +10,7 @@ public final class SimplePlayEngine {
   static let bundle = Bundle(for: SimplePlayEngine.self)
   static let bundleIdentifier = bundle.bundleIdentifier!
 
+  private let log: OSLog
   private let engine = AVAudioEngine()
   private let player = AVAudioPlayerNode()
   private var activeEffect: AVAudioUnit?
@@ -38,11 +40,11 @@ public final class SimplePlayEngine {
    Create new audio processing setup, with an audio file player connected directly to the mixer for the main
    output device.
    */
-  public init(audioFileName: String) {
+  public init(name: String, audioFileName: String) {
+    self.log = .init(subsystem: name, category: "SimplePlayEngine")
     self.file = Self.audioFileResource(name: audioFileName)
     engine.attach(player)
     engine.connect(player, to: engine.mainMixerNode, format: file.processingFormat)
-    engine.prepare()
   }
 }
 
@@ -52,29 +54,37 @@ extension SimplePlayEngine {
    Start playback of the audio file player.
    */
   public func start() {
+    os_log(.debug, log: log, "start BEGIN")
     stateChangeQueue.sync {
       guard !player.isPlaying else { return }
       updateAudioSession(active: true)
       beginLoop()
       do {
+        os_log(.debug, log: log, "start - starting engine")
         try engine.start()
       } catch {
         fatalError("failed to start AVAudioEngine")
       }
+      os_log(.debug, log: log, "start - starting player")
       player.play()
     }
+    os_log(.debug, log: log, "start END")
   }
 
   /**
    Stop playback of the audio file player.
    */
   public func stop() {
+    os_log(.debug, log: log, "stop BEGIN")
     stateChangeQueue.sync {
       guard player.isPlaying else { return }
+      os_log(.debug, log: log, "stop - stopping player")
       player.stop()
+      os_log(.debug, log: log, "stop - stopping engine")
       engine.stop()
       updateAudioSession(active: false)
     }
+    os_log(.debug, log: log, "stop END")
   }
 
   /**
@@ -96,28 +106,38 @@ extension SimplePlayEngine {
    @param completion closure to call when finished
    */
   public func connectEffect(audioUnit: AVAudioUnit, completion: @escaping (() -> Void) = {}) {
+    os_log(.debug, log: log, "connectEffect BEGIN")
     defer { completion() }
     pauseWhile {
       disconnectEffect()
       activeEffect = audioUnit
+      os_log(.debug, log: log, "connectEffect - attaching effect")
       engine.attach(audioUnit)
+      os_log(.debug, log: log, "connectEffect - connecting player to effect")
       engine.connect(player, to: audioUnit, format: file.processingFormat)
+      os_log(.debug, log: log, "connectEffect - connecting effect to mixer")
       engine.connect(audioUnit, to: engine.mainMixerNode, format: file.processingFormat)
     }
+    os_log(.debug, log: log, "connectEffect END")
   }
 
   /**
    Uninstall a previously-installed effect AudioUnit.
    */
   public func disconnectEffect() {
+    os_log(.debug, log: log, "disconnectEffect BEGIN")
     guard let previous = activeEffect else { return }
     activeEffect = nil
     pauseWhile {
+      os_log(.debug, log: log, "disconnectEffect - disconnecting effect")
       engine.disconnectNodeInput(previous)
       engine.disconnectNodeInput(engine.mainMixerNode)
+      os_log(.debug, log: log, "disconnectEffect - detaching effect")
       engine.detach(previous)
+      os_log(.debug, log: log, "disconnectEffect - connecting player to mixer")
       engine.connect(player, to: engine.mainMixerNode, format: file.processingFormat)
     }
+    os_log(.debug, log: log, "disconnectEffect END")
   }
 }
 
@@ -138,6 +158,7 @@ private extension SimplePlayEngine {
 
   private func updateAudioSession(active: Bool) {
     #if os(iOS)
+    os_log(.debug, log: log, "updateAudioSession BEGIN - active: %d", active)
     let session = AVAudioSession.sharedInstance()
     do {
       try session.setCategory(.playback, mode: .default)
@@ -145,6 +166,7 @@ private extension SimplePlayEngine {
     } catch {
       fatalError("Could not set Audio Session active \(active). error: \(error).")
     }
+    os_log(.debug, log: log, "updateAudioSession END")
     #endif
   }
 

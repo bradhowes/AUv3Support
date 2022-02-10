@@ -79,21 +79,20 @@ public final class FilterAudioUnit: AUAudioUnit {
    */
   override public init(componentDescription: AudioComponentDescription,
                        options: AudioComponentInstantiationOptions = []) throws {
-    // Start with the default format. Host or downstream AudioUnit can change the format of the input/output bus
-    // objects later between calls to allocateRenderResources().
+
     guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2) else {
       os_log(.error, log: log, "failed to create AVAudioFormat format")
       throw Failure.unableToInitialize(String(describing: AVAudioFormat.self))
     }
-    
+
     os_log(.debug, log: log, "format: %{public}s", format.description)
     inputBus = try AUAudioUnitBus(format: format)
     inputBus.maximumChannelCount = maxNumberOfChannels
-    
+
     os_log(.debug, log: log, "creating output bus")
     outputBus = try AUAudioUnitBus(format: format)
     outputBus.maximumChannelCount = maxNumberOfChannels
-    
+
     try super.init(componentDescription: componentDescription, options: options)
     
     os_log(.debug, log: log, "type: %{public}s, subtype: %{public}s, manufacturer: %{public}s flags: %x",
@@ -101,7 +100,7 @@ public final class FilterAudioUnit: AUAudioUnit {
            componentDescription.componentSubType.stringValue,
            componentDescription.componentManufacturer.stringValue,
            componentDescription.componentFlags)
-    
+
     maximumFramesToRender = maxFramesToRender
   }
 }
@@ -121,15 +120,16 @@ extension FilterAudioUnit {
     os_log(.debug, log: log, "configure BEGIN")
 
     self.kernel = kernel
-    parameters.parameterTree.implementorValueObserver = kernel.set(_:value:)
     parameters.parameterTree.implementorValueProvider = kernel.get(_:)
+    parameters.parameterTree.implementorValueObserver = kernel.set(_:value:)
 
     self.parameters = parameters
     currentPreset = parameters.factoryPresets.first
 
-    kernel.startProcessing(inputBus.format, maxFramesToRender: maxFramesToRender)
+    // NOTE: this is needed here. Not sure why yet...
+    kernel.startProcessing(outputBus.format, maxFramesToRender: maxFramesToRender)
 
-    os_log(.debug, log: log, "setParameters END")
+    os_log(.debug, log: log, "configure END")
   }
 }
 
@@ -248,7 +248,10 @@ extension FilterAudioUnit {
    routine should `setRenderResourcesAllocated(false)`.
    */
   override public func allocateRenderResources() throws {
-    os_log(.info, log: log, "allocateRenderResources")
+    os_log(.info, log: log, "allocateRenderResources BEGIN")
+    guard let kernel = kernel else { fatalError("FilterAudioUnit not configured with kernel") }
+    guard let parameters = parameters else { fatalError("FilterAudioUnit not configured with parameter source") }
+
     try super.allocateRenderResources()
 
     os_log(.debug, log: log, "inputBus format: %{public}s", inputBus.format.description)
@@ -265,46 +268,39 @@ extension FilterAudioUnit {
       throw NSError(domain: NSOSStatusErrorDomain, code: Int(kAudioUnitErr_FailedInitialization), userInfo: nil)
     }
 
-    if let kernel = self.kernel,
-       let parameters = self.parameters {
+    kernel.startProcessing(outputBus.format, maxFramesToRender: maximumFramesToRender)
 
-      // Communicate to the kernel the new formats being used
-      kernel.startProcessing(inputBus.format, maxFramesToRender: maximumFramesToRender)
-
-      // Ramp parameter changes over 20 milliseconds using AudioUnit functionality rather than just directly changing
-      // it in the kernel. Perhaps better if this is moved into the kernel, but I think we are safe here, relying on
-      // AudioUnit tech to properly present the change in a thread-safe manner to the kernel.
-      let rampTime = AUAudioFrameCount(0.02 * outputBus.format.sampleRate)
-      let scheduleParameter = scheduleParameterBlock
-      parameters.parameterTree.implementorValueObserver = { param, value in
-        scheduleParameter(AUEventSampleTimeImmediate, rampTime, param.address, value);
-      }
+    // Configure parameter value setting to use internal `scheduleParameterBlock` instead of direct updates to kernel.
+    let rampDurationInSeconds = 0.02
+    let rampDurationInSamples = AUAudioFrameCount(rampDurationInSeconds * outputBus.format.sampleRate)
+    let scheduleParameter = scheduleParameterBlock
+    parameters.parameterTree.implementorValueObserver = { param, value in
+      scheduleParameter(AUEventSampleTimeImmediate, rampDurationInSamples, param.address, value);
     }
+
+    os_log(.info, log: log, "allocateRenderResources END")
   }
 
   /**
    Rendering has stopped -- tear down stuff that was supporting it.
    */
   override public func deallocateRenderResources() {
-    os_log(.debug, log: log, "before super.deallocateRenderResources")
+    os_log(.debug, log: log, "deallocateRenderResources BEGIN")
+    guard let kernel = kernel else { fatalError("FilterAudioUnit not configured with kernel") }
+    guard let parameters = parameters else { fatalError("FilterAudioUnit not configured with parameter source") }
 
     super.deallocateRenderResources()
 
-    if let kernel = kernel,
-       let parameters = parameters {
+    kernel.stopProcessing()
+    parameters.parameterTree.implementorValueObserver = kernel.set(_:value:)
 
-      // Not processing audio anymore. Go back to setting parameter values directly in the kernel.
-      kernel.stopProcessing()
-      parameters.parameterTree.implementorValueObserver = kernel.set(_:value:)
-    }
-
-    os_log(.debug, log: log, "after super.deallocateRenderResources")
+    os_log(.debug, log: log, "deallocateRenderResources END")
   }
   
   override public var internalRenderBlock: AUInternalRenderBlock {
-    os_log(.info, log: log, "internalRenderBlock")
-    precondition(kernel != nil, "nil for kernel")
-    return kernel!.internalRenderBlock()
+    os_log(.info, log: log, "internalRenderBlock BEGIN")
+    guard let kernel = kernel else { fatalError("nil kernel") }
+    return kernel.internalRenderBlock() // (transportStateBlock)
   }
 }
 

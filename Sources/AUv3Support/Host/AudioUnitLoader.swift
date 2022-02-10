@@ -88,7 +88,7 @@ public final class AudioUnitLoader: NSObject {
   public init(name: String, componentDescription: AudioComponentDescription, loop: SampleLoop) {
     self.log = .init(subsystem: name, category: "AudioUnitLoader")
     self.locateQueue = .init(label: name + ".LocateQueue", qos: .userInitiated)
-    self.playEngine = .init(audioFileName: loop.rawValue)
+    self.playEngine = .init(name: name, audioFileName: loop.rawValue)
     self.componentDescription = componentDescription
     self.searchCriteria = AudioComponentDescription(componentType: componentDescription.componentType,
                                                     componentSubType: 0,

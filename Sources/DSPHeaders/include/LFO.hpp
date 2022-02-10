@@ -31,9 +31,10 @@ public:
    @param frequency the frequency of the oscillator
    @param waveform the waveform to emit
    */
-  LFO(T sampleRate, T frequency, LFOWaveform waveform) : valueGenerator_{WaveformGenerator(waveform)}
+  LFO(T sampleRate, T frequency, LFOWaveform waveform)
+  : valueGenerator_{WaveformGenerator(waveform)}, sampleRate_{sampleRate}
   {
-    initialize(sampleRate, frequency);
+    setFrequency(frequency, 0);
     reset();
   }
   
@@ -53,10 +54,13 @@ public:
    @param sampleRate number of samples per second
    @param frequency the frequency of the oscillator
    */
-  void initialize(T sampleRate, T frequency) {
+  void setSampleRate(T sampleRate) {
+
+    // We don't keep around the LFO frequency. It can be recalculated but that depends on existing sampleRate_ value.
+    // Save the current frequency value and then reapply it after changing sampleRate_.
+    auto tmp = frequency();
     sampleRate_ = sampleRate;
-    setFrequency(frequency, 0);
-    reset();
+    setFrequency(tmp, 0);
   }
 
   /**
@@ -72,6 +76,7 @@ public:
    @param frequency the frequency to operate at
    */
   void setFrequency(T frequency, AUAudioFrameCount duration) {
+    assert(sampleRate_ != 0.0);
     phaseIncrement_.set(frequency / sampleRate_, duration);
   }
 
