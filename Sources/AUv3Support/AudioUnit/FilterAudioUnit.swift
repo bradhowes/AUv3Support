@@ -35,8 +35,6 @@ public final class FilterAudioUnit: AUAudioUnit {
   private let sampleRate: Double = 44100.0
   /// Maximum number of channels to support
   private let maxNumberOfChannels: UInt32 = 8
-  /// Maximum frames to render
-  private let maxFramesToRender: UInt32 = 512
 
   /// The active preset in use. This is the backing value for the `currentPreset` property.
   private var _currentPreset: AUAudioUnitPreset? {
@@ -100,8 +98,6 @@ public final class FilterAudioUnit: AUAudioUnit {
            componentDescription.componentSubType.stringValue,
            componentDescription.componentManufacturer.stringValue,
            componentDescription.componentFlags)
-
-    maximumFramesToRender = maxFramesToRender
   }
 }
 
@@ -122,12 +118,11 @@ extension FilterAudioUnit {
     self.kernel = kernel
     parameters.parameterTree.implementorValueProvider = kernel.get(_:)
     parameters.parameterTree.implementorValueObserver = kernel.set(_:value:)
-
     self.parameters = parameters
-    currentPreset = parameters.factoryPresets.first
 
-    // NOTE: this is needed here. Not sure why yet...
-    // kernel.setRenderingFormat(outputBus.format, maxFramesToRender: maxFramesToRender)
+    // At start, configure effect to do something interesting. Hosts can and should update the effect state after it is
+    // initialized via `fullState` attribute.
+    currentPreset = parameters.factoryPresets.first
 
     os_log(.debug, log: log, "configure END")
   }
