@@ -73,6 +73,9 @@ public:
                                      AudioBufferList* output, const AURenderEvent* realtimeEventListHead,
                                      AURenderPullInputBlock pullInputBlock)
   {
+    if (frameCount > inputBuffer_.capacity()) return kAudioUnitErr_TooManyFramesToProcess;
+    if (pullInputBlock == nullptr) return kAudioUnitErr_NoConnection;
+
     AudioUnitRenderActionFlags actionFlags = 0;
     auto status = inputBuffer_.pullInput(&actionFlags, timestamp, frameCount, inputBusNumber, pullInputBlock);
     if (status != noErr) {
