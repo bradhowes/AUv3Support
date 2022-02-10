@@ -127,7 +127,7 @@ extension FilterAudioUnit {
     currentPreset = parameters.factoryPresets.first
 
     // NOTE: this is needed here. Not sure why yet...
-    kernel.setRenderingFormat(outputBus.format, maxFramesToRender: maxFramesToRender)
+    // kernel.setRenderingFormat(outputBus.format, maxFramesToRender: maxFramesToRender)
 
     os_log(.debug, log: log, "configure END")
   }
