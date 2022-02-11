@@ -7,7 +7,7 @@
 #import "DSP.hpp"
 #import "RampingParameter.hpp"
 
-enum class LFOWaveform { sinusoid, triangle, sawtooth };
+enum class LFOWaveform { sinusoid, triangle, sawtooth, square};
 
 /**
  Implementation of a low-frequency oscillator. Can generate:
@@ -124,23 +124,25 @@ private:
       case LFOWaveform::sinusoid: return sineValue;
       case LFOWaveform::sawtooth: return sawtoothValue;
       case LFOWaveform::triangle: return triangleValue;
+      case LFOWaveform::square: return squareValue;
     }
   }
-  
+
   static double wrappedModuloCounter(T counter, T inc) {
     if (inc > 0 && counter >= 1.0) return counter - 1.0;
     if (inc < 0 && counter <= 0.0) return counter + 1.0;
     return counter;
   }
-  
+
   static T incrementModuloCounter(T counter, T inc) { return wrappedModuloCounter(counter + inc, inc); }
   static T sineValue(T counter) { return DSP::parabolicSine(M_PI - counter * 2.0 * M_PI); }
   static T sawtoothValue(T counter) { return DSP::unipolarToBipolar(counter); }
   static T triangleValue(T counter) { return DSP::unipolarToBipolar(std::abs(DSP::unipolarToBipolar(counter))); }
-  
+  static T squareValue(T counter) { return counter >= 0.5 ? 1.0 : -1.0; }
+
   T sampleRate_;
   std::function<T(T)> valueGenerator_;
   T moduloCounter_ = {0.0};
-  T quadPhaseCounter_ = {0.0};
+  T quadPhaseCounter_ = {0.25};
   RampingParameter<T> phaseIncrement_;
 };

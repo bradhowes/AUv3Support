@@ -114,4 +114,26 @@
   SamplesEqual(osc.quadPhaseValue(), -0.25);
 }
 
+- (void)testSquareSamples {
+  LFO<float> osc(8.0, 1.0, LFOWaveform::square);
+  SamplesEqual(osc.value(), -1.0);
+  osc.increment();
+  SamplesEqual(osc.value(), -1.0);
+  osc.increment();
+  SamplesEqual(osc.value(), -1.0);
+  osc.increment();
+  SamplesEqual(osc.value(), -1.0);
+  osc.increment();
+  SamplesEqual(osc.value(),  1.0);
+  osc.increment();
+  SamplesEqual(osc.value(),  1.0);
+  osc.increment();
+  SamplesEqual(osc.value(),  1.0);
+  osc.increment();
+  SamplesEqual(osc.value(),  1.0);
+  osc.increment();
+  SamplesEqual(osc.value(), -1.0);
+}
+
+
 @end
