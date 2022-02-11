@@ -1,3 +1,4 @@
+[![CI](https://github.com/bradhowes/AUv3Support/actions/workflows/CI.yml/badge.svg)](https://github.com/bradhowes/AUv3Support/actions/workflows/CI.yml)
 ![Swift](https://img.shields.io/badge/Swift-5.5-red.svg)
 ![SPM](https://img.shields.io/badge/SPM-5.5-red.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-A31F34.svg)](https://opensource.org/licenses/MIT)
