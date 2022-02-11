@@ -19,8 +19,8 @@ Swift package containing useful code for AUv3 app extensions. There are three pr
   menu items not connected to delegate slots, toolbar buttons not connected to the window.
 
 These libraries are now being used by my [SimplyFlange](https://github.com/bradhowes/SimplyFlange), 
-[SimplyPhaser](https://github.com/bradhowes/SimplePhaser), and
-[AUv3Template](https://github.com/bradhowes/AUv3Template] projects.
+[SimplyPhaser](https://github.com/bradhowes/SimplyPhaser), and
+[AUv3Template](https://github.com/bradhowes/AUv3Template) projects.
 
 # AUv3Support
 
