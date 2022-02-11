@@ -2,10 +2,10 @@ import AudioUnit
 import XCTest
 @testable import AUv3Support
 
-let logInit = Shared.logger("SubSystem", "Category")
+fileprivate class MockAudioUnit: AUAudioUnitPresetsFacade {
+  static let log = Shared.logger("SubSystem", "Category")
+  private let log = MockAudioUnit.log
 
-class MockAudioUnit: AUAudioUnitPresetsFacade {
-  private let log = Shared.logger("MockAudioUnit")
   var factoryPresetsNonNil: [AUAudioUnitPreset] = [.init(number: 0, name: "Zero"),
                                                    .init(number: 1, name: "One")
   ]
@@ -29,7 +29,7 @@ class MockAudioUnit: AUAudioUnitPresetsFacade {
   }
 }
 
-final class UserPresetsManagerTests: XCTestCase {
+fileprivate final class UserPresetsManagerTests: XCTestCase {
 
   var mock: MockAudioUnit!
   var upm: UserPresetsManager!

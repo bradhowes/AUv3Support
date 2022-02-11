@@ -39,7 +39,7 @@ extension BooleanParameterEditor: AUParameterEditor {
 
     let value = source.value
     if booleanControl !== source {
-      booleanControl.isOn = value >= 0.5 ? true : false
+      setState(value)
     }
 
     if value != parameter.value {
@@ -60,11 +60,16 @@ extension BooleanParameterEditor: AUParameterEditor {
   public func setEditedValue(_ value: AUValue) {
     os_log(.info, log: log, "setEditedValue - %f", value)
     precondition(Thread.isMainThread, "setEditedValue found running on non-main thread")
-    parameter.setValue(value, originator: parameterObserverToken)
     setState(value)
+    parameter.setValue(value, originator: parameterObserverToken)
   }
 
   private func setState(_ value: AUValue) {
-    booleanControl.isOn = value >= 0.5 ? true : false
+    os_log(.info, log: log, "setState - value: %f current: %d", value, booleanControl.isOn)
+    let newState = value >= 0.5 ? true : false
+    if newState != booleanControl.isOn {
+      os_log(.info, log: log, "setState - setting to %d", newState)
+      booleanControl.isOn = newState
+    }
   }
 }

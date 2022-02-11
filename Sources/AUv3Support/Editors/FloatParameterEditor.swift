@@ -30,9 +30,10 @@ public final class FloatParameterEditor: NSObject {
   private let logSliderMinValue: Float = 0.0
   private let logSliderMaxValue: Float = 9.0
   private lazy var logSliderMaxValuePower2Minus1 = Float(pow(2, logSliderMaxValue) - 1)
+
   private let formatter: (AUValue) -> String
   private let rangedControl: RangedControl
-  private let label: Label
+  private let label: Label?
   private let useLogValues: Bool
   private var restoreNameTimer: Timer?
   private var hasActiveLabel: Bool = false
@@ -51,7 +52,7 @@ public final class FloatParameterEditor: NSObject {
    - parameter label: the Label to show the new value
    */
   public init(parameter: AUParameter, formatter: @escaping (AUValue) -> String, rangedControl: RangedControl,
-              label: Label) {
+              label: Label?) {
     self.log = Shared.logger("FloatParameterEditor")
     self.parameter = parameter
     self.formatter = formatter
@@ -65,12 +66,12 @@ public final class FloatParameterEditor: NSObject {
     })
 
     rangedControl.setParameterAddress(parameter.address)
-    label.setParameterAddress(parameter.address)
+    label?.setParameterAddress(parameter.address)
     
-    self.label.text = parameter.displayName
+    label?.text = parameter.displayName
 #if os(macOS)
-    self.label.delegate = self
-    self.label.onFocusChange = onFocusChanged
+    label?.delegate = self
+    label?.onFocusChange = onFocusChanged
 #endif
 
     if useLogValues {
@@ -118,7 +119,7 @@ extension FloatParameterEditor: AUParameterEditor {
     precondition(Thread.isMainThread, "controlChanged found running on non-main thread")
 
 #if os(macOS)
-    NSApp.keyWindow?.makeFirstResponder(nil)
+    NSApp?.keyWindow?.makeFirstResponder(nil)
 #endif
 
     if rangedControl !== source {
@@ -175,6 +176,7 @@ private extension FloatParameterEditor {
 
 #if os(macOS)
   func onFocusChanged(hasFocus: Bool) {
+    guard let label = self.label else { fatalError("expected non-nil label") }
     os_log(.debug, log: log, "onFocusChanged - hasFocus: %d", hasFocus)
     if hasFocus {
       hasActiveLabel = true
@@ -213,20 +215,20 @@ private extension FloatParameterEditor {
 
   private func showNewValue(_ value: AUValue) {
     os_log(.info, log: log, "showNewValue BEGIN - %f", value)
-    self.label.text = formatter(value)
-    self.restoreName()
+    label?.text = formatter(value)
+    restoreName()
     os_log(.info, log: log, "showNewValue END")
   }
 
   private func restoreName() {
     os_log(.info, log: log, "restoreName BEGIN")
     restoreNameTimer?.invalidate()
+    guard let label = label else { return }
     let displayName = parameter.displayName
-    let label = self.label
     restoreNameTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
       os_log(.debug, log: self.log, "restoreName: %{public}s", displayName)
 #if os(iOS)
-      UIView.transition(with: self.label, duration: 0.5, options: [.curveLinear, .transitionCrossDissolve]) {
+      UIView.transition(with: label, duration: 0.5, options: [.curveLinear, .transitionCrossDissolve]) {
         label.text = displayName
       } completion: { _ in
         label.text = displayName
