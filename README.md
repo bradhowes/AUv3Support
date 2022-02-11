@@ -18,6 +18,10 @@ Swift package containing useful code for AUv3 app extensions. There are three pr
   macOS as it is for iOS. So far I have not been able to get a good load from a storyboard held in this package:
   menu items not connected to delegate slots, toolbar buttons not connected to the window.
 
+These libraries are now being used by my [SimplyFlange](https://github.com/bradhowes/SimplyFlange), 
+[SimplyPhaser](https://github.com/bradhowes/SimplePhaser), and
+[AUv3Template](https://github.com/bradhowes/AUv3Template] projects.
+
 # AUv3Support
 
 In the AUv3-Support product you will find various classes and extension to make things easier when working with AUv3
