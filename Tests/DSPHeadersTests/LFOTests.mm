@@ -23,6 +23,8 @@
 
 - (void)testSinusoidSamples {
   LFO<float> osc(4.0, 1.0, LFOWaveform::sinusoid);
+  XCTAssertEqual(LFOWaveform::sinusoid, osc.waveform());
+
   SamplesEqual(osc.value(),  0.0);
   osc.increment();
   SamplesEqual(osc.value(),  1.0);
@@ -42,6 +44,8 @@
 
 - (void)testSawtoothSamples {
   LFO<float> osc(8.0, 1.0, LFOWaveform::sawtooth);
+  XCTAssertEqual(LFOWaveform::sawtooth, osc.waveform());
+
   SamplesEqual(osc.value(), -1.00);
   osc.increment();
   SamplesEqual(osc.value(), -0.75);
@@ -63,6 +67,8 @@
 
 - (void)testTriangleSamples {
   LFO<float> osc(8.0, 1.0, LFOWaveform::triangle);
+  XCTAssertEqual(LFOWaveform::triangle, osc.waveform());
+
   SamplesEqual(osc.value(),  1.0);
   osc.increment();
   SamplesEqual(osc.value(),  0.5);
@@ -84,6 +90,8 @@
 
 - (void)testQuadPhaseSamples {
   LFO<float> osc(8.0, 1.0, LFOWaveform::sawtooth);
+  XCTAssertEqual(LFOWaveform::sawtooth, osc.waveform());
+
   SamplesEqual(osc.value(), -1.00);
   osc.increment();
   SamplesEqual(osc.quadPhaseValue(), -0.250);
@@ -116,6 +124,8 @@
 
 - (void)testSquareSamples {
   LFO<float> osc(8.0, 1.0, LFOWaveform::square);
+  XCTAssertEqual(LFOWaveform::square, osc.waveform());
+
   SamplesEqual(osc.value(), -1.0);
   osc.increment();
   SamplesEqual(osc.value(), -1.0);

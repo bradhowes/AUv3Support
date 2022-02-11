@@ -32,7 +32,7 @@ public:
    @param waveform the waveform to emit
    */
   LFO(T sampleRate, T frequency, LFOWaveform waveform)
-  : valueGenerator_{WaveformGenerator(waveform)}, sampleRate_{sampleRate}
+  : valueGenerator_{WaveformGenerator(waveform)}, sampleRate_{sampleRate}, waveform_{waveform}
   {
     setFrequency(frequency, 0);
     reset();
@@ -68,7 +68,10 @@ public:
    
    @param waveform the waveform to emit
    */
-  void setWaveform(LFOWaveform waveform) { valueGenerator_ = WaveformGenerator(waveform); }
+  void setWaveform(LFOWaveform waveform) {
+    waveform_ = waveform;
+    valueGenerator_ = WaveformGenerator(waveform);
+  }
   
   /**
    Set the frequency of the oscillator.
@@ -116,6 +119,8 @@ public:
    */
   T frequency() const { return phaseIncrement_.get() * sampleRate_; }
 
+  LFOWaveform waveform() const { return waveform_; }
+
 private:
   using ValueGenerator = std::function<T(T)>;
   
@@ -145,4 +150,5 @@ private:
   T moduloCounter_ = {0.0};
   T quadPhaseCounter_ = {0.25};
   RampingParameter<T> phaseIncrement_;
+  LFOWaveform waveform_;
 };
