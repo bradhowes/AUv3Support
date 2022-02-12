@@ -165,7 +165,7 @@ public final class AudioUnitLoader: NSObject {
       }
 
       // Hosts are expected to set this value
-      avAudioUnit.auAudioUnit.maximumFramesToRender = 512
+      avAudioUnit.auAudioUnit.maximumFramesToRender = 2048
 
       DispatchQueue.main.async {
         self.createViewController(avAudioUnit)
