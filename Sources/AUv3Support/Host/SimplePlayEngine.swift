@@ -113,10 +113,12 @@ extension SimplePlayEngine {
       activeEffect = audioUnit
       os_log(.debug, log: log, "connectEffect - attaching effect")
       engine.attach(audioUnit)
-      os_log(.debug, log: log, "connectEffect - connecting player to effect")
-      engine.connect(player, to: audioUnit, format: file.processingFormat)
+      os_log(.debug, log: log, "connectEffect - connecting player to effect - format: %{public}s",
+             file.processingFormat.description)
+      engine.connect(player, to: audioUnit, format: nil)
       os_log(.debug, log: log, "connectEffect - connecting effect to mixer")
-      engine.connect(audioUnit, to: engine.mainMixerNode, format: file.processingFormat)
+      // engine.connect(audioUnit, to: engine.mainMixerNode, format: file.processingFormat)
+      engine.connect(audioUnit, to: engine.mainMixerNode, format: nil)
     }
     os_log(.debug, log: log, "connectEffect END")
   }
