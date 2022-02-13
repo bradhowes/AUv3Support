@@ -21,4 +21,10 @@ public protocol ParameterSource {
    - parameter preset: the preset to apply
    */
   func useFactoryPreset(_ preset: AUAudioUnitPreset)
+
+  /**
+   Add parameter values to the given state dictionary. This is not strictly necessary since the state dict already has
+   the values in its `data` key, but that is in a binary format.
+   */
+  func storeParameters(into dict: inout [String: Any])
 }
