@@ -209,6 +209,7 @@ extension FilterAudioUnit {
       // format has not been published. For now, we will use it but a better implementation would be to encode/decode
       // our own format and rely on that instead of the binary blob that AUAudioUnit provides us.
       var value = super.fullState ?? [String: Any]()
+      parameters?.storeParameters(into: &value)
       if let preset = _currentPreset {
 
         // Record into the state the active preset name and number. This will allow us to recover it later when given
@@ -266,8 +267,7 @@ extension FilterAudioUnit {
     kernel.setRenderingFormat(outputBus.format, maxFramesToRender: maximumFramesToRender)
 
     // Configure parameter value setting to use internal `scheduleParameterBlock` instead of direct updates to kernel.
-    let rampDurationInSeconds = 0.02
-    let rampDurationInSamples = AUAudioFrameCount(rampDurationInSeconds * outputBus.format.sampleRate)
+    let rampDurationInSamples = AUAudioFrameCount(30)
     let scheduleParameter = scheduleParameterBlock
     parameters.parameterTree.implementorValueObserver = { param, value in
       scheduleParameter(AUEventSampleTimeImmediate, rampDurationInSamples, param.address, value);
