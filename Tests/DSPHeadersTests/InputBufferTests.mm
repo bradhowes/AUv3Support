@@ -3,6 +3,7 @@
 #import <XCTest/XCTest.h>
 #import <vector>
 
+#import "../../Sources/DSPHeaders/include/EventProcessor.hpp"
 #import "../../Sources/DSPHeaders/include/InputBuffer.hpp"
 
 @interface InputBufferTests : XCTestCase

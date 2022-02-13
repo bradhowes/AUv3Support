@@ -4,8 +4,8 @@
 extension ClosedRange where Bound : BinaryFloatingPoint {
 
   /// Obtain the difference between the upper bound and lower bound
-  public var span: Bound { upperBound - lowerBound }
+  public var distance: Bound { upperBound - lowerBound }
 
   /// Obtain the value that lies between the bounds of the range.
-  public var mid: Bound { (upperBound - lowerBound) / 2.0 + lowerBound }
+  public var mid: Bound { distance / 2.0 + lowerBound }
 }

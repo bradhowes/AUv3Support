@@ -11,7 +11,7 @@ class ClosedRangeTests: XCTestCase {
   }
 
   func testProperties() throws {
-    XCTAssertEqual((10...20).mid, 15.0)
-    XCTAssertEqual((10...20).span, 10.0)
+    XCTAssertEqual((10.0...20.0).mid, 15.0)
+    XCTAssertEqual((10.1...17.5).mid, 13.8)
   }
 }
