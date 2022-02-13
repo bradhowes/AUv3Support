@@ -15,3 +15,7 @@ public extension AUParameterTree {
     parameter(withAddress: source.parameterAddress)
   }
 }
+
+public extension AUParameter {
+  var range: ClosedRange<AUValue> { minValue...maxValue }
+}
