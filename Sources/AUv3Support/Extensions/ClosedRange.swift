@@ -1,6 +1,5 @@
 // Copyright © 2022 Brad Howes. All rights reserved.
 
-
 extension ClosedRange where Bound : BinaryFloatingPoint {
 
   /// Obtain the difference between the upper bound and lower bound
