@@ -1,10 +1,10 @@
 // Copyright © 2022 Brad Howes. All rights reserved.
 
-extension ClosedRange where Bound : BinaryFloatingPoint {
-
-  /// Obtain the difference between the upper bound and lower bound
-  public var distance: Bound { upperBound - lowerBound }
-
-  /// Obtain the value that lies between the bounds of the range.
-  public var mid: Bound { distance / 2.0 + lowerBound }
-}
+//extension ClosedRange where Bound : BinaryFloatingPoint {
+//
+//  /// Obtain the difference between the upper bound and lower bound
+//  public var distance: Bound { upperBound - lowerBound }
+//
+//  /// Obtain the value that lies between the bounds of the range.
+//  public var mid: Bound { distance / 2.0 + lowerBound }
+//}
