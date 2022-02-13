@@ -65,11 +65,11 @@ public final class AudioUnitLoader: NSObject {
 
   private let lastStateKey = "lastStateKey"
   private let playEngine: SimplePlayEngine
-  private let locateQueue: DispatchQueue
   private let componentDescription: AudioComponentDescription
   private let searchCriteria: AudioComponentDescription
   private var creationError: AudioUnitLoaderError? { didSet { notifyDelegate() } }
-  private var detectionTimer: Timer?
+  private var remainingLocateAttempts = 50
+  private let delayBeforeNextLocateAttempt = 0.2
 
   /**
    The loops that are available.
@@ -87,7 +87,6 @@ public final class AudioUnitLoader: NSObject {
    */
   public init(name: String, componentDescription: AudioComponentDescription, loop: SampleLoop) {
     self.log = .init(subsystem: name, category: "AudioUnitLoader")
-    self.locateQueue = .init(label: name + ".LocateQueue", qos: .userInitiated)
     self.playEngine = .init(name: name, audioFileName: loop.rawValue)
     self.componentDescription = componentDescription
     self.searchCriteria = AudioComponentDescription(componentType: componentDescription.componentType,
@@ -96,15 +95,7 @@ public final class AudioUnitLoader: NSObject {
                                                     componentFlags: 0,
                                                     componentFlagsMask: 0)
     super.init()
-
-    NotificationCenter.default.addObserver(self, selector: #selector(check(_:)),
-                                           name: AVAudioUnitComponentManager.registrationsChangedNotification,
-                                           object: nil)
-    locateQueue.async { self.locate() }
-  }
-
-  @objc func check(_ notification: Notification) {
-    locateQueue.async { self.locate() }
+    self.locate()
   }
 
   /**
@@ -125,7 +116,7 @@ public final class AudioUnitLoader: NSObject {
          each.audioComponentDescription.componentSubType == self.componentDescription.componentSubType {
         os_log(.debug, log: self.log, "found match")
 
-        NotificationCenter.default.removeObserver(self)
+        // NotificationCenter.default.removeObserver(self)
 
         DispatchQueue.main.async {
           self.createAudioUnit(each.audioComponentDescription)
@@ -134,6 +125,14 @@ public final class AudioUnitLoader: NSObject {
       }
     }
 
+    remainingLocateAttempts -= 1
+    if remainingLocateAttempts <= 0 {
+      os_log(.error, log: self.log, "locate END - failed to locate component")
+      creationError = .componentNotFound
+      return
+    }
+
+    Timer.scheduledTimer(withTimeInterval: delayBeforeNextLocateAttempt, repeats: false) { _ in self.locate() }
     os_log(.debug, log: log, "locate END")
   }
 
