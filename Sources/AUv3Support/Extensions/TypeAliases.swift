@@ -33,6 +33,12 @@ public typealias ViewController = NSViewController
 
 public extension NSView {
 
+  /// Replicate UIKit API
+  func setNeedsDisplay() { needsDisplay = true }
+
+  /// Replicate UIKit API
+  func setNeedsLayout() { needsLayout = true }
+
   /// Replicate the `backgroundColor` property found in `UIView`.
   var backgroundColor: NSColor? {
     get {
