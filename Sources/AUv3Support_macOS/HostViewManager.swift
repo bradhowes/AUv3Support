@@ -193,9 +193,17 @@ extension HostViewManager {
   private func showPresetName() {
     guard let window = config.viewController.view.window else { return }
     if let presetName = userPresetsManager?.currentPreset?.name {
-      window.title = "\(config.componentName) - \(presetName)"
+      if #available(macOS 11, *) {
+        window.subtitle = presetName
+      } else {
+        window.title = "\(config.componentName) - \(presetName)"
+      }
     } else {
-      window.title = config.componentName
+      if #available(macOS 11, *) {
+        window.subtitle = ""
+      } else {
+        window.title = config.componentName
+      }
     }
   }
 
