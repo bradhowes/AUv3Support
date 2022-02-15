@@ -70,7 +70,7 @@
                                                     </button>
                                                 </subviews>
                                             </stackView>
-                                            <stackView opaque="NO" contentMode="scaleToFill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="Urn-1t-R6l">
+                                            <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Urn-1t-R6l">
                                                 <rect key="frame" x="0.0" y="39" width="234" height="20.5"/>
                                                 <subviews>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="presetName" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rex-SM-lPc">
@@ -80,6 +80,9 @@
                                                         <nil key="highlightedColor"/>
                                                     </label>
                                                 </subviews>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="20.5" id="cG4-OW-V0W"/>
+                                                </constraints>
                                             </stackView>
                                         </subviews>
                                     </stackView>
@@ -151,7 +154,6 @@ However, if you later delete this app from your device, the AUv3 component will 
                         <accessibility key="accessibilityConfiguration" identifier="MainView" label="MainView"/>
                         <constraints>
                             <constraint firstItem="aBM-QG-hno" firstAttribute="bottom" secondItem="6Tk-OE-BBY" secondAttribute="bottom" id="3iF-Br-EaT"/>
-                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="ygb-hY-iRR" secondAttribute="bottom" constant="16" id="4Rf-tS-cVg"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="YiJ-1a-ELQ" secondAttribute="trailing" constant="8" id="613-tJ-dOL"/>
                             <constraint firstItem="ygb-hY-iRR" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="Bja-f1-kFe"/>
                             <constraint firstItem="YiJ-1a-ELQ" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="8" id="I7e-co-4wx"/>
@@ -163,9 +165,7 @@ However, if you later delete this app from your device, the AUv3 component will 
                             <constraint firstItem="ygb-hY-iRR" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="8bC-Xf-vdC" secondAttribute="leading" constant="16" id="fxU-WO-gn6"/>
                             <constraint firstItem="YiJ-1a-ELQ" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="gcb-Ax-44p"/>
                             <constraint firstItem="aBM-QG-hno" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="8" id="hbi-zb-RYf"/>
-                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="ygb-hY-iRR" secondAttribute="bottom" constant="127.5" id="pJU-1o-cSH"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="68k-M7-cHK" secondAttribute="trailing" id="pxu-xY-NpT"/>
-                            <constraint firstItem="ygb-hY-iRR" firstAttribute="top" relation="greaterThanOrEqual" secondItem="YiJ-1a-ELQ" secondAttribute="bottom" constant="16" id="rnl-GZ-uG0"/>
                         </constraints>
                     </view>
                     <nil key="simulatedTopBarMetrics"/>

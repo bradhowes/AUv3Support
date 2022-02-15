@@ -81,6 +81,10 @@ applications.
       }
     }
   }
+
+  public func saveState() {
+    audioUnitLoader.save()
+  }
 }
 
 extension HostViewManager: AudioUnitLoaderDelegate {

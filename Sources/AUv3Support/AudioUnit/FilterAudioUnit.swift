@@ -29,21 +29,13 @@ public final class FilterAudioUnit: AUAudioUnit {
   /// The associated view controller for the audio unit that shows the controls
   public weak var viewConfigurationManager: AudioUnitViewConfigurationManager?
 
-  public weak var currentPresetMonitor: CurrentPresetMonitor?
-
   /// Initial sample rate
   private let sampleRate: Double = 44100.0
   /// Maximum number of channels to support
   private let maxNumberOfChannels: UInt32 = 8
 
   /// The active preset in use. This is the backing value for the `currentPreset` property.
-  private var _currentPreset: AUAudioUnitPreset? {
-    didSet {
-      if oldValue != _currentPreset {
-        currentPresetMonitor?.currentPresetChanged(_currentPreset)
-      }
-    }
-  }
+  private var _currentPreset: AUAudioUnitPreset?
 
   private var inputBus: AUAudioUnitBus
   private var outputBus: AUAudioUnitBus
@@ -52,7 +44,7 @@ public final class FilterAudioUnit: AUAudioUnit {
   private lazy var _outputBusses: AUAudioUnitBusArray = .init(audioUnit: self, busType: .output, busses: [outputBus])
 
   /**
-   Crete a new audio unit asynchronously.
+   Create a new audio unit asynchronously.
    
    - parameter componentDescription: the component to instantiate
    - parameter options: options for instantiation
@@ -153,7 +145,7 @@ extension FilterAudioUnit {
   /// the preset. Factory presets are done internally via the `ParameterSource.usePreset` function. User presets rely
   /// on AUAudioUnit functionality to change the `AUParameter` values in the `AUParameterTree` via the `fullState`
   /// property.
-  @objc override public var currentPreset: AUAudioUnitPreset? {
+  @objc dynamic override public var currentPreset: AUAudioUnitPreset? {
     get {
       os_log(.info, log: log, "get currentPreset - %{public}s", _currentPreset.descriptionOrNil)
       return _currentPreset
@@ -225,12 +217,15 @@ extension FilterAudioUnit {
       os_log(.info, log: log, "value: %{public}s", newValue.descriptionOrNil)
       super.fullState = newValue
 
-      // Restore *internal* current preset if there was one.
       if let state = newValue,
          let name = state[kAUPresetNameKey] as? String,
          let number = state[kAUPresetNumberKey] as? NSNumber {
         os_log(.info, log: log, "name %{public}s number %d", name, number.intValue)
+
+        // NOTE: set *internal* state only here
         _currentPreset = AUAudioUnitPreset(number: number.intValue, name: name)
+      } else {
+        _currentPreset = nil
       }
     }
   }

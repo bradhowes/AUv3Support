@@ -46,24 +46,24 @@ public final class HostViewController: UIViewController {
 
   private let showedInitialAlert = "showedInitialAlert"
 
-  private var audioUnitLoader: AudioUnitLoader!
+  private var audioUnitLoader: AudioUnitLoader?
   public var userPresetsManager: UserPresetsManager?
 
   public var avAudioUnit: AVAudioUnit?
   public var auAudioUnit: AUAudioUnit? { avAudioUnit?.auAudioUnit }
   public var audioUnitViewController: UIViewController?
 
-  @IBOutlet public var playButton: UIButton!
-  @IBOutlet public var bypassButton: UIButton!
-  @IBOutlet public var reviewButton: UIButton!
-  @IBOutlet public var presetSelection: UISegmentedControl!
-  @IBOutlet public var userPresetsMenuButton: UIButton!
-  @IBOutlet weak var presetName: UILabel!
+  @IBOutlet private var playButton: UIButton!
+  @IBOutlet private var bypassButton: UIButton!
+  @IBOutlet private var reviewButton: UIButton!
+  @IBOutlet private var presetSelection: UISegmentedControl!
+  @IBOutlet private var userPresetsMenuButton: UIButton!
+  @IBOutlet private var presetName: UILabel!
 
-  @IBOutlet public var containerView: UIView!
+  @IBOutlet private var containerView: UIView!
 
-  @IBOutlet public weak var instructions: UIView!
-  @IBOutlet public weak var instructionsLabel: UILabel!
+  @IBOutlet private weak var instructions: UIView!
+  @IBOutlet private weak var instructionsLabel: UILabel!
 
   private var currentPresetObserverToken: NSKeyValueObservation?
   private var userPresetsObserverToken: NSKeyValueObservation?
@@ -119,7 +119,7 @@ applications.
 
     audioUnitLoader = .init(name: config.name, componentDescription: config.componentDescription,
                             loop: config.sampleLoop)
-    audioUnitLoader.delegate = self
+    audioUnitLoader?.delegate = self
 
     applyTheme()
 
@@ -128,6 +128,11 @@ applications.
       instructions.isHidden = false
     }
 
+    config.appDelegate.setResigningActiveBlock {
+      self.saveState()
+      self.stopPlaying()
+    }
+    
     os_log(.debug, log: log, "viewDidLoad END")
   }
 
@@ -139,6 +144,12 @@ applications.
     os_log(.debug, log: log, "viewWillAppear END")
   }
 
+  public func saveState() {
+    os_log(.debug, log: log, "saveState BEGIN")
+    audioUnitLoader?.save()
+    os_log(.debug, log: log, "saveState BEGIN")
+  }
+
   public func stopPlaying() {
     os_log(.debug, log: log, "stopPlaying BEGIN")
     playButton.isSelected = false
@@ -147,7 +158,9 @@ applications.
     bypassButton.isEnabled = auAudioUnit != nil
     presetSelection.isEnabled = auAudioUnit != nil
 
-    audioUnitLoader.cleanup()
+    audioUnitLoader?.save()
+    audioUnitLoader?.cleanup()
+
     os_log(.debug, log: log, "stopPlaying END")
   }
 }
@@ -158,7 +171,7 @@ extension HostViewController {
 
   @IBAction public func togglePlay(_ sender: UIButton) {
     os_log(.debug, log: log, "togglePlay BEGIN")
-    let isPlaying = audioUnitLoader.togglePlayback()
+    let isPlaying = audioUnitLoader?.togglePlayback() ?? false
     bypassButton.isEnabled = isPlaying
     playButton.isSelected = isPlaying
     playButton.tintColor = isPlaying ? .systemYellow : config?.tintColor
@@ -214,11 +227,11 @@ extension HostViewController: AudioUnitLoaderDelegate {
     connectFilterView(audioUnit, viewController)
     connectParametersToControls(audioUnit.auAudioUnit)
 
-    audioUnitLoader.restore()
-    if audioUnit.auAudioUnit.currentPreset == nil {
-      presetSelection.selectedSegmentIndex = 0
-      useFactoryPreset(nil)
-    }
+    audioUnitLoader?.restore()
+//    if audioUnit.auAudioUnit.currentPreset == nil {
+//      presetSelection.selectedSegmentIndex = 0
+//      useFactoryPreset(nil)
+//    }
 
     updateView()
 
@@ -230,6 +243,54 @@ extension HostViewController: AudioUnitLoaderDelegate {
     let message = "Unable to load the AUv3 component. \(error.description)"
     notify(title: "AUv3 Failure", message: message)
     os_log(.debug, log: log, "failed END")
+  }
+}
+
+// MARK: - ActionSupporter
+
+extension HostViewController: ActionSupporter {
+
+  public func askForName(title: String, placeholder: String, activity: String, _ closure: @escaping (String) -> Void) {
+    let controller = UIAlertController(title: title, message: nil, preferredStyle: .alert)
+    controller.addTextField { textField in textField.placeholder = placeholder }
+    controller.addAction(UIAlertAction(title: activity, style: .default) { _ in
+      guard let name = controller.textFields?.first?.text?.trimmingCharacters(in: .whitespaces), !name.isEmpty else {
+        return
+      }
+      closure(name)
+    })
+    controller.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+    present(controller, animated: true)
+  }
+
+  public func confirmAction(title: String, message: String, _ closure: @escaping () -> Void) {
+    yesOrNo(title: title, message: message) { _ in closure() }
+  }
+
+  public func notifyFailure(title: String, message: String) {
+    notify(title: title, message: message)
+  }
+
+  public func completeAction() {
+    self.updateView()
+  }
+}
+
+// MARK: - Alerts and Prompts
+
+extension HostViewController {
+
+  public func notify(title: String, message: String) {
+    let controller = UIAlertController(title: title, message: message, preferredStyle: .alert)
+    controller.addAction(UIAlertAction(title: "OK", style: .default))
+    present(controller, animated: true)
+  }
+
+  public func yesOrNo(title: String, message: String, continuation: @escaping (UIAlertAction) -> Void) {
+    let controller = UIAlertController(title: title, message: message, preferredStyle: .alert)
+    controller.addAction(.init(title: "Continue", style: .default, handler: continuation))
+    controller.addAction(.init(title: "Cancel", style: .cancel))
+    present(controller, animated: true)
   }
 }
 
@@ -291,7 +352,7 @@ private extension HostViewController {
       os_log(.info, log: self.log, "userPresets changed")
       DispatchQueue.main.async { self.updatePresetMenu() }
     }
-    
+
     os_log(.debug, log: log, "connectParametersToControls END")
   }
 
@@ -354,7 +415,7 @@ private extension HostViewController {
     guard let auAudioUnit = auAudioUnit else { return }
     updatePresetMenu()
     updatePresetSelection(auAudioUnit)
-    audioUnitLoader.save()
+    audioUnitLoader?.save()
     os_log(.debug, log: log, "updateView END")
   }
 
@@ -389,52 +450,6 @@ private extension HostViewController {
 
   func makeDeletePresetAction(presetsManager: UserPresetsManager) -> UIAction {
     UIAction(title: "Delete", handler: DeletePreset(self, presetsManager: presetsManager).handler(_:))
-  }
-}
-
-// MARK: - Alerts and Prompts
-
-extension HostViewController: ActionSupporter {
-
-  public func askForName(title: String, placeholder: String, activity: String, _ closure: @escaping (String) -> Void) {
-    let controller = UIAlertController(title: title, message: nil, preferredStyle: .alert)
-    controller.addTextField { textField in textField.placeholder = placeholder }
-    controller.addAction(UIAlertAction(title: activity, style: .default) { _ in
-      guard let name = controller.textFields?.first?.text?.trimmingCharacters(in: .whitespaces), !name.isEmpty else {
-        return
-      }
-      closure(name)
-    })
-    controller.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-    present(controller, animated: true)
-  }
-
-  public func confirmAction(title: String, message: String, _ closure: @escaping () -> Void) {
-    yesOrNo(title: title, message: message) { _ in closure() }
-  }
-
-  public func notifyFailure(title: String, message: String) {
-    notify(title: title, message: message)
-  }
-
-  public func completeAction() {
-    self.updateView()
-  }
-}
-
-extension HostViewController {
-
-  public func notify(title: String, message: String) {
-    let controller = UIAlertController(title: title, message: message, preferredStyle: .alert)
-    controller.addAction(UIAlertAction(title: "OK", style: .default))
-    present(controller, animated: true)
-  }
-
-  public func yesOrNo(title: String, message: String, continuation: @escaping (UIAlertAction) -> Void) {
-    let controller = UIAlertController(title: title, message: message, preferredStyle: .alert)
-    controller.addAction(.init(title: "Continue", style: .default, handler: continuation))
-    controller.addAction(.init(title: "Cancel", style: .cancel))
-    present(controller, animated: true)
   }
 }
 

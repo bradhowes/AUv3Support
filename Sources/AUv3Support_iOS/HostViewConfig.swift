@@ -11,6 +11,7 @@ import AUv3Support
 public struct HostViewConfig {
   public let name: String
   public let version: String
+  public let appDelegate: AppDelegate
   public let appStoreId: String
   public let componentDescription: AudioComponentDescription
   public let sampleLoop: AudioUnitLoader.SampleLoop
@@ -28,10 +29,12 @@ public struct HostViewConfig {
    - parameter tintColor: color to use for control tinting
    - parameter appStoreVisitor: the closure to invoke to visit the app store and view the page for the audio unit
    */
-  public init(name: String, version: String, appStoreId: String, componentDescription: AudioComponentDescription,
-              sampleLoop: AudioUnitLoader.SampleLoop, tintColor: UIColor, appStoreVisitor: @escaping (URL) -> Void) {
+  public init(name: String, version: String, appDelegate: AppDelegate, appStoreId: String,
+              componentDescription: AudioComponentDescription, sampleLoop: AudioUnitLoader.SampleLoop,
+              tintColor: UIColor, appStoreVisitor: @escaping (URL) -> Void) {
     self.name = name
     self.version = version
+    self.appDelegate = appDelegate
     self.appStoreId = appStoreId
     self.componentDescription = componentDescription
     self.sampleLoop = sampleLoop

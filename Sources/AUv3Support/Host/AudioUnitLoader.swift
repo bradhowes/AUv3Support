@@ -52,17 +52,13 @@ public protocol AudioUnitLoaderDelegate: AnyObject {
 public final class AudioUnitLoader: NSObject {
   private let log: OSLog
 
-  /// AudioUnit controlled by the view controller
-  public private(set) var avAudioUnit: AVAudioUnit?
-  /// Convenience access to the wrapped auAudioUnit
-  public var auAudioUnit: AUAudioUnit? { avAudioUnit?.auAudioUnit }
-  /// View controller for the AudioUnit interface
-  public private(set) var viewController: ViewController?
-  /// True if the audio engine is currently playing
-  public var isPlaying: Bool { playEngine.isPlaying }
   /// Delegate to signal when everything is wired up.
   public weak var delegate: AudioUnitLoaderDelegate? { didSet { notifyDelegate() } }
 
+  private var avAudioUnit: AVAudioUnit?
+  private var auAudioUnit: AUAudioUnit? { avAudioUnit?.auAudioUnit }
+  private var viewController: ViewController?
+  private var isPlaying: Bool { playEngine.isPlaying }
   private let lastStateKey = "lastStateKey"
   private let playEngine: SimplePlayEngine
   private let componentDescription: AudioComponentDescription
@@ -200,7 +196,6 @@ public final class AudioUnitLoader: NSObject {
   private func wireAudioUnit(_ avAudioUnit: AVAudioUnit, _ viewController: ViewController) {
     self.avAudioUnit = avAudioUnit
     self.viewController = viewController
-
     playEngine.connectEffect(audioUnit: avAudioUnit)
     notifyDelegate()
   }
@@ -221,13 +216,14 @@ public extension AudioUnitLoader {
 
   /**
    Save the current state of the AUv3 component to UserDefaults for future restoration. Saves the value from
-   `fullStateForDocument` and the number of the preset that is in `currentPreset` if non-nil.
+   the audio unit's `fullState` property.
    */
   func save() {
     guard let audioUnit = auAudioUnit else { return }
     os_log(.debug, log: log, "save BEGIN - %{public}s", audioUnit.currentPreset.descriptionOrNil)
 
     if let lastState = audioUnit.fullState {
+      os_log(.debug, log: log, "save - lastState: %{public}s", lastState.description)
       UserDefaults.standard.set(lastState, forKey: lastStateKey)
     } else {
       UserDefaults.standard.removeObject(forKey: lastStateKey)

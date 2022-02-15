@@ -4,7 +4,10 @@ import Foundation
 import CoreAudioKit.AUViewController
 import os.log
 
-public enum FilterAudioUnitFactory {
+/// Namespace for the `create` global function below.
+public enum FilterAudioUnitFactory {}
+
+public extension FilterAudioUnitFactory {
 
   /**
    Create a new FilterAudioUnit instance to run in an AVu3 container.
@@ -12,18 +15,20 @@ public enum FilterAudioUnitFactory {
    - parameter componentDescription: descriptions of the audio environment it will run in
    - parameter parameters: provider of AUParameter values that define the runtime parameters for the audio unit
    - parameter kernel: the audio sample renderer to use
-   - parameter currentPresetMonitor: optional entity to notify when currentPreset attribute changes
    - parameter viewConfigurationManager: optional delegate for view configuration management
    - returns: new FilterAudioUnit
    */
-  public static func create(componentDescription: AudioComponentDescription,
-                            parameters: ParameterSource,
-                            kernel: AudioRenderer,
-                            currentPresetMonitor: CurrentPresetMonitor?,
-                            viewConfigurationManager: AudioUnitViewConfigurationManager?) throws -> FilterAudioUnit {
-    let audioUnit = try FilterAudioUnit(componentDescription: componentDescription, options: [.loadOutOfProcess])
+  static func create(componentDescription: AudioComponentDescription,
+                     parameters: ParameterSource,
+                     kernel: AudioRenderer,
+                     viewConfigurationManager: AudioUnitViewConfigurationManager? = nil) throws -> FilterAudioUnit {
+#if os(macOS)
+    let options: AudioComponentInstantiationOptions = .loadInProcess
+#else
+    let options: AudioComponentInstantiationOptions = .loadOutOfProcess
+#endif
+    let audioUnit = try FilterAudioUnit(componentDescription: componentDescription, options: options)
     audioUnit.configure(parameters: parameters, kernel: kernel)
-    audioUnit.currentPresetMonitor = currentPresetMonitor
     audioUnit.viewConfigurationManager = viewConfigurationManager
     return audioUnit
   }
