@@ -230,6 +230,7 @@ extension FilterAudioUnit {
     }
   }
 }
+
 // MARK: - Rendering
 
 extension FilterAudioUnit {
