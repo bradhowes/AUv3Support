@@ -66,6 +66,8 @@ public final class AudioUnitLoader: NSObject {
   private var creationError: AudioUnitLoaderError? { didSet { notifyDelegate() } }
   private var remainingLocateAttempts = 50
   private let delayBeforeNextLocateAttempt = 0.2
+  private var notificationRegistration: NSObjectProtocol?
+  private var hasUpdates = false
 
   /**
    The loops that are available.
@@ -91,6 +93,12 @@ public final class AudioUnitLoader: NSObject {
                                                     componentFlags: 0,
                                                     componentFlagsMask: 0)
     super.init()
+
+    let name = AVAudioUnitComponentManager.registrationsChangedNotification
+    notificationRegistration = NotificationCenter.default.addObserver(forName: name, object: nil, queue: nil) { _ in
+      self.hasUpdates = true
+    }
+
     self.locate()
   }
 
@@ -112,8 +120,6 @@ public final class AudioUnitLoader: NSObject {
          each.audioComponentDescription.componentSubType == self.componentDescription.componentSubType {
         os_log(.debug, log: self.log, "found match")
 
-        // NotificationCenter.default.removeObserver(self)
-
         DispatchQueue.main.async {
           self.createAudioUnit(each.audioComponentDescription)
         }
@@ -121,6 +127,12 @@ public final class AudioUnitLoader: NSObject {
       }
     }
 
+    scheduleCheck()
+    
+    os_log(.debug, log: log, "locate END")
+  }
+
+  private func scheduleCheck() {
     remainingLocateAttempts -= 1
     if remainingLocateAttempts <= 0 {
       os_log(.error, log: self.log, "locate END - failed to locate component")
@@ -128,8 +140,14 @@ public final class AudioUnitLoader: NSObject {
       return
     }
 
-    Timer.scheduledTimer(withTimeInterval: delayBeforeNextLocateAttempt, repeats: false) { _ in self.locate() }
-    os_log(.debug, log: log, "locate END")
+    Timer.scheduledTimer(withTimeInterval: delayBeforeNextLocateAttempt, repeats: false) { _ in
+      if self.hasUpdates {
+        self.hasUpdates = false
+        self.locate()
+      } else {
+        self.scheduleCheck()
+      }
+    }
   }
 
   /**
@@ -159,9 +177,6 @@ public final class AudioUnitLoader: NSObject {
         return
       }
 
-      // Hosts are expected to set this value
-      avAudioUnit.auAudioUnit.maximumFramesToRender = 2048
-
       DispatchQueue.main.async {
         self.createViewController(avAudioUnit)
       }
@@ -175,6 +190,7 @@ public final class AudioUnitLoader: NSObject {
    */
   private func createViewController(_ avAudioUnit: AVAudioUnit) {
     os_log(.debug, log: log, "createViewController")
+
     avAudioUnit.auAudioUnit.requestViewController { [weak self] controller in
       guard let self = self else { return }
       guard let controller = controller else {
@@ -197,6 +213,11 @@ public final class AudioUnitLoader: NSObject {
     self.avAudioUnit = avAudioUnit
     self.viewController = viewController
     playEngine.connectEffect(audioUnit: avAudioUnit)
+
+    let maximumFramesToRender = playEngine.maximumFramesToRender
+    os_log(.debug, log: log, "setting maximumFramesToRender: %d", maximumFramesToRender)
+    avAudioUnit.auAudioUnit.maximumFramesToRender = maximumFramesToRender
+
     notifyDelegate()
   }
 

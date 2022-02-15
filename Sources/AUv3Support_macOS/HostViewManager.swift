@@ -44,6 +44,11 @@ public final class HostViewManager: NSObject {
     config.bypassMenuItem.isEnabled = false
 
     self.audioUnitLoader.delegate = self
+
+    NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil,
+                                           queue: nil) { _ in
+      self.audioUnitLoader.save()
+    }
   }
 }
 
@@ -122,7 +127,7 @@ extension HostViewManager {
 
   @IBAction private func togglePlay(_ sender: NSButton) {
     audioUnitLoader.togglePlayback()
-    let isPlaying = audioUnitLoader.isPlaying
+    let isPlaying = config.playButton.state == .on
     config.playButton.state = isPlaying ? .on : .off
     config.playMenuItem.title = isPlaying ? "Stop" : "Play"
 

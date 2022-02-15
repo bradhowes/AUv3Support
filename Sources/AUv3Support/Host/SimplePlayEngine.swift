@@ -15,11 +15,11 @@ public final class SimplePlayEngine {
   private let player = AVAudioPlayerNode()
   private var activeEffect: AVAudioUnit?
   private let file: AVAudioFile
-
   private lazy var stateChangeQueue = DispatchQueue(label: Self.bundleIdentifier + ".StateChangeQueue")
 
   /// True if engine is currently playing the audio file.
   public var isPlaying: Bool { player.isPlaying }
+  public var maximumFramesToRender: AUAudioFrameCount { engine.mainMixerNode.auAudioUnit.maximumFramesToRender }
 
   static func audioFileResource(name: String) -> AVAudioFile {
     let parts = name.split(separator: .init("."))

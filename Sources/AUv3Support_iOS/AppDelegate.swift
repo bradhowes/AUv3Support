@@ -17,7 +17,6 @@ open class AppDelegate: UIResponder, UIApplicationDelegate {
     super.init()
   }
 
-
   public func setResigningActiveBlock(_ block: @escaping () -> Void) {
     self.resigningActiveBlock = block
   }

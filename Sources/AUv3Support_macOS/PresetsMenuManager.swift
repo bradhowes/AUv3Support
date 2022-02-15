@@ -191,7 +191,7 @@ private extension PresetsMenuManager {
     }
 
     for (index, preset) in userPresetsManager.presetsOrderedByName.enumerated() {
-      let keyEquivalent = index < 10 ? "\(index)" : ""
+      let keyEquivalent = index < 9 ? "\(index + 1)" : ""
       let item = NSMenuItem(title: preset.name, action: #selector(handlePresetMenuSelection),
                             keyEquivalent: keyEquivalent)
       item.target = self

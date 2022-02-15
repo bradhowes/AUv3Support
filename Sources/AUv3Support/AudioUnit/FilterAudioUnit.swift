@@ -35,7 +35,10 @@ public final class FilterAudioUnit: AUAudioUnit {
   private let maxNumberOfChannels: UInt32 = 8
 
   /// The active preset in use. This is the backing value for the `currentPreset` property.
-  private var _currentPreset: AUAudioUnitPreset?
+  private var _currentPreset: AUAudioUnitPreset? {
+    willSet { willChangeValue(for: \.currentPreset) }
+    didSet { didChangeValue(for: \.currentPreset) }
+  }
 
   private var inputBus: AUAudioUnitBus
   private var outputBus: AUAudioUnitBus
@@ -159,9 +162,7 @@ extension FilterAudioUnit {
       if let preset = newValue {
         if preset.number >= 0 {
           os_log(.info, log: log, "factoryPreset %d", preset.number)
-          willChangeValue(for: \.currentPreset)
           _currentPreset = preset
-          didChangeValue(for: \.currentPreset)
           os_log(.info, log: log, "updating parameters")
           parameters?.useFactoryPreset(preset)
           return
@@ -171,15 +172,11 @@ extension FilterAudioUnit {
         if let state = try? presetState(for: preset) {
           os_log(.info, log: log, "state: %{public}s", state.debugDescription)
           fullState = state
-          willChangeValue(for: \.currentPreset)
           _currentPreset = preset
-          didChangeValue(for: \.currentPreset)
           return
         }
       }
-      willChangeValue(for: \.currentPreset)
       _currentPreset = nil
-      didChangeValue(for: \.currentPreset)
     }
   }
 
@@ -187,8 +184,8 @@ extension FilterAudioUnit {
    Clear `currentPreset` if it holds a factory preset.
    */
   public func clearCurrentPresetIfFactoryPreset() {
-    if let preset = currentPreset, preset.number >= 0 {
-      currentPreset = nil
+    if let preset = _currentPreset, preset.number >= 0 {
+      _currentPreset = nil
     }
   }
 
@@ -221,8 +218,6 @@ extension FilterAudioUnit {
          let name = state[kAUPresetNameKey] as? String,
          let number = state[kAUPresetNumberKey] as? NSNumber {
         os_log(.info, log: log, "name %{public}s number %d", name, number.intValue)
-
-        // NOTE: set *internal* state only here
         _currentPreset = AUAudioUnitPreset(number: number.intValue, name: name)
       } else {
         _currentPreset = nil
