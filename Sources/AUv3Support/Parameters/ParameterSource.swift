@@ -28,3 +28,12 @@ public protocol ParameterSource {
    */
   func storeParameters(into dict: inout [String: Any])
 }
+
+extension ParameterSource {
+
+  public func storeParameters(into dict: inout [String: Any]) {
+    for parameter in parameters {
+      dict[parameter.identifier] = parameter.value
+    }
+  }
+}
