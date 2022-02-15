@@ -228,11 +228,6 @@ extension HostViewController: AudioUnitLoaderDelegate {
     connectParametersToControls(audioUnit.auAudioUnit)
 
     audioUnitLoader?.restore()
-//    if audioUnit.auAudioUnit.currentPreset == nil {
-//      presetSelection.selectedSegmentIndex = 0
-//      useFactoryPreset(nil)
-//    }
-
     updateView()
 
     os_log(.debug, log: log, "connected END")
