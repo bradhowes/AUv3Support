@@ -5,7 +5,7 @@
 
 # Overview
 
-Swift package containing useful code for AUv3 app extensions. There are three products so far:
+Swift package containing useful code for AUv3 app extensions. There are three products so far in this package:
 
 - AUv3-Support -- collection of extensions and classes for both the AudioUnit components that is packaged
   as an AUv3 app extension and the host app that contains it. Because it will be linked to the AUv3 app
@@ -24,19 +24,20 @@ These libraries are now being used by my [SimplyFlange](https://github.com/bradh
 
 # AUv3Support
 
-In the AUv3-Support product you will find various classes and extension to make things easier when working with AUv3
+In the AUv3-Support product you will find various classes and extensions to make things easier when working with AUv3
 components:
 
-- Editors -- a collection parameter editors that work on iOS and macOS via protocol conformance. They properly 
-update themselves when a audio unit loads a preset, and they properly communicate changes made the user. There is a 
+- Editors -- a collection of parameter editors that work on iOS and macOS via protocol conformance. They properly 
+update themselves when a audio unit loads a preset, and they properly communicate changes made by the user or by 
+another control, perhaps external. There is a 
 `BooleanParameterEditor` that works with a UISwitch/NSSwitch control, and there is a `FloatParameterEditor` that works 
 with anything that can report out a floating-point value as well as the min/max ranges the value may have.
 - AudioUnitLoader -- a basic AUv3 host that locates your AUv3 component and connects it up
 - SimplePlayEngine -- a simple AudioUnit graph that plays audio from a file and sends it through the loaded
   component and then to the speaker.
 - UserPresetManager -- manages the user presets of an AUv3 component
-- Extensions -- folder with sundry extensions that makes life easier
-- Resources -- audio files that can be played using the `SimplePlayEngine`
+- Extensions -- folder with sundry extensions that makes life better
+- Resources -- audio files that can be played using the `SimplePlayEngine`. Useful when demoing a filter.
 
 # AUv3Support-iOS
 
@@ -100,9 +101,9 @@ storyboard holds a set of UI elements that are useful for a AUv3 demonstration a
 
 # AUv3Support-macOS
 
-Unlike the above, this is a bit more involved because I have yet to get something simpler up and running. The big issue
+Unlike the above, macOS is a bit more involved because I have yet to get something simpler up and running. The big issue
 is getting the application's delegate, main window, and main view controller all established and functional when 
-instantiated from a package. So, until that is accomplished, one must pass a bucket-load of UI elements in a 
+unpacked from a package. So, until that is accomplished, one must pass a bucket-load of UI elements in a 
 `HostViewConfig` and instantiate a `HostViewManager` with it. This should be done as early as possible, but it cannot be
 done before the main view controller has a window assigned to it. So, the best option is to do something like below, 
 where we monitor for a window being set on the view. The only remaining task is to show the initial prompt to the user
@@ -148,7 +149,7 @@ on first-time launch.
   }
 ```
 
-Not great, but not too cumbersome to use. And it is nice to have abstracted out all of the common functionality my 
+Not great, but not too cumbersome to use now. And it is nice to have abstracted out all of the common functionality my 
 audio unit apps share.
 
 # Usage Notes
