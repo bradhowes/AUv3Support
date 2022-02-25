@@ -192,16 +192,21 @@ namespace Transform {
  */
 template <typename T>
 struct Base {
-  
+
   /**
-   If value is too small to be represented in a `float`, force it to be zero.
-   
+   If value is smaller than a noise floor value, force it to be zero. 16-bit audio provides ~96dB dynamic range where
+   the least-significant bit adds ~1.0e-5 change in amplitude. So, we cannot really do anything with values below this.
+   Similarly, 24-bit audio provides 144dB dynamic range and the least-significant bit gives ~6.0e-8 change in amplitude
+   or 1.0e-7. Finally, 32-bit audio provides ~192dB dynamic range with a corresponding ~1.0e-10 resolution. We will use
+   that for our cutoff here, multiplied by 2 because audio samples range between -1 and 1 instead of 0 to 1, so there is
+   half the resolution. All of these values are well above the std::numeric_limits<float>::min() value of 1.17549e-38.
+
    @param value the value to inspect
    @returns value or 0.0
    */
   static T forceMinToZero(T value) {
-    return ((value > 0.0 && value < std::numeric_limits<float>::min()) ||
-            (value < 0.0 && value > -std::numeric_limits<float>::min())) ? 0.0 : value;
+    static constexpr T noiseFloor = 2.0e-10;
+    return (value > 0.0 && value <= noiseFloor) || (value < 0.0 && -value <= noiseFloor) ? 0.0 : value;
   }
 };
 
