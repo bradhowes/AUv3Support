@@ -7,8 +7,6 @@
 #import "../../Sources/DSPHeaders/include/LFO.hpp"
 #import "../../Sources/DSPHeaders/include/PhaseShifter.hpp"
 
-#define SamplesEqual(A, B) XCTAssertEqualWithAccuracy(A, B, _epsilon)
-
 @interface PhaseShifterTests : XCTestCase
 @property float epsilon;
 @end
@@ -16,7 +14,7 @@
 @implementation PhaseShifterTests
 
 - (void)setUp {
-  _epsilon = 0.0001;
+  _epsilon = 1.0e-12;
   self.continueAfterFailure = false;
 }
 
@@ -31,14 +29,14 @@
   double lfoFrequency = 0.2;
   Pirkle::PhaseShifter phaseShifterOld;
   phaseShifterOld.reset(sampleRate);
-  
+
   auto params = phaseShifterOld.getParameters();
   params.intensity_Pct = 100.0;
   params.lfoDepth_Pct = 100.0;
   params.lfoRate_Hz = lfoFrequency;
   params.quadPhaseLFO = false;
   phaseShifterOld.setParameters(params);
-  
+
   LFO<double> lfo(sampleRate, lfoFrequency, LFOWaveform::triangle);
   PhaseShifter<double> phaseShifterNew{PhaseShifter<double>::ideal, sampleRate, 1.0, 1};
 
@@ -53,16 +51,9 @@
       double modulator = lfo.value();
       lfo.increment();
       double output2 = phaseShifterNew.process(modulator, input);
-      SamplesEqual(output1, output2);
+      XCTAssertEqualWithAccuracy(output1, output2, _epsilon);
     }
   }
 }
-
-//- (void)testPerformanceExample {
-//  [self measureBlock:^{
-//    [self testPhaseShifters];
-//  }];
-//}
-//
 
 @end
