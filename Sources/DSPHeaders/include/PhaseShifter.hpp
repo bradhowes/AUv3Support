@@ -3,7 +3,7 @@
 #pragma once
 
 #import <algorithm>
-#import <vector>
+#import <array>
 
 #import "Biquad.hpp"
 #import "DSP.hpp"
@@ -26,28 +26,30 @@ public:
     T frequencyMin;
     T frequencyMax;
   };
-  
+
+  inline static constexpr size_t BandCount = 6;
+
   /// Definition of a collection of frequency bands
-  using FrequencyBands = std::vector<Band>;
+  using FrequencyBands = std::array<Band, BandCount>;
   
   /// Collection of frequency bands based on Pirkle's ideal.
-  inline static FrequencyBands ideal = {
-    Band{16.0, 1600.0},
-    Band{33.0, 3300.0},
-    Band{48.0, 4800.0},
-    Band{98.0, 9800.0},
-    Band{160.0, 16000.0},
-    Band{260.0, 20480.0}
+  inline static FrequencyBands ideal{
+    16.0, 1600.0,
+    33.0, 3300.0,
+    48.0, 4800.0,
+    98.0, 9800.0,
+    160.0, 16000.0,
+    260.0, 20480.0
   };
   
   /// Collection of frequency bands based on National Semiconductor paper and Pirkle's interpretation.
-  inline static FrequencyBands nationalSemiconductor = {
-    Band{32.0, 1500.0},
-    Band{68.0, 3400.0},
-    Band{96.0, 4800.0},
-    Band{212.0, 10000.0},
-    Band{320.0, 16000.0},
-    Band{636.0, 20480.0}
+  inline static FrequencyBands nationalSemiconductor{
+    32.0, 1500.0,
+    68.0, 3400.0,
+    96.0, 4800.0,
+    212.0, 10000.0,
+    320.0, 16000.0,
+    636.0, 20480.0
   };
   
   /**
@@ -59,8 +61,7 @@ public:
    @param samplesPerFilterUpdate number of sample values to emit before updating the filter parameters
    */
   PhaseShifter(const FrequencyBands& bands, T sampleRate, T intensity, int samplesPerFilterUpdate = 10)
-  : bands_(bands), sampleRate_{sampleRate}, intensity_{intensity}, samplesPerFilterUpdate_{samplesPerFilterUpdate},
-  filters_(bands_.size(), AllPassFilter()), gammas_(bands.size() + 1, 1.0)
+  : bands_(bands), sampleRate_{sampleRate}, intensity_{intensity}, samplesPerFilterUpdate_{samplesPerFilterUpdate}
   {
     updateCoefficients(0.0);
   }
@@ -135,8 +136,8 @@ private:
   T intensity_;
   int samplesPerFilterUpdate_;
   int sampleCounter_{0};
-  std::vector<AllPassFilter> filters_;
-  std::vector<T> gammas_;
+  std::array<AllPassFilter, BandCount> filters_{};
+  std::array<T, BandCount + 1> gammas_{1.0};
   
   os_log_t log_ = os_log_create("AUv3Support", "PhaseShifter");
 };
