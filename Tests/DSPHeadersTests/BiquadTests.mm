@@ -117,7 +117,8 @@
   params.fc = frequency;
   Pirkle::AudioFilter pirkle;
   pirkle.setParameters(params);
-  
+
+  // Run over 2 cycles of a sin wave with 0.1 degree step.
   for (int counter = 0; counter < 7200; ++counter) {
     double input = std::sin(counter/10.0 * Pirkle::kPi / 180.0 );
     double output1 = filter.transform(input);
@@ -205,6 +206,54 @@
     double output1 = filter.transform(input);
     double output2 = pirkle.processAudioSample(input);
     SamplesEqual(output1, output2);
+  }
+}
+
+- (void)testRamping {
+  double sampleRate = 44100.0;
+  double frequency = 4000.0;
+  size_t rampCount = 8;
+
+  Biquad::Coefficients coefficients{Biquad::Coefficients<double>::LPF2(sampleRate, frequency, 0.707)};
+  Biquad::Direct<double> filter{coefficients};
+  Biquad::RampingAdapter<Biquad::Direct<double>> ramping{filter, rampCount};
+
+  Pirkle::AudioFilterParameters params;
+  params.algorithm = Pirkle::filterAlgorithm::kLPF2;
+  params.fc = frequency;
+  Pirkle::AudioFilter pirkle;
+  pirkle.setParameters(params);
+
+  // Run over 2 cycles of a sin wave with 0.1 degree step.
+  int counter;
+  auto inputGenerator = [](int counter) -> double { return std::sin(counter/10.0 * Pirkle::kPi / 180.0 ); };
+
+  for (counter = 0; counter < 7200; ++counter) {
+    double input = inputGenerator(counter);
+    double output1 = filter.transform(input);
+    double output2 = pirkle.processAudioSample(input);
+    double output3 = ramping.transform(input);
+    SamplesEqual(output1, output2);
+    SamplesEqual(output1, output3);
+  }
+
+  // Ramp to a new value
+  coefficients = Biquad::Coefficients<double>::LPF2(sampleRate, 2000.0, 0.707);
+  filter.setCoefficients(coefficients);
+  ramping.setCoefficients(coefficients);
+
+  // We expect that for rampCount samples the ramped and un-ramped filters would not match. However, even after the
+  // ramping is complete, the ramped filter still has memory that must get cycled out before it begins to emit values
+  // like the un-ramped version.
+  for (counter = 0; counter < rampCount * 2 + 1; ++counter) {
+    double input = inputGenerator(counter);
+    XCTAssertNotEqualWithAccuracy(filter.transform(input), ramping.transform(input), _epsilon);
+  }
+
+  // From this point on, they filters should match.
+  for (; counter < 7200; ++counter) {
+    double input = inputGenerator(counter);
+    XCTAssertEqualWithAccuracy(filter.transform(input), ramping.transform(input), _epsilon);
   }
 }
 
