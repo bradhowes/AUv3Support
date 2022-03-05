@@ -179,6 +179,13 @@ struct Coefficients {
     return Coefficients(-alpha, beta * (1.0 - alpha), 1.0, beta * (1.0 - alpha), -alpha);
   }
 
+  /**
+   Obtain a collection of delta coefficient values.
+
+   @param goal the goal coefficient collection
+   @param sampleCount the number of samples to ramp over
+   @return new Coefficients instance with the delta values to ramp with
+   */
   Coefficients rampFactor(const Coefficients& goal, size_t sampleCount) const
   {
     double factor = 1.0 / sampleCount;
@@ -189,6 +196,11 @@ struct Coefficients {
                         (goal.b2 - b2) * factor);
   }
 
+  /**
+   Add delta values from a `rampFactor` to update the coefficients.
+
+   @param change the delta to apply to the current coefficients.
+   */
   void operator +=(const Coefficients& change)
   {
     a0 += change.a0;
