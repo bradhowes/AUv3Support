@@ -124,7 +124,7 @@ public:
   LFOWaveform waveform() const { return waveform_; }
 
 private:
-  using ValueGenerator = std::function<T(T)>;
+  using ValueGenerator = T (*)(T);
   
   static ValueGenerator WaveformGenerator(LFOWaveform waveform) {
     switch (waveform) {
@@ -142,13 +142,14 @@ private:
   }
 
   static T incrementModuloCounter(T counter, T inc) { return wrappedModuloCounter(counter + inc, inc); }
+
   static T sineValue(T counter) { return DSP::parabolicSine(M_PI - counter * 2.0 * M_PI); }
   static T sawtoothValue(T counter) { return DSP::unipolarToBipolar(counter); }
   static T triangleValue(T counter) { return DSP::unipolarToBipolar(std::abs(DSP::unipolarToBipolar(counter))); }
   static T squareValue(T counter) { return counter >= 0.5 ? 1.0 : -1.0; }
 
   T sampleRate_;
-  std::function<T(T)> valueGenerator_;
+  ValueGenerator valueGenerator_;
   T moduloCounter_ = {0.0};
   T quadPhaseCounter_ = {0.25};
   Parameters::RampingParameter<T> phaseIncrement_;
