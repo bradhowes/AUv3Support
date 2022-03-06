@@ -5,9 +5,11 @@
 #import <cmath>
 
 #import "DSP.hpp"
-#import "RampingParameter.hpp"
+#import "DSPHeaders/RampingParameter.hpp"
 
 enum class LFOWaveform { sinusoid, triangle, sawtooth, square};
+
+namespace DSPHeaders {
 
 /**
  Implementation of a low-frequency oscillator. Can generate:
@@ -149,6 +151,8 @@ private:
   std::function<T(T)> valueGenerator_;
   T moduloCounter_ = {0.0};
   T quadPhaseCounter_ = {0.25};
-  RampingParameter<T> phaseIncrement_;
+  Parameters::RampingParameter<T> phaseIncrement_;
   LFOWaveform waveform_;
 };
+
+} // end namespace DSPHeaders

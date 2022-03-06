@@ -4,6 +4,8 @@
 
 #import "RampingParameter.hpp"
 
+namespace DSPHeaders::Parameters {
+
 /**
  Manage a value that represents a percentage. External values are [0-100] while internally it holds [0-1].
  */
@@ -33,3 +35,5 @@ public:
    */
   T get() const { return super::get() * 100.0; }
 };
+
+} // end namespace DSPHeaders::Parameters

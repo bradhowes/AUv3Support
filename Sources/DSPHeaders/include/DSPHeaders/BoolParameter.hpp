@@ -4,6 +4,8 @@
 
 #import <AVFoundation/AVFoundation.h>
 
+namespace DSPHeaders::Parameters {
+
 /**
  Holds a boolean value and handles conversion from/to AUValue representations.
  */
@@ -28,4 +30,4 @@ private:
   BoolParameter& operator =(BoolParameter&&) = delete;
 };
 
-
+} // end namespace DSPHeaders::Parameters

@@ -3,7 +3,9 @@
 #import <XCTest/XCTest.h>
 
 #import "Pirkle/fxobjects.h"
-#import "../../Sources/DSPHeaders/include/Biquad.hpp"
+#import "DSPHeaders/Biquad.hpp"
+
+using namespace DSPHeaders;
 
 #define SamplesEqual(A, B) XCTAssertEqualWithAccuracy(A, B, _epsilon)
 

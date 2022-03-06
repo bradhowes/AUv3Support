@@ -10,6 +10,8 @@
 
 #import "InputBuffer.hpp"
 
+namespace DSPHeaders {
+
 /**
  Base template class for DSP kernels that provides common functionality. It uses the "Curiously Recurring Template
  Pattern (CRTP)" to interleave base functionality contained in this class with custom functionality from the derived
@@ -191,3 +193,5 @@ private:
 
   bool bypassed_ = false;
 };
+
+} // end namespace DSPHeaders

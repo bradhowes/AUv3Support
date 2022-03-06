@@ -2,11 +2,13 @@
 
 #pragma once
 
+#include <cassert>
 #include <cmath>
 #include <limits>
+
 #include <os/log.h>
 
-namespace Biquad {
+namespace DSPHeaders::Biquad {
 
 /**
  Filter coefficients. The naming here follows that in "Designing Audio Effect Plugins in C++" by Will C. Pirkle (2019),
@@ -568,4 +570,4 @@ private:
   CoefficientsType goal_{};
 };
 
-} // namespace Biquad
+} // namespace DSPHeaders::Biquad

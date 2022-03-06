@@ -3,7 +3,9 @@
 #import <XCTest/XCTest.h>
 #import <cmath>
 
-#import "../../Sources/DSPHeaders/include/DSP.hpp"
+#import "DSPHeaders/DSP.hpp"
+
+using namespace DSPHeaders;
 
 @interface DSPTests : XCTestCase
 

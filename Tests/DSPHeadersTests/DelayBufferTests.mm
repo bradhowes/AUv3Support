@@ -3,7 +3,9 @@
 #import <XCTest/XCTest.h>
 #import <vector>
 
-#import "../../Sources/DSPHeaders/include/DelayBuffer.hpp"
+#import "DSPHeaders/DelayBuffer.hpp"
+
+using namespace DSPHeaders;
 
 @interface DelayBufferTests : XCTestCase
 

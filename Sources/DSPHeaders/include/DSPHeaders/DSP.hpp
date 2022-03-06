@@ -5,7 +5,7 @@
 #import <algorithm>
 #import <cmath>
 
-namespace DSP {
+namespace DSPHeaders::DSP {
 
 /**
  Translate value in range [0, +1] into one in range [-1, +1]
@@ -66,4 +66,4 @@ template <typename T> auto parabolicSine(T angle) {
   return P * (y * std::abs(y) - y) + y;
 }
 
-} // DSP namespace
+} // end namespace DSPHeaders::DSP

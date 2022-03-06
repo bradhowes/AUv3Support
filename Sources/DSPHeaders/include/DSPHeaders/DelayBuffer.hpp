@@ -5,6 +5,8 @@
 #import <cmath>
 #import <vector>
 
+namespace DSPHeaders {
+
 /**
  Delay buffer that holds a maximum number of samples. It manages a write position which is where new samples are added
  to the buffer. Reading takes place some samples before the current write position with linear interpolation being used
@@ -78,3 +80,5 @@ private:
   std::vector<T> buffer_;
   size_t writePos_;
 };
+
+} // end namespace DSPHeaders

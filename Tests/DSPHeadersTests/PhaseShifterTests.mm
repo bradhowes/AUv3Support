@@ -4,8 +4,10 @@
 #import <cmath>
 
 #import "Pirkle/fxobjects.h"
-#import "../../Sources/DSPHeaders/include/LFO.hpp"
-#import "../../Sources/DSPHeaders/include/PhaseShifter.hpp"
+#import "DSPHeaders/LFO.hpp"
+#import "DSPHeaders/PhaseShifter.hpp"
+
+using namespace DSPHeaders;
 
 @interface PhaseShifterTests : XCTestCase
 @property float epsilon;

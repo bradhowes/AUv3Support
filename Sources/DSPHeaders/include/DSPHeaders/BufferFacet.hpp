@@ -9,6 +9,8 @@
 
 #import <vector>
 
+namespace DSPHeaders {
+
 /**
  Provides a simple std::vector view of an AudioBufferList.
  */
@@ -110,3 +112,5 @@ private:
   AudioBufferList* bufferList_{nullptr};
   std::vector<AUValue*> pointers_{};
 };
+
+} // end namespace DSPHeaders

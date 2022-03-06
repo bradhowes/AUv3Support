@@ -3,7 +3,9 @@
 #import <XCTest/XCTest.h>
 #import <vector>
 
-#import "../../Sources/DSPHeaders/include/LFO.hpp"
+#import "DSPHeaders/LFO.hpp"
+
+using namespace DSPHeaders;
 
 #define SamplesEqual(A, B) XCTAssertEqualWithAccuracy(A, B, _epsilon)
 

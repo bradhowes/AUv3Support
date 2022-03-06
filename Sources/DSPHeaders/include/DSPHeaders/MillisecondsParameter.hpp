@@ -4,6 +4,8 @@
 
 #import "RampingParameter.hpp"
 
+namespace DSPHeaders::Parameters {
+
 /**
  Manage a value that represents duration in milliseconds. No transform is applied to set/get values. Purely serves as
  a notational mechanism.
@@ -17,3 +19,5 @@ public:
   explicit MillisecondsParameter(T milliseconds) : super(milliseconds) {}
   ~MillisecondsParameter() = default;
 };
+
+} // end namespace DSPHeaders::Parameters

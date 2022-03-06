@@ -9,6 +9,8 @@
 
 #import "BufferFacet.hpp"
 
+namespace DSPHeaders {
+
 /**
  Maintains a buffer of PCM samples which is used to save samples from an upstream node.
  */
@@ -88,3 +90,5 @@ private:
   AudioBufferList* mutableAudioBufferList_{nullptr};
   BufferFacet bufferFacet_{};
 };
+
+} // end namespace DSPHeaders

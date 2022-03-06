@@ -2,6 +2,8 @@
 
 #import <AVFoundation/AVFoundation.h>
 
+namespace DSPHeaders::Parameters {
+
 /**
  Manages a parameter value that can transition from one value to another over some number of frames.
  */
@@ -70,3 +72,5 @@ private:
   RampingParameter& operator =(const RampingParameter&) = delete;
   RampingParameter& operator =(const RampingParameter&&) = delete;
 };
+
+} // end namespace DSPHeaders::Parameters
