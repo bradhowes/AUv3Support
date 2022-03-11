@@ -34,7 +34,7 @@ struct BufferFacet {
     bufferList_ = bufferList;
     if (bufferList->mBuffers[0].mData == nullptr) {
       assert(inPlaceSource != nullptr);
-      for (auto channel = 0; channel < bufferList->mNumberBuffers; ++channel) {
+      for (UInt32 channel = 0; channel < bufferList->mNumberBuffers; ++channel) {
         bufferList->mBuffers[channel].mData = inPlaceSource->mBuffers[channel].mData;
       }
     }
@@ -43,7 +43,7 @@ struct BufferFacet {
     size_t numBuffers = bufferList_->mNumberBuffers;
     pointers_.reserve(numBuffers);
     pointers_.clear();
-    for (auto channel = 0; channel < numBuffers; ++channel) {
+    for (UInt32 channel = 0; channel < numBuffers; ++channel) {
       pointers_.push_back(static_cast<AUValue*>(bufferList_->mBuffers[channel].mData));
     }
   }
@@ -56,7 +56,7 @@ struct BufferFacet {
   void setFrameCount(AUAudioFrameCount frameCount) {
     assert(bufferList_ != nullptr);
     UInt32 byteSize = frameCount * sizeof(AUValue);
-    for (auto channel = 0; channel < bufferList_->mNumberBuffers; ++channel) {
+    for (UInt32 channel = 0; channel < bufferList_->mNumberBuffers; ++channel) {
       bufferList_->mBuffers[channel].mDataByteSize = byteSize;
     }
   }
@@ -91,7 +91,7 @@ struct BufferFacet {
    */
   void copyInto(BufferFacet& destination, AUAudioFrameCount offset, AUAudioFrameCount frameCount) const {
     auto outputs = destination.bufferList_;
-    for (auto channel = 0; channel < bufferList_->mNumberBuffers; ++channel) {
+    for (UInt32 channel = 0; channel < bufferList_->mNumberBuffers; ++channel) {
       if (bufferList_->mBuffers[channel].mData == outputs->mBuffers[channel].mData) {
         continue;
       }
