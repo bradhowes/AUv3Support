@@ -33,7 +33,8 @@ public:
 
    @param log the log identifier to use for our logging statements
    */
-  EventProcessor(os_log_t log) : derived_{static_cast<T&>(*this)}, log_{log}
+  EventProcessor(os_log_t log, bool customPull = false) :
+  derived_{static_cast<T&>(*this)}, customPull_{customPull}, log_{log}
   {
     os_log_info(log_, "EventProcessor");
   }
@@ -78,12 +79,12 @@ public:
 
    @param timestamp the timestamp of the first sample or the first event
    @param frameCount the number of frames to process
-   @param inputBusNumber the bus to pull samples from
+   @param outputBusNumber the bus to render (normally only 0)
    @param output the buffer to hold the rendered samples
    @param realtimeEventListHead pointer to the first AURenderEvent (may be null)
    @param pullInputBlock the closure to call to obtain upstream samples
    */
-  AUAudioUnitStatus processAndRender(const AudioTimeStamp* timestamp, UInt32 frameCount, NSInteger inputBusNumber,
+  AUAudioUnitStatus processAndRender(const AudioTimeStamp* timestamp, UInt32 frameCount, NSInteger outputBusNumber,
                                      AudioBufferList* output, const AURenderEvent* realtimeEventListHead,
                                      AURenderPullInputBlock pullInputBlock)
   {
@@ -93,20 +94,25 @@ public:
       return kAudioUnitErr_TooManyFramesToProcess;
     }
 
-    if (pullInputBlock == nullptr) {
-      os_log_error(log_, "processAndRender - null pullInputBlock");
-      return kAudioUnitErr_NoConnection;
-    }
+    if (pullInputBlock) {
+      if (customPull_) {
+        derived_.doPullInput(timestamp, frameCount, outputBusNumber, pullInputBlock);
+      }
+      else {
+        AudioUnitRenderActionFlags actionFlags = 0;
 
-    AudioUnitRenderActionFlags actionFlags = 0;
-    auto status = inputBuffer_.pullInput(&actionFlags, timestamp, frameCount, inputBusNumber, pullInputBlock);
-    if (status != noErr) {
-      os_log_error(log_, "processAndRender - failed pullInput - %d", status);
-      return status;
+        // NOTE: this forces the bus to be 0 which is OK for most cases of 1 input bus, but it will cause problems for
+        // audio units with more than one input bus.
+        auto status = inputBuffer_.pullInput(&actionFlags, timestamp, frameCount, 0, pullInputBlock);
+        if (status != noErr) {
+          os_log_error(log_, "processAndRender - failed pullInput - %d", status);
+          return status;
+        }
+      }
     }
 
     setOutputBuffer(output, frameCount);
-    render(timestamp, frameCount, realtimeEventListHead);
+    render(outputBusNumber, timestamp, frameCount, realtimeEventListHead);
     clearBuffers();
 
     return noErr;
@@ -117,7 +123,8 @@ protected:
 
 private:
 
-  void render(AudioTimeStamp const* timestamp, AUAudioFrameCount frameCount, AURenderEvent const* events)
+  void render(NSInteger outputBusNumber, AudioTimeStamp const* timestamp, AUAudioFrameCount frameCount,
+              AURenderEvent const* events)
   {
     auto zero = AUEventSampleTime(0);
     auto now = AUEventSampleTime(timestamp->mSampleTime);
@@ -127,14 +134,14 @@ private:
 
       // Short-circuit if there are no more events to interleave
       if (events == nullptr) {
-        renderFrames(framesRemaining, frameCount - framesRemaining);
+        renderFrames(outputBusNumber, framesRemaining, frameCount - framesRemaining);
         return;
       }
 
       // Render the frames for the times between now and the time of the first event.
       auto framesThisSegment = AUAudioFrameCount(std::max(events->head.eventSampleTime - now, zero));
       if (framesThisSegment > 0) {
-        renderFrames(framesThisSegment, frameCount - framesRemaining);
+        renderFrames(outputBusNumber, framesThisSegment, frameCount - framesRemaining);
         framesRemaining -= framesThisSegment;
         now += AUEventSampleTime(framesThisSegment);
       }
@@ -173,7 +180,7 @@ private:
     return event;
   }
 
-  void renderFrames(AUAudioFrameCount frameCount, AUAudioFrameCount processedFrameCount)
+  void renderFrames(NSInteger outputBusNumber, AUAudioFrameCount frameCount, AUAudioFrameCount processedFrameCount)
   {
     auto& inputs{inputBuffer_.bufferFacet()};
 
@@ -184,13 +191,13 @@ private:
 
     inputs.setOffset(processedFrameCount);
     outputs_.setOffset(processedFrameCount);
-    derived_.doRendering(inputs.pointers(), outputs_.pointers(), frameCount);
+    derived_.doRendering(outputBusNumber, inputs.pointers(), outputs_.pointers(), frameCount);
   }
 
   T& derived_;
-  InputBuffer inputBuffer_;
-  BufferFacet outputs_;
-
+  bool customPull_;
+  InputBuffer inputBuffer_{};
+  BufferFacet outputs_{};
   bool bypassed_ = false;
 };
 
