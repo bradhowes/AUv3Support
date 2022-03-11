@@ -74,6 +74,25 @@ public:
   }
 
   /**
+   Stock way to pull input from upstream nodes in the audio graph. This will be used unless `customPull_` is set to
+   `true` during construction.
+
+   @param timestamp the timestamp of the first sample or the first event
+   @param frameCount the number of frames to pull
+   @param inputBusNumber the bus to pull on
+   @param pullInputBlock the block to invoke to do the pulling
+   */
+  AUAudioUnitStatus pullInput(const AudioTimeStamp* timestamp, UInt32 frameCount, NSInteger inputBusNumber,
+                              AURenderPullInputBlock pullInputBlock) {
+    AudioUnitRenderActionFlags actionFlags = 0;
+    auto status = inputBuffer_.pullInput(&actionFlags, timestamp, frameCount, inputBusNumber, pullInputBlock);
+    if (status != noErr) {
+      os_log_error(log_, "processAndRender - failed pullInput - %d", status);
+    }
+    return status;
+  }
+
+  /**
    Process events and render a given number of frames. Events and rendering are interleaved if necessary so that
    event times align with samples.
 
@@ -95,19 +114,18 @@ public:
     }
 
     if (pullInputBlock) {
+      AUAudioUnitStatus status = noErr;
+
       if (customPull_) {
-        derived_.doPullInput(timestamp, frameCount, outputBusNumber, pullInputBlock);
+        status = derived_.doPullInput(timestamp, frameCount, outputBusNumber, pullInputBlock);
       }
       else {
-        AudioUnitRenderActionFlags actionFlags = 0;
+        status pullInput(timestamp, frameCount, outputBusNumber, pullInputBlock);
+      }
 
-        // NOTE: this forces the bus to be 0 which is OK for most cases of 1 input bus, but it will cause problems for
-        // audio units with more than one input bus.
-        auto status = inputBuffer_.pullInput(&actionFlags, timestamp, frameCount, 0, pullInputBlock);
-        if (status != noErr) {
-          os_log_error(log_, "processAndRender - failed pullInput - %d", status);
-          return status;
-        }
+      if (status != noErr) {
+        os_log_error(log_, "pullInput failed - %d", status);
+        return status;
       }
     }
 
