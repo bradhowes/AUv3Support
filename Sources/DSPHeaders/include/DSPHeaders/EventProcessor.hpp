@@ -34,7 +34,7 @@ public:
    @param log the log identifier to use for our logging statements
    */
   EventProcessor(os_log_t log, bool customPull = false) :
-  derived_{static_cast<T&>(*this)}, customPull_{customPull}, log_{log}
+  derived_{static_cast<T&>(*this)}, log_{log}
   {
     os_log_info(log_, "EventProcessor");
   }
@@ -116,13 +116,7 @@ public:
     if (pullInputBlock) {
       AUAudioUnitStatus status = noErr;
 
-      if (customPull_) {
-        status = derived_.doPullInput(timestamp, frameCount, outputBusNumber, pullInputBlock);
-      }
-      else {
-        status pullInput(timestamp, frameCount, outputBusNumber, pullInputBlock);
-      }
-
+      status = derived_.doPullInput(timestamp, frameCount, outputBusNumber, pullInputBlock);
       if (status != noErr) {
         os_log_error(log_, "pullInput failed - %d", status);
         return status;
@@ -213,7 +207,6 @@ private:
   }
 
   T& derived_;
-  bool customPull_;
   InputBuffer inputBuffer_{};
   BufferFacet outputs_{};
   bool bypassed_ = false;
