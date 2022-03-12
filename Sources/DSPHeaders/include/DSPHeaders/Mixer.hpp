@@ -15,7 +15,9 @@ class Mixer
 public:
 
   /**
-   Construct new mixer that consists of three output busses.
+   Construct new mixer that consists of three output busses. The arguments take a value type so that they may be
+   constructed at the call site or used directly from a function return. Alternative would be to define move operations
+   but `BufferPair` just holds two AUValue pointers so there is no cost to doing a copy.
 
    @param dry the dry (original) output samples
    @param chorusSend the samples that will go to the first effects channel

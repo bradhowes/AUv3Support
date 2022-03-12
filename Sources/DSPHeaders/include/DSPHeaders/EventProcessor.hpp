@@ -123,6 +123,13 @@ protected:
   os_log_t log_;
 
 
+  /**
+   Obtain a `BufferPair` for the given bus. Setup the buffers so that they indicate that they hold `frameCount` samples.
+
+   @param bus the bus to whose buffers will be pointed to
+   @param frameCount the number of frames that will be found in the buffers
+   @returns BufferPair instance
+   */
   BufferPair channelBuffers(size_t bus, AUAudioFrameCount frameCount)
   {
     facets_[bus].setBufferList(buffers_[bus].mutableAudioBufferList());
@@ -202,6 +209,7 @@ private:
     auto& outputs{facets_[outputBusNumber]};
     inputs.setOffset(processedFrameCount);
     outputs.setOffset(processedFrameCount);
+
     derived_.doRendering(outputBusNumber, inputs.bufferPair(), outputs.bufferPair(), frameCount);
   }
 
