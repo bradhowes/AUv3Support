@@ -9,17 +9,29 @@
 
 #import <vector>
 
+#import "DSPHeaders/BufferPair.hpp"
+
 namespace DSPHeaders {
 
 /**
- Provides a simple std::vector view of an AudioBufferList.
+ Provides a simple std::vector view of an 2-channel (L+R) AudioBufferList.
  */
 struct BufferFacet {
 
   /**
    Construct new instance.
    */
-  BufferFacet() {}
+  BufferFacet() : pointers_{}
+  {
+    pointers_.reserve(2);
+    pointers_.resize(2);
+  }
+
+  void setChannelCount(AUAudioChannelCount channelCount) noexcept
+  {
+    pointers_.reserve(channelCount);
+    pointers_.resize(channelCount);
+  }
 
   /**
    Set the underlying buffers to use to hold and report out data. There are two options:
@@ -39,12 +51,10 @@ struct BufferFacet {
       }
     }
 
-    // Create the std::vector facet.
     size_t numBuffers = bufferList_->mNumberBuffers;
-    pointers_.reserve(numBuffers);
-    pointers_.clear();
+    assert(numBuffers == pointers_.size());
     for (UInt32 channel = 0; channel < numBuffers; ++channel) {
-      pointers_.push_back(static_cast<AUValue*>(bufferList_->mBuffers[channel].mData));
+      pointers_[channel] = static_cast<AUValue*>(bufferList_->mBuffers[channel].mData);
     }
   }
 
@@ -76,9 +86,11 @@ struct BufferFacet {
   /**
    Release the underlying buffers.
    */
-  void release() {
+  void unlink() {
     bufferList_ = nullptr;
-    pointers_.clear();
+    for (size_t channel = 0; channel < pointers_.size(); ++channel) {
+      pointers_[channel] = nullptr;
+    }
   }
 
   /**
@@ -93,6 +105,7 @@ struct BufferFacet {
     auto outputs = destination.bufferList_;
     for (UInt32 channel = 0; channel < bufferList_->mNumberBuffers; ++channel) {
       if (bufferList_->mBuffers[channel].mData == outputs->mBuffers[channel].mData) {
+        // nothing to do since input buffer is being used for output buffer (in-place rendering).
         continue;
       }
 
@@ -105,12 +118,12 @@ struct BufferFacet {
   /// Obtain the number of channels
   size_t channelCount() const { return pointers_.size(); }
 
-  /// Obtain reference to the std::vector of AUValue pointers. Callers must not change the size of the vector.
-  std::vector<AUValue*>& pointers() { return pointers_; }
+  /// Obtain the AUValue pointers for left + right buffers.
+  BufferPair bufferPair() { return BufferPair(pointers_[0], pointers_[1]); }
 
 private:
   AudioBufferList* bufferList_{nullptr};
-  std::vector<AUValue*> pointers_{};
+  std::vector<AUValue*> pointers_;
 };
 
 } // end namespace DSPHeaders

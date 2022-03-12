@@ -7,14 +7,17 @@
 #import <AudioUnit/AudioUnit.h>
 #import <AVFoundation/AVFoundation.h>
 
-#import "BufferFacet.hpp"
+#import "DSPHeaders/BufferFacet.hpp"
 
 namespace DSPHeaders {
 
 /**
- Maintains a buffer of PCM samples which is used to save samples from an upstream node.
+ Maintains a buffer of PCM samples which can be used to save samples from an upstream node. Internally uses an
+ `AVAudioPCMBuffer` to deal with the audio format of the upstream node. It also uses `BufferFacet` to present the
+ buffers as a collection of AUValue pointers (std::vector<AUValue*>) to make it easier for working with the buffers
+ and index accounting.
  */
-struct InputBuffer {
+struct SampleBuffer {
   
   /**
    Set the format of the buffer to use.
@@ -22,12 +25,13 @@ struct InputBuffer {
    @param format the format of the samples
    @param maxFrames the maximum number of frames to be found in the upstream output
    */
-  void allocateBuffers(AVAudioFormat* format, AUAudioFrameCount maxFrames)
+  void allocate(AVAudioFormat* format, AUAudioFrameCount maxFrames)
   {
     maxFramesToRender_ = maxFrames;
     buffer_ = [[AVAudioPCMBuffer alloc] initWithPCMFormat: format frameCapacity: maxFrames];
     mutableAudioBufferList_ = buffer_.mutableAudioBufferList;
-    bufferFacet_.setBufferList(mutableAudioBufferList_);
+    facet_.setChannelCount([format channelCount]);
+    facet_.setBufferList(mutableAudioBufferList_);
   }
   
   /**
@@ -37,7 +41,7 @@ struct InputBuffer {
   {
     buffer_ = nullptr;
     mutableAudioBufferList_ = nullptr;
-    bufferFacet_.release();
+    facet_.unlink();
   }
   
   /**
@@ -54,19 +58,20 @@ struct InputBuffer {
                               AURenderPullInputBlock pullInputBlock)
   {
     if (pullInputBlock == nullptr) return kAudioUnitErr_NoConnection;
-    prepareBufferList(frameCount);
+    setFrameCount(frameCount);
     return pullInputBlock(actionFlags, timestamp, frameCount, inputBusNumber, mutableAudioBufferList_);
   }
-  
+
   /**
-   Update the input buffer to reflect current format.
+   Update the buffer to reflect that it will hold frameCount frames.
    
    @param frameCount the number of frames to expect to place in the buffer
    */
-  void prepareBufferList(AVAudioFrameCount frameCount)
+  void setFrameCount(AVAudioFrameCount frameCount)
   {
+    assert(frameCount <= maxFramesToRender_);
     UInt32 byteSize = frameCount * sizeof(AUValue);
-    for (auto channel = 0; channel < mutableAudioBufferList_->mNumberBuffers; ++channel) {
+    for (UInt32 channel = 0; channel < mutableAudioBufferList_->mNumberBuffers; ++channel) {
       mutableAudioBufferList_->mBuffers[channel].mDataByteSize = byteSize;
     }
   }
@@ -78,17 +83,16 @@ struct InputBuffer {
   AudioBufferList* mutableAudioBufferList() const { return mutableAudioBufferList_; }
 
   /// Obtain a C++ vector facet using the internal buffer.
-  BufferFacet& bufferFacet() { return bufferFacet_; }
+  BufferFacet& bufferFacet() { return facet_; }
 
   /// Obtain the number of channels in the buffer
-  size_t channelCount() const { return bufferFacet_.channelCount(); }
+  size_t channelCount() const { return buffer_ != nullptr ? facet_.channelCount() : 0; }
 
 private:
-  os_log_t logger_ = os_log_create("SimplyFlange", "BufferedInputBus");
   AUAudioFrameCount maxFramesToRender_;
   AVAudioPCMBuffer* buffer_{nullptr};
   AudioBufferList* mutableAudioBufferList_{nullptr};
-  BufferFacet bufferFacet_{};
+  BufferFacet facet_{};
 };
 
 } // end namespace DSPHeaders

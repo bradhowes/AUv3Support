@@ -135,7 +135,7 @@ private:
     }
   }
 
-  static double wrappedModuloCounter(T counter, T inc) {
+  static T wrappedModuloCounter(T counter, T inc) {
     if (inc > 0 && counter >= 1.0) return counter - 1.0;
     if (inc < 0 && counter <= 0.0) return counter + 1.0;
     return counter;

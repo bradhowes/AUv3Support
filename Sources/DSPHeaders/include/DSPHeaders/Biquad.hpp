@@ -326,7 +326,7 @@ struct Canonical : Base<T> {
    
    @returns always 0.0
    */
-  static T storageComponent(const State<T>& state, const Coefficients<T>& coefficients) { return 0.0; }
+  static T storageComponent(const State<T>&, const Coefficients<T>&) { return 0.0; }
 };
 
 /// Transform for the transposed 'direct' biquad structure
@@ -357,7 +357,7 @@ struct DirectTranspose : Base<T> {
    
    @returns always 0.0
    */
-  static T storageComponent(const State<T>& state, const Coefficients<T>& coefficients) { return 0.0; }
+  static T storageComponent(const State<T>&, const Coefficients<T>&) { return 0.0; }
 };
 
 /// Transform for the transposed 'canonical' biquad structure (min state)
@@ -384,7 +384,7 @@ struct CanonicalTranspose : Base<T> {
    
    @returns the Z1 state value
    */
-  static T storageComponent(const State<T>& state, const Coefficients<T>& coefficients) { return state.x_z1; }
+  static T storageComponent(const State<T>& state, const Coefficients<T>&) { return state.x_z1; }
 };
 
 } // namespace Transform

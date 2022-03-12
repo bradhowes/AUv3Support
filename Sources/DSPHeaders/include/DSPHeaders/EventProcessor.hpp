@@ -8,7 +8,8 @@
 #import <vector>
 #import <AudioToolbox/AudioToolbox.h>
 
-#import "InputBuffer.hpp"
+#import "DSPHeaders/SampleBuffer.hpp"
+#import "DSPHeaders/BufferPair.hpp"
 
 namespace DSPHeaders {
 
@@ -33,11 +34,9 @@ public:
 
    @param log the log identifier to use for our logging statements
    */
-  EventProcessor(os_log_t log, bool customPull = false) :
-  derived_{static_cast<T&>(*this)}, log_{log}
-  {
-    os_log_info(log_, "EventProcessor");
-  }
+  EventProcessor(os_log_t log) :
+  derived_{static_cast<T&>(*this)}, log_{log}, buffers_{}, facets_{}
+  {}
 
   /**
    Set the bypass mode.
@@ -62,7 +61,9 @@ public:
    */
   void setRenderingFormat(AVAudioFormat* format, AUAudioFrameCount maxFramesToRender) {
     os_log_info(log_, "setRenderingFormat");
-    inputBuffer_.allocateBuffers(format, maxFramesToRender);
+    for (auto& entry : buffers_) {
+      entry.allocate(format, maxFramesToRender);
+    }
   }
 
   /**
@@ -70,26 +71,9 @@ public:
    */
   void renderingStopped() {
     os_log_info(log_, "renderingStopped");
-    inputBuffer_.releaseBuffers();
-  }
-
-  /**
-   Stock way to pull input from upstream nodes in the audio graph. This will be used unless `customPull_` is set to
-   `true` during construction.
-
-   @param timestamp the timestamp of the first sample or the first event
-   @param frameCount the number of frames to pull
-   @param inputBusNumber the bus to pull on
-   @param pullInputBlock the block to invoke to do the pulling
-   */
-  AUAudioUnitStatus pullInput(const AudioTimeStamp* timestamp, UInt32 frameCount, NSInteger inputBusNumber,
-                              AURenderPullInputBlock pullInputBlock) {
-    AudioUnitRenderActionFlags actionFlags = 0;
-    auto status = inputBuffer_.pullInput(&actionFlags, timestamp, frameCount, inputBusNumber, pullInputBlock);
-    if (status != noErr) {
-      os_log_error(log_, "processAndRender - failed pullInput - %d", status);
+    for (auto& entry : buffers_) {
+      entry.release();
     }
-    return status;
   }
 
   /**
@@ -107,23 +91,28 @@ public:
                                      AudioBufferList* output, const AURenderEvent* realtimeEventListHead,
                                      AURenderPullInputBlock pullInputBlock)
   {
-    if (frameCount > inputBuffer_.capacity()) {
+    auto& buffer{buffers_[outputBusNumber]};
+    if (frameCount > buffer.capacity()) {
       os_log_error(log_, "processAndRender - too many frames - frameCount: %d capacity: %d", frameCount,
-                   inputBuffer_.capacity());
+                   buffer.capacity());
       return kAudioUnitErr_TooManyFramesToProcess;
     }
 
+    // This only applies for effects -- instruments do not have anything to pull.
     if (pullInputBlock) {
-      AUAudioUnitStatus status = noErr;
-
-      status = derived_.doPullInput(timestamp, frameCount, outputBusNumber, pullInputBlock);
+      AudioUnitRenderActionFlags actionFlags = 0;
+      auto status = buffer.pullInput(&actionFlags, timestamp, frameCount, outputBusNumber, pullInputBlock);
       if (status != noErr) {
         os_log_error(log_, "pullInput failed - %d", status);
         return status;
       }
     }
 
-    setOutputBuffer(output, frameCount);
+    // Setup the output buffers to accept samples. For in-place rendering, the `output` buffer list will have null
+    // buffer points, so this will have it point to the internal buffer.
+    setOutputBuffer(outputBusNumber, output, frameCount);
+
+    // Generate samples into the output buffer.
     render(outputBusNumber, timestamp, frameCount, realtimeEventListHead);
     clearBuffers();
 
@@ -132,6 +121,14 @@ public:
 
 protected:
   os_log_t log_;
+
+
+  BufferPair channelBuffers(size_t bus, AUAudioFrameCount frameCount)
+  {
+    facets_[bus].setBufferList(buffers_[bus].mutableAudioBufferList());
+    facets_[bus].setFrameCount(frameCount);
+    return facets_[bus].bufferPair();
+  }
 
 private:
 
@@ -163,15 +160,17 @@ private:
     }
   }
 
-  void setOutputBuffer(AudioBufferList* outputs, AUAudioFrameCount frameCount)
+  void setOutputBuffer(NSInteger outputBusNumber, AudioBufferList* outputs, AUAudioFrameCount frameCount)
   {
-    outputs_.setBufferList(outputs, inputBuffer_.mutableAudioBufferList());
-    outputs_.setFrameCount(frameCount);
+    facets_[outputBusNumber].setBufferList(outputs, buffers_[outputBusNumber].mutableAudioBufferList());
+    facets_[outputBusNumber].setFrameCount(frameCount);
   }
 
   void clearBuffers()
   {
-    outputs_.release();
+    for (auto& entry : facets_) {
+      entry.release();
+    }
   }
 
   AURenderEvent const* processEventsUntil(AUEventSampleTime now, AURenderEvent const* event)
@@ -194,21 +193,21 @@ private:
 
   void renderFrames(NSInteger outputBusNumber, AUAudioFrameCount frameCount, AUAudioFrameCount processedFrameCount)
   {
-    auto& inputs{inputBuffer_.bufferFacet()};
-
+    auto& inputs{buffers_[outputBusNumber].bufferFacet()};
     if (isBypassed()) {
-      inputs.copyInto(outputs_, processedFrameCount, frameCount);
+      inputs.copyInto(facets_[outputBusNumber], processedFrameCount, frameCount);
       return;
     }
 
+    auto& outputs{facets_[outputBusNumber]};
     inputs.setOffset(processedFrameCount);
-    outputs_.setOffset(processedFrameCount);
-    derived_.doRendering(outputBusNumber, inputs.pointers(), outputs_.pointers(), frameCount);
+    outputs.setOffset(processedFrameCount);
+    derived_.doRendering(outputBusNumber, inputs.bufferPair(), outputs.bufferPair(), frameCount);
   }
 
   T& derived_;
-  InputBuffer inputBuffer_{};
-  BufferFacet outputs_{};
+  std::vector<SampleBuffer> buffers_;
+  std::vector<BufferFacet> facets_;
   bool bypassed_ = false;
 };
 

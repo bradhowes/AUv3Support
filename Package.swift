@@ -14,7 +14,37 @@ let package = Package(
   targets: [
     .target(
       name: "DSPHeaders",
-      exclude: ["README.md"]
+      exclude: ["README.md"],
+      cxxSettings: [
+        .unsafeFlags([
+          "-pedantic",
+          "-Wmissing-braces",
+          "-Wparentheses",
+          "-Wswitch",
+          "-Wcompletion-handler",
+          "-Wunused-function",
+          "-Wunused-label",
+          "-Wunused-parameter",
+          "-Wunused-variable",
+          "-Wunused-value",
+          "-Wempty-body",
+          "-Wno-unknown-pragmas",
+          "-Wuninitialized",
+          "-Wconditional-uninitialized",
+          "-Wconversion",
+          "-Wconstant-conversion",
+          "-Wassign-enum",
+          "-Wsign-compare",
+          "-Wint-conversion",
+          "-Wbool-conversion",
+          "-Wenum-conversion",
+          "-Wfloat-conversion",
+          "-Wshorten-64-to-32",
+          "-Wsign-conversion",
+          "-Wmove",
+          "-Wcomma",
+        ], .none)
+      ]
     ),
     .target(
       name: "AUv3Support",

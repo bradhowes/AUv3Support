@@ -28,17 +28,17 @@ AUAudioFrameCount maxFrames = 100;
 - (void)testInit {
   InputBuffer buffer;
   XCTAssertEqual(buffer.capacity(), 0);
-  XCTAssertEqual(buffer.bufferFacet().channelCount(), 0);
+  XCTAssertEqual(buffer.channelCount(), 0);
   XCTAssertEqual(buffer.mutableAudioBufferList(), nullptr);
 
   buffer.allocateBuffers(format, maxFrames);
   XCTAssertEqual(buffer.capacity(), maxFrames);
-  XCTAssertEqual(buffer.bufferFacet().channelCount(), 2);
+  XCTAssertEqual(buffer.channelCount(), 2);
   XCTAssertNotEqual(buffer.mutableAudioBufferList(), nullptr);
 
   buffer.releaseBuffers();
   XCTAssertEqual(buffer.capacity(), maxFrames);
-  XCTAssertEqual(buffer.bufferFacet().channelCount(), 0);
+  XCTAssertEqual(buffer.channelCount(), 0);
   XCTAssertEqual(buffer.mutableAudioBufferList(), nullptr);
 }
 
@@ -50,10 +50,11 @@ AUAudioFrameCount maxFrames = 100;
   XCTAssertEqual(buffer.bufferFacet().channelCount(), 2);
   XCTAssertNotEqual(buffer.mutableAudioBufferList(), nullptr);
 
-  AUAudioUnitStatus (^mockPullInput)(AudioUnitRenderActionFlags *actionFlags, const AudioTimeStamp *timestamp, AUAudioFrameCount frameCount,
-                                     NSInteger inputBusNumber, AudioBufferList *inputData);
-  mockPullInput = ^(AudioUnitRenderActionFlags *actionFlags, const AudioTimeStamp *timestamp, AUAudioFrameCount frameCount,
-                    NSInteger inputBusNumber, AudioBufferList *inputData) {
+  AUAudioUnitStatus (^mockPullInput)(AudioUnitRenderActionFlags *actionFlags, const AudioTimeStamp *timestamp,
+                                     AUAudioFrameCount frameCount, NSInteger inputBusNumber,
+                                     AudioBufferList *inputData);
+  mockPullInput = ^(AudioUnitRenderActionFlags *actionFlags, const AudioTimeStamp *timestamp,
+                    AUAudioFrameCount frameCount, NSInteger inputBusNumber, AudioBufferList *inputData) {
     auto bufferCount = inputData->mNumberBuffers;
     for (int index = 0; index < bufferCount; ++index) {
       auto& buffer = inputData->mBuffers[index];
