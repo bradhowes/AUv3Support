@@ -9,7 +9,7 @@
 #import <AudioToolbox/AudioToolbox.h>
 
 #import "DSPHeaders/SampleBuffer.hpp"
-#import "DSPHeaders/BufferPair.hpp"
+#import "DSPHeaders/BusBuffers.hpp"
 
 namespace DSPHeaders {
 
@@ -130,11 +130,11 @@ protected:
    @param frameCount the number of frames that will be found in the buffers
    @returns BufferPair instance
    */
-  BufferPair channelBuffers(size_t bus, AUAudioFrameCount frameCount)
+  BusBuffers busBuffers(size_t bus, AUAudioFrameCount frameCount)
   {
     facets_[bus].setBufferList(buffers_[bus].mutableAudioBufferList());
     facets_[bus].setFrameCount(frameCount);
-    return facets_[bus].bufferPair();
+    return facets_[bus].busBuffers();
   }
 
 private:

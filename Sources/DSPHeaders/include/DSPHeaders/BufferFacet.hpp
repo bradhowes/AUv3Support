@@ -9,7 +9,7 @@
 
 #import <vector>
 
-#import "DSPHeaders/BufferPair.hpp"
+#import "DSPHeaders/BusBuffers.hpp"
 
 namespace DSPHeaders {
 
@@ -18,14 +18,7 @@ namespace DSPHeaders {
  */
 struct BufferFacet {
 
-  /**
-   Construct new instance.
-   */
-  BufferFacet() : pointers_{}
-  {
-    pointers_.reserve(2);
-    pointers_.resize(2);
-  }
+  BufferFacet() = default;
 
   void setChannelCount(AUAudioChannelCount channelCount) noexcept
   {
@@ -52,7 +45,7 @@ struct BufferFacet {
     }
 
     size_t numBuffers = bufferList_->mNumberBuffers;
-    assert(numBuffers == pointers_.size());
+    if (numBuffers != pointers_.size()) throw std::runtime_error("mismatch channel size");
     for (UInt32 channel = 0; channel < numBuffers; ++channel) {
       pointers_[channel] = static_cast<AUValue*>(bufferList_->mBuffers[channel].mData);
     }
@@ -119,11 +112,11 @@ struct BufferFacet {
   size_t channelCount() const { return pointers_.size(); }
 
   /// Obtain the AUValue pointers for left + right buffers.
-  BufferPair bufferPair() { return BufferPair(pointers_[0], pointers_[1]); }
+  BusBuffers busBuffers() { return BusBuffers(pointers_); }
 
 private:
   AudioBufferList* bufferList_{nullptr};
-  std::vector<AUValue*> pointers_;
+  std::vector<AUValue*> pointers_{};
 };
 
 } // end namespace DSPHeaders

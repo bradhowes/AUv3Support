@@ -4,18 +4,18 @@
 #import <vector>
 
 #import "DSPHeaders/EventProcessor.hpp"
-#import "DSPHeaders/InputBuffer.hpp"
+#import "DSPHeaders/SampleBuffer.hpp"
 
 using namespace DSPHeaders;
 
-@interface InputBufferTests : XCTestCase
+@interface SampleBufferTests : XCTestCase
 
 @end
 
-AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
-AUAudioFrameCount maxFrames = 100;
+static AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
+static AUAudioFrameCount maxFrames = 100;
 
-@implementation InputBufferTests
+@implementation SampleBufferTests
 
 - (void)setUp {
   // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -26,17 +26,17 @@ AUAudioFrameCount maxFrames = 100;
 }
 
 - (void)testInit {
-  InputBuffer buffer;
+  SampleBuffer buffer;
   XCTAssertEqual(buffer.capacity(), 0);
   XCTAssertEqual(buffer.channelCount(), 0);
   XCTAssertEqual(buffer.mutableAudioBufferList(), nullptr);
 
-  buffer.allocateBuffers(format, maxFrames);
+  buffer.allocate(format, maxFrames);
   XCTAssertEqual(buffer.capacity(), maxFrames);
   XCTAssertEqual(buffer.channelCount(), 2);
   XCTAssertNotEqual(buffer.mutableAudioBufferList(), nullptr);
 
-  buffer.releaseBuffers();
+  buffer.release();
   XCTAssertEqual(buffer.capacity(), maxFrames);
   XCTAssertEqual(buffer.channelCount(), 0);
   XCTAssertEqual(buffer.mutableAudioBufferList(), nullptr);
@@ -44,8 +44,8 @@ AUAudioFrameCount maxFrames = 100;
 
 - (void)testPullInput {
 
-  InputBuffer buffer;
-  buffer.allocateBuffers(format, maxFrames);
+  SampleBuffer buffer;
+  buffer.allocate(format, maxFrames);
   XCTAssertEqual(buffer.capacity(), maxFrames);
   XCTAssertEqual(buffer.bufferFacet().channelCount(), 2);
   XCTAssertNotEqual(buffer.mutableAudioBufferList(), nullptr);

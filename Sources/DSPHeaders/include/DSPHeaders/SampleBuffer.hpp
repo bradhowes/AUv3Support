@@ -37,7 +37,7 @@ struct SampleBuffer {
   /**
    Forget any allocated buffer.
    */
-  void releaseBuffers()
+  void release()
   {
     buffer_ = nullptr;
     mutableAudioBufferList_ = nullptr;
