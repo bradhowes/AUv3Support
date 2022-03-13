@@ -45,6 +45,7 @@ public:
    */
   void addMono(AUAudioFrameCount frame, AUValue monoSample) noexcept
   {
+    assert(isMono());
     buffers_[0][frame] += monoSample;
   }
 
@@ -57,6 +58,7 @@ public:
    */
   void addStereo(AUAudioFrameCount frame, AUValue leftSample, AUValue rightSample) noexcept
   {
+    assert(isStereo());
     buffers_[0][frame] += leftSample;
     buffers_[1][frame] += rightSample;
   }
