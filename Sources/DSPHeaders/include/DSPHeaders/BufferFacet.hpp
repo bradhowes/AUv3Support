@@ -14,12 +14,18 @@
 namespace DSPHeaders {
 
 /**
- Provides a simple std::vector view of an 2-channel (L+R) AudioBufferList.
+ Provides a simple std::vector view of an N-channel AudioBufferList.
  */
 struct BufferFacet {
 
   BufferFacet() = default;
 
+  /**
+   Set the expected number of channels to support during rendering. The goal is to not encountered any memory
+   allocations while rendering.
+
+   @param channelCount the number of channels to expect
+   */
   void setChannelCount(AUAudioChannelCount channelCount) noexcept
   {
     pointers_.reserve(channelCount);
@@ -31,6 +37,9 @@ struct BufferFacet {
 
    - bufferList has non-nullptr mData values -- use it as the source
    - bufferList has nullptr mData values && inPlaceSource != nullptr -- use the inPlaceSource mData elements
+
+   Note that this method will throw an exception if the channel count of either `bufferList` does not match the expected
+   channel count.
 
    @param bufferList the collection of buffers to use
    @param inPlaceSource if not nullptr, use their mData elements for storage
@@ -52,7 +61,8 @@ struct BufferFacet {
   }
 
   /**
-   Set the number of frames (samples) that are in each buffer.
+   Set the number of frames (samples) that are in each buffer. This must be done before the underlying buffers are
+   returned to Apple's audio engine that is driving the rendering.
 
    @param frameCount number of samples in a buffer.
    */
@@ -108,10 +118,10 @@ struct BufferFacet {
     }
   }
 
-  /// Obtain the number of channels
+  /// @returns the number of channels that are currently supported
   size_t channelCount() const { return pointers_.size(); }
 
-  /// Obtain the AUValue pointers for left + right buffers.
+  /// @returns a BusBuffer instance for the sample pointers.
   BusBuffers busBuffers() { return BusBuffers(pointers_); }
 
 private:
