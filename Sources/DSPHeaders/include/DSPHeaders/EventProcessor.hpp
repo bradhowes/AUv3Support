@@ -71,6 +71,7 @@ public:
    */
   void renderingStopped() {
     os_log_info(log_, "renderingStopped");
+    unlinkBuffers();
     for (auto& entry : buffers_) {
       entry.release();
     }
@@ -114,7 +115,7 @@ public:
 
     // Generate samples into the output buffer.
     render(outputBusNumber, timestamp, frameCount, realtimeEventListHead);
-    clearBuffers();
+    unlinkBuffers();
 
     return noErr;
   }
@@ -173,10 +174,10 @@ private:
     facets_[outputBusNumber].setFrameCount(frameCount);
   }
 
-  void clearBuffers()
+  void unlinkBuffers()
   {
     for (auto& entry : facets_) {
-      entry.release();
+      entry.unlink();
     }
   }
 

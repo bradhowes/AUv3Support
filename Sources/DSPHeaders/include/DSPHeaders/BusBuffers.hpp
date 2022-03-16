@@ -106,6 +106,9 @@ public:
     }
   }
 
+  /// @returns number of channel buffers
+  size_t size() const { return buffers_.size(); }
+
 private:
   std::vector<AUValue*> buffers_;
 };
