@@ -124,11 +124,11 @@ protected:
 
 
   /**
-   Obtain a `BufferPair` for the given bus. Setup the buffers so that they indicate that they hold `frameCount` samples.
+   Obtain a `busBuffer` for the given bus. Setup the buffers so that they indicate that they hold `frameCount` samples.
 
    @param bus the bus to whose buffers will be pointed to
    @param frameCount the number of frames that will be found in the buffers
-   @returns BufferPair instance
+   @returns BusBuffers instance
    */
   BusBuffers busBuffers(size_t bus, AUAudioFrameCount frameCount)
   {
@@ -210,7 +210,7 @@ private:
     inputs.setOffset(processedFrameCount);
     outputs.setOffset(processedFrameCount);
 
-    derived_.doRendering(outputBusNumber, inputs.bufferPair(), outputs.bufferPair(), frameCount);
+    derived_.doRendering(outputBusNumber, inputs.busBuffers(), outputs.busBuffers(), frameCount);
   }
 
   T& derived_;
