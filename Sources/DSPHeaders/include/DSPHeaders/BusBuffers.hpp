@@ -92,6 +92,10 @@ public:
     }
   }
 
+  AUValue* operator[](size_t index) const { return buffers_[index]; }
+
+  AUValue*& operator[](size_t index) { return buffers_[index]; }
+
   /**
    Adjust the buffer pointers so that they start `frames` later. Currently, this is only uses in unit tests. There is
    not a need for this type of activity in normal AUv3 sample rendering since BufferPair instances always start at the
