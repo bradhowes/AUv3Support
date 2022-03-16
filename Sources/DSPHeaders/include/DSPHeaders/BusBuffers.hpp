@@ -92,8 +92,20 @@ public:
     }
   }
 
+  /**
+   Obtain the sample pointer for the given channel index.
+
+   @param index the index of the channel to get
+   @returns the sample pointer at the given channel index
+   */
   AUValue* operator[](size_t index) const { return buffers_[index]; }
 
+  /**
+   Obtain the modifiable sample pointer for the given channel index.
+
+   @param index the index of the channel to get
+   @returns reference to the sample pointer at the given channel index
+   */
   AUValue*& operator[](size_t index) { return buffers_[index]; }
 
   /**
