@@ -26,13 +26,13 @@ public struct ParametricValue: ExpressibleByFloatLiteral {
   public let value: AUValue
 
   @inlinable
-  public init(_ value: AUValue) {
-    self.value = value.clamped(to: 0...1)
+  public init(_ aValue: AUValue) {
+    self.value = aValue.clamped(to: 0...1)
   }
 
   @inlinable
-  public init(floatLiteral value: AUValue) {
-    self.value = value.clamped(to: 0...1)
+  public init(floatLiteral aValue: AUValue) {
+    self.init(aValue)
   }
 }
 
