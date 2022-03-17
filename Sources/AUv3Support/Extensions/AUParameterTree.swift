@@ -32,7 +32,7 @@ public struct ParametricValue: ExpressibleByFloatLiteral {
 
   @inlinable
   public init(floatLiteral value: AUValue) {
-    self.init(value)
+    self.value = value.clamped(to: 0...1)
   }
 }
 
