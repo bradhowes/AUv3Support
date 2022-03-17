@@ -27,7 +27,7 @@ static AUAudioFrameCount maxFrames = 100;
 }
 
 - (void)testMono {
-  SampleBuffer buffer;
+  SampleBuffer buffer{"abc"};
   buffer.allocate(monoFormat, maxFrames);
   BufferFacet& facet{buffer.bufferFacet()};
   XCTAssertEqual(1, facet.channelCount());
@@ -36,7 +36,7 @@ static AUAudioFrameCount maxFrames = 100;
 }
 
 - (void)testStereo {
-  SampleBuffer buffer;
+  SampleBuffer buffer{"abc"};
   buffer.allocate(stereoFormat, maxFrames);
   BufferFacet& facet{buffer.bufferFacet()};
   XCTAssertEqual(2, facet.channelCount());
@@ -45,12 +45,12 @@ static AUAudioFrameCount maxFrames = 100;
 }
 
 - (void)testChannelCount {
-  SampleBuffer monoBuffer;
+  SampleBuffer monoBuffer{"abc"};
   monoBuffer.allocate(monoFormat, maxFrames);
-  SampleBuffer stereoBuffer;
+  SampleBuffer stereoBuffer{"abc"};
   stereoBuffer.allocate(stereoFormat, maxFrames);
 
-  BufferFacet facet;
+  BufferFacet facet{"abc"};
   facet.setChannelCount(1);
   XCTAssertNoThrow(facet.setBufferList(monoBuffer.mutableAudioBufferList()));
 
@@ -62,12 +62,12 @@ static AUAudioFrameCount maxFrames = 100;
 }
 
 - (void)testFrameCount {
-  SampleBuffer monoBuffer;
+  SampleBuffer monoBuffer{"abc"};
   monoBuffer.allocate(monoFormat, maxFrames);
-  SampleBuffer stereoBuffer;
+  SampleBuffer stereoBuffer{"abc"};
   stereoBuffer.allocate(stereoFormat, maxFrames);
 
-  BufferFacet facet;
+  BufferFacet facet{"abc"};
   facet.setChannelCount(1);
   facet.setBufferList(monoBuffer.mutableAudioBufferList());
   facet.setFrameCount(10);
@@ -81,10 +81,10 @@ static AUAudioFrameCount maxFrames = 100;
 }
 
 - (void)testOffset {
-  SampleBuffer stereoBuffer;
+  SampleBuffer stereoBuffer{"abc"};
   stereoBuffer.allocate(stereoFormat, maxFrames);
 
-  BufferFacet facet;
+  BufferFacet facet{"abc"};
   facet.setChannelCount(2);
   facet.setBufferList(stereoBuffer.mutableAudioBufferList());
   BusBuffers bb1{facet.busBuffers()};
@@ -114,10 +114,10 @@ static AUAudioFrameCount maxFrames = 100;
 }
 
 - (void)testUnlink {
-  SampleBuffer stereoBuffer;
+  SampleBuffer stereoBuffer{"abc"};
   stereoBuffer.allocate(stereoFormat, maxFrames);
 
-  BufferFacet facet;
+  BufferFacet facet{"abc"};
   facet.unlink();
   BusBuffers bb{facet.busBuffers()};
   XCTAssertFalse(bb.isValid());

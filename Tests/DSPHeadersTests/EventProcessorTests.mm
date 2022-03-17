@@ -10,7 +10,7 @@ using namespace DSPHeaders;
 
 struct MockEffect : public EventProcessor<MockEffect>
 {
-  MockEffect() : EventProcessor<MockEffect>(os_log_create("Foo", "Bar")) {}
+  MockEffect() : EventProcessor<MockEffect>("Foo") {}
 };
 
 @interface EventProcessorTests : XCTestCase
@@ -29,13 +29,13 @@ struct MockEffect : public EventProcessor<MockEffect>
 - (void)testInit {
   auto effect = MockEffect();
   AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
-  effect.setRenderingFormat(format, 512);
+  effect.setRenderingFormat(1, format, 512);
 }
 
 - (void)testBypass {
   auto effect = MockEffect();
   AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
-  effect.setRenderingFormat(format, 512);
+  effect.setRenderingFormat(1, format, 512);
 
   XCTAssertFalse(effect.isBypassed());
   effect.setBypass(true);
@@ -48,7 +48,7 @@ struct MockEffect : public EventProcessor<MockEffect>
   auto effect = MockEffect();
   AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
   AUAudioFrameCount maxFrames = 512;
-  effect.setRenderingFormat(format, maxFrames);
+  effect.setRenderingFormat(1, format, maxFrames);
 
   AVAudioPCMBuffer* buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:format frameCapacity:maxFrames];
   AudioTimeStamp timestamp = AudioTimeStamp();
@@ -56,7 +56,7 @@ struct MockEffect : public EventProcessor<MockEffect>
 
   AUAudioFrameCount frames = 4;
   NSInteger bus = 0;
-  auto status = effect.processAndRender(&timestamp, frames, bus, [buffer mutableAudioBufferList], nil, pullInputBlock);
+  // auto status = effect.processAndRender(&timestamp, frames, bus, [buffer mutableAudioBufferList], nil, pullInputBlock);
 }
 
 @end
