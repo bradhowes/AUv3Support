@@ -43,6 +43,8 @@ let package = Package(
           "-Wsign-conversion",
           "-Wmove",
           "-Wcomma",
+          "-Wno-newline-eof", // resource_bundle_accessor.h is missing newline at end of file
+          "-x", "objective-c++", // treat source files as Obj-C++ files
         ], .none)
       ]
     ),

@@ -64,9 +64,9 @@ public:
   void setRenderingFormat(NSInteger busCount, AVAudioFormat* format, AUAudioFrameCount maxFramesToRender) {
     os_log_info(log_, "setRenderingFormat - busCount: %ld", (long)busCount);
 
-    while (buffers_.size() < busCount) {
-      buffers_.push_back(SampleBuffer(loggingSubsystem_));
-      facets_.push_back(BufferFacet(loggingSubsystem_));
+    while (buffers_.size() < size_t(busCount)) {
+      buffers_.emplace_back(loggingSubsystem_);
+      facets_.emplace_back(loggingSubsystem_);
     }
 
     // Setup sample buffers to have the right format and capacity
