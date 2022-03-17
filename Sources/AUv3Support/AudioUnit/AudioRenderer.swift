@@ -12,7 +12,7 @@ import AVKit
    - parameter format: the audio format for the samples that will be processed
    - parameter maxFramesToRender: the maximum number of frames to render in one shot
    */
-  func setRenderingFormat(_ format: AVAudioFormat, maxFramesToRender: AUAudioFrameCount)
+  func setRenderingFormat(_ busCount: Int, format: AVAudioFormat, maxFramesToRender: AUAudioFrameCount)
 
   /**
    Stop audio processing.

@@ -2,6 +2,8 @@
 
 #pragma once
 
+#import <string>
+
 #import <os/log.h>
 #import <AudioToolbox/AudioToolbox.h>
 #import <AudioUnit/AudioUnit.h>
@@ -18,7 +20,11 @@ namespace DSPHeaders {
  and index accounting.
  */
 struct SampleBuffer {
-  
+
+  SampleBuffer(std::string loggingSubsystem) : log_{os_log_create(loggingSubsystem.c_str(), "SampleBuffer")},
+  facet_{loggingSubsystem}
+  {}
+
   /**
    Set the format of the buffer to use.
    
@@ -27,6 +33,7 @@ struct SampleBuffer {
    */
   void allocate(AVAudioFormat* format, AUAudioFrameCount maxFrames)
   {
+    os_log_info(log_, "allocate - maxFrames: %d", maxFrames);
     maxFramesToRender_ = maxFrames;
     buffer_ = [[AVAudioPCMBuffer alloc] initWithPCMFormat: format frameCapacity: maxFrames];
     mutableAudioBufferList_ = buffer_.mutableAudioBufferList;
@@ -39,6 +46,13 @@ struct SampleBuffer {
    */
   void release()
   {
+    os_log_info(log_, "release - %p", buffer_);
+
+    if (buffer_ == nullptr) {
+      os_log_error(log_, "buffer_ == nullptr");
+      throw std::runtime_error("buffer_ == nullptr");
+    }
+
     buffer_ = nullptr;
     mutableAudioBufferList_ = nullptr;
     facet_.unlink();
@@ -57,9 +71,16 @@ struct SampleBuffer {
                               AVAudioFrameCount frameCount, NSInteger inputBusNumber,
                               AURenderPullInputBlock pullInputBlock)
   {
-    if (pullInputBlock == nullptr) return kAudioUnitErr_NoConnection;
+    os_log_debug(log_, "pullInput - %llu", timestamp->mHostTime);
+    if (pullInputBlock == nullptr) {
+      os_log_error(log_, "pullInputBlock == nullptr");
+      return kAudioUnitErr_NoConnection;
+    }
+
     setFrameCount(frameCount);
-    return pullInputBlock(actionFlags, timestamp, frameCount, inputBusNumber, mutableAudioBufferList_);
+    auto status = pullInputBlock(actionFlags, timestamp, frameCount, inputBusNumber, mutableAudioBufferList_);
+    os_log_debug(log_, "pullInput done - %d", status);
+    return status;
   }
 
   /**
@@ -69,7 +90,17 @@ struct SampleBuffer {
    */
   void setFrameCount(AVAudioFrameCount frameCount)
   {
-    assert(frameCount <= maxFramesToRender_);
+    os_log_debug(log_, "setFrameCount - %d", frameCount);
+    if (frameCount > maxFramesToRender_) {
+      os_log_error(log_, "frameCount > maxFramesToRender");
+      throw std::runtime_error("frameCount > maxFramesToRender");
+    }
+
+    if (mutableAudioBufferList_ == nullptr) {
+      os_log_error(log_, "mutableAudioBufferList_ == nullptr");
+      throw std::runtime_error("mutableAudioBufferList_ == nullptr");
+    }
+
     UInt32 byteSize = frameCount * sizeof(AUValue);
     for (UInt32 channel = 0; channel < mutableAudioBufferList_->mNumberBuffers; ++channel) {
       mutableAudioBufferList_->mBuffers[channel].mDataByteSize = byteSize;
@@ -89,10 +120,11 @@ struct SampleBuffer {
   size_t channelCount() const { return buffer_ != nullptr ? facet_.channelCount() : 0; }
 
 private:
+  os_log_t log_;
   AUAudioFrameCount maxFramesToRender_;
   AVAudioPCMBuffer* buffer_{nullptr};
   AudioBufferList* mutableAudioBufferList_{nullptr};
-  BufferFacet facet_{};
+  BufferFacet facet_;
 };
 
 } // end namespace DSPHeaders

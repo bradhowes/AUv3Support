@@ -3,9 +3,10 @@
 #pragma once
 
 #import <os/log.h>
-
 #import <algorithm>
+#import <string>
 #import <vector>
+
 #import <AudioToolbox/AudioToolbox.h>
 
 #import "DSPHeaders/SampleBuffer.hpp"
@@ -34,8 +35,9 @@ public:
 
    @param log the log identifier to use for our logging statements
    */
-  EventProcessor(os_log_t log) :
-  derived_{static_cast<T&>(*this)}, log_{log}, buffers_{}, facets_{}
+  EventProcessor(std::string subsystem) :
+  derived_{static_cast<T&>(*this)}, loggingSubsystem_{subsystem}, log_{os_log_create(subsystem.c_str(), "Kernel")},
+  buffers_{}, facets_{}
   {}
 
   /**
@@ -59,10 +61,22 @@ public:
    @param format the sample format to expect
    @param maxFramesToRender the maximum number of frames to expect on input
    */
-  void setRenderingFormat(AVAudioFormat* format, AUAudioFrameCount maxFramesToRender) {
-    os_log_info(log_, "setRenderingFormat");
+  void setRenderingFormat(NSInteger busCount, AVAudioFormat* format, AUAudioFrameCount maxFramesToRender) {
+    os_log_info(log_, "setRenderingFormat - busCount: %ld", (long)busCount);
+
+    while (buffers_.size() < busCount) {
+      buffers_.push_back(SampleBuffer(loggingSubsystem_));
+      facets_.push_back(BufferFacet(loggingSubsystem_));
+    }
+
+    // Setup sample buffers to have the right format and capacity
     for (auto& entry : buffers_) {
       entry.allocate(format, maxFramesToRender);
+    }
+
+    // Setup facets to have the right channel count so we do not allocate while rendering
+    for (auto& entry : facets_) {
+      entry.setChannelCount([format channelCount]);
     }
   }
 
@@ -92,6 +106,10 @@ public:
                                      AudioBufferList* output, const AURenderEvent* realtimeEventListHead,
                                      AURenderPullInputBlock pullInputBlock)
   {
+    os_log_info(log_, "processAndRender - frameCount: %d bus: %ld size: %lu", frameCount, (long)outputBusNumber,
+                buffers_.size());
+    assert(outputBusNumber < buffers_.size());
+
     auto& buffer{buffers_[outputBusNumber]};
     if (frameCount > buffer.capacity()) {
       os_log_error(log_, "processAndRender - too many frames - frameCount: %d capacity: %d", frameCount,
@@ -101,10 +119,11 @@ public:
 
     // This only applies for effects -- instruments do not have anything to pull.
     if (pullInputBlock) {
+      os_log_info(log_, "processAndRender - pulling input");
       AudioUnitRenderActionFlags actionFlags = 0;
       auto status = buffer.pullInput(&actionFlags, timestamp, frameCount, outputBusNumber, pullInputBlock);
       if (status != noErr) {
-        os_log_error(log_, "pullInput failed - %d", status);
+        os_log_error(log_, "processAndRender - pullInput failed - %d", status);
         return status;
       }
     }
@@ -115,6 +134,7 @@ public:
 
     // Generate samples into the output buffer.
     render(outputBusNumber, timestamp, frameCount, realtimeEventListHead);
+
     unlinkBuffers();
 
     return noErr;
@@ -215,6 +235,7 @@ private:
   }
 
   T& derived_;
+  std::string loggingSubsystem_;
   std::vector<SampleBuffer> buffers_;
   std::vector<BufferFacet> facets_;
   bool bypassed_ = false;

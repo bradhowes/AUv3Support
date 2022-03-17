@@ -2,6 +2,8 @@
 
 #pragma once
 
+#import <string>
+
 #import <os/log.h>
 #import <AudioToolbox/AudioToolbox.h>
 #import <AudioUnit/AudioUnit.h>
@@ -18,7 +20,7 @@ namespace DSPHeaders {
  */
 struct BufferFacet {
 
-  BufferFacet() = default;
+  BufferFacet(std::string loggingSubsystem) : log_{os_log_create(loggingSubsystem.c_str(), "BufferFacet")} {}
 
   /**
    Set the expected number of channels to support during rendering. The goal is to not encountered any memory
@@ -28,6 +30,7 @@ struct BufferFacet {
    */
   void setChannelCount(AUAudioChannelCount channelCount) noexcept
   {
+    os_log_debug(log_, "setChannelCount - %d", channelCount);
     pointers_.reserve(channelCount);
     pointers_.resize(channelCount);
   }
@@ -45,8 +48,14 @@ struct BufferFacet {
    @param inPlaceSource if not nullptr, use their mData elements for storage
    */
   void setBufferList(AudioBufferList* bufferList, AudioBufferList* inPlaceSource = nullptr) {
+    os_log_debug(log_, "setBufferList - bufferList: %p inPlaceSource: %p", bufferList, inPlaceSource);
     bufferList_ = bufferList;
     if (bufferList->mBuffers[0].mData == nullptr) {
+      os_log_debug(log_, "using inPlaceSource");
+      if (inPlaceSource == nullptr) {
+        os_log_error(log_, "inPlaceSource == nullptr");
+        throw std::runtime_error("inPlaceSource == nullptr");
+      }
       assert(inPlaceSource != nullptr);
       for (UInt32 channel = 0; channel < bufferList->mNumberBuffers; ++channel) {
         bufferList->mBuffers[channel].mData = inPlaceSource->mBuffers[channel].mData;
@@ -54,9 +63,14 @@ struct BufferFacet {
     }
 
     size_t numBuffers = bufferList_->mNumberBuffers;
-    if (numBuffers != pointers_.size()) throw std::runtime_error("mismatch channel size");
+    if (numBuffers != pointers_.size()) {
+      os_log_error(log_, "numBuffers != pointers_.size()");
+      throw std::runtime_error("numBuffers != pointers_.size()");
+    }
+
     for (UInt32 channel = 0; channel < numBuffers; ++channel) {
       pointers_[channel] = static_cast<AUValue*>(bufferList_->mBuffers[channel].mData);
+      assert(pointers_[channel] != nullptr);
     }
   }
 
@@ -67,7 +81,11 @@ struct BufferFacet {
    @param frameCount number of samples in a buffer.
    */
   void setFrameCount(AUAudioFrameCount frameCount) {
-    assert(bufferList_ != nullptr);
+    os_log_debug(log_, "setFrameCount - %d", frameCount);
+    if (bufferList_ == nullptr) {
+      os_log_error(log_, "bufferList_ == nullptr");
+      throw std::runtime_error("bufferList_ == nullptr");
+    }
     UInt32 byteSize = frameCount * sizeof(AUValue);
     for (UInt32 channel = 0; channel < bufferList_->mNumberBuffers; ++channel) {
       bufferList_->mBuffers[channel].mDataByteSize = byteSize;
@@ -81,6 +99,7 @@ struct BufferFacet {
    @param offset number of samples to offset.
    */
   void setOffset(AUAudioFrameCount offset) {
+    os_log_debug(log_, "setOffset - %d", offset);
     for (size_t channel = 0; channel < pointers_.size(); ++channel) {
       pointers_[channel] = static_cast<AUValue*>(bufferList_->mBuffers[channel].mData) + offset;
     }
@@ -90,6 +109,7 @@ struct BufferFacet {
    Release the underlying buffers.
    */
   void unlink() {
+    os_log_debug(log_, "unlink - %lul", pointers_.size());
     bufferList_ = nullptr;
     for (size_t channel = 0; channel < pointers_.size(); ++channel) {
       pointers_[channel] = nullptr;
@@ -105,6 +125,7 @@ struct BufferFacet {
    @param frameCount the number of samples to write
    */
   void copyInto(BufferFacet& destination, AUAudioFrameCount offset, AUAudioFrameCount frameCount) const {
+    os_log_debug(log_, "copyInto");
     auto outputs = destination.bufferList_;
     for (UInt32 channel = 0; channel < bufferList_->mNumberBuffers; ++channel) {
       if (bufferList_->mBuffers[channel].mData == outputs->mBuffers[channel].mData) {
@@ -127,6 +148,7 @@ struct BufferFacet {
 private:
   AudioBufferList* bufferList_{nullptr};
   std::vector<AUValue*> pointers_{};
+  os_log_t log_;
 };
 
 } // end namespace DSPHeaders

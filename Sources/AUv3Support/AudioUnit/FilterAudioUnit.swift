@@ -255,7 +255,7 @@ extension FilterAudioUnit {
       throw NSError(domain: NSOSStatusErrorDomain, code: Int(kAudioUnitErr_FailedInitialization), userInfo: nil)
     }
 
-    kernel.setRenderingFormat(outputBus.format, maxFramesToRender: maximumFramesToRender)
+    kernel.setRenderingFormat(outputBusses.count, format: outputBus.format, maxFramesToRender: maximumFramesToRender)
 
     // Configure parameter value setting to use internal `scheduleParameterBlock` instead of direct updates to kernel.
     let rampDurationInSamples = AUAudioFrameCount(30)
