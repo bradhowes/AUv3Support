@@ -125,6 +125,12 @@ public:
   /// @returns number of channel buffers
   size_t size() const { return buffers_.size(); }
 
+  /// @returns pointer to first AUValue pointer (first channel in bundle)
+  AUValue* const* data() const { return buffers_.data(); }
+
+  /// @returns pointer to first AUValue pointer (first channel in bundle)
+  AUValue** data() { return buffers_.data(); }
+
 private:
   std::vector<AUValue*> buffers_;
 };
