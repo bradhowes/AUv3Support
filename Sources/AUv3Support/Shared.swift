@@ -8,7 +8,7 @@ public enum Shared {}
 extension Shared {
 
   /// The top-level identifier to use for logging.
-  public private(set) static var loggingSubsystem: String = "?"
+  public private(set) static var loggingSubsystem: String = "com.braysoftware.AUv3Support"
 
   /**
    Create a new logger for a subsystem
