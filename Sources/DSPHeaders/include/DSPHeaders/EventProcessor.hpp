@@ -141,6 +141,12 @@ public:
       }
     }
 
+    for (size_t busIndex = 0; busIndex < buffers_.size(); ++busIndex) {
+      auto& facet{facets_[busIndex]};
+      facet.setBufferList(buffers_[busIndex].mutableAudioBufferList());
+      facet.setFrameCount(frameCount);
+    }
+
     // Generate samples into the output buffer.
     render(outputBusNumber, timestamp, frameCount, realtimeEventListHead);
 
@@ -199,16 +205,10 @@ private:
     }
   }
 
-  void setOutputBuffer(NSInteger outputBusNumber, AudioBufferList* outputs, AUAudioFrameCount frameCount)
-  {
-    facets_[outputBusNumber].setBufferList(outputs, buffers_[outputBusNumber].mutableAudioBufferList());
-    facets_[outputBusNumber].setFrameCount(frameCount);
-  }
-
   void unlinkBuffers()
   {
     for (auto& entry : facets_) {
-      entry.unlink();
+      if (entry.isLinked()) entry.unlink();
     }
   }
 
@@ -232,17 +232,16 @@ private:
 
   void renderFrames(NSInteger outputBusNumber, AUAudioFrameCount frameCount, AUAudioFrameCount processedFrameCount)
   {
+    for (size_t busIndex = 0; busIndex < buffers_.size(); ++busIndex) {
+      auto& facet{facets_[busIndex]};
+      facet.setOffset(processedFrameCount);
+    }
+
+
     auto& input{inputFacet()};
     if (input.isLinked() && isBypassed()) {
       input.copyInto(facets_[outputBusNumber], processedFrameCount, frameCount);
       return;
-    }
-
-    for (size_t busIndex = 0; busIndex < buffers_.size(); ++busIndex) {
-      auto& facet{facets_[busIndex]};
-      facet.setBufferList(buffers_[busIndex].mutableAudioBufferList());
-      facet.setFrameCount(frameCount);
-      facet.setOffset(processedFrameCount);
     }
 
     auto& output{facets_[outputBusNumber]};
