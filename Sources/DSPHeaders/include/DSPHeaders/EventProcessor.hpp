@@ -225,18 +225,24 @@ private:
 
   void renderFrames(NSInteger outputBusNumber, AUAudioFrameCount frameCount, AUAudioFrameCount processedFrameCount)
   {
+    // This method can be called multiple times during one `processAndRender` call due to interleaved audio events
+    // such as MIDI messages. We will generate in total `frameCount` + `processedFrameCount` samples, but maybe not in
+    // one shot. As a result, we must adjust buffer pointers by the number of processed samples so far before we
+    // let the kernel render into our buffers.
     for (size_t busIndex = 0; busIndex < buffers_.size(); ++busIndex) {
       auto& facet{facets_[busIndex]};
       facet.setOffset(processedFrameCount);
     }
 
-
+    // If we have input samples from an upstream node *and* we are in bypass mode, either use the sample buffers
+    // directly or copy samples over to the output buffer and be done.
     auto& input{inputFacet()};
     if (input.isLinked() && isBypassed()) {
       input.copyInto(facets_[outputBusNumber], processedFrameCount, frameCount);
       return;
     }
 
+    // Pass off to the kernel to render the desired number of samples.
     auto& output{facets_[outputBusNumber]};
     derived_.doRendering(outputBusNumber, input.busBuffers(), output.busBuffers(), frameCount);
   }
