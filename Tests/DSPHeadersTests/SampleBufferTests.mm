@@ -28,7 +28,6 @@ static AUAudioFrameCount maxFrames = 100;
 - (void)testInit {
   SampleBuffer buffer{"abc"};
   XCTAssertEqual(buffer.capacity(), 0);
-  XCTAssertEqual(buffer.channelCount(), 0);
   XCTAssertEqual(buffer.mutableAudioBufferList(), nullptr);
 
   buffer.allocate(format, maxFrames);
@@ -46,7 +45,10 @@ static AUAudioFrameCount maxFrames = 100;
   SampleBuffer buffer{"abc"};
   buffer.allocate(format, maxFrames);
   XCTAssertEqual(buffer.capacity(), maxFrames);
-  XCTAssertEqual(buffer.bufferFacet().channelCount(), 2);
+  BufferFacet facet{"def"};
+  facet.setChannelCount(2);
+  XCTAssertEqual(facet.channelCount(), 2);
+  facet.setBufferList(buffer.mutableAudioBufferList());
   XCTAssertNotEqual(buffer.mutableAudioBufferList(), nullptr);
 
   AUAudioUnitStatus (^mockPullInput)(AudioUnitRenderActionFlags *actionFlags, const AudioTimeStamp *timestamp,
@@ -73,7 +75,7 @@ static AUAudioFrameCount maxFrames = 100;
   AudioUnitRenderActionFlags flags = 0;
   AudioTimeStamp timestamp;
   XCTAssertEqual(buffer.pullInput(&flags, &timestamp, frameCount, 0, mockPullInput), 0);
-  auto& facet{buffer.bufferFacet()};
+  facet.setBufferList(buffer.mutableAudioBufferList());
   XCTAssertEqual(facet.channelCount(), 2);
 }
 

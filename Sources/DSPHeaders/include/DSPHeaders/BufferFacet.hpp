@@ -6,8 +6,6 @@
 
 #import <os/log.h>
 #import <AudioToolbox/AudioToolbox.h>
-#import <AudioUnit/AudioUnit.h>
-#import <AVFoundation/AVFoundation.h>
 
 #import <vector>
 
@@ -82,10 +80,7 @@ struct BufferFacet {
    */
   void setFrameCount(AUAudioFrameCount frameCount) {
     os_log_debug(log_, "setFrameCount - %d", frameCount);
-    if (bufferList_ == nullptr) {
-      os_log_error(log_, "bufferList_ == nullptr");
-      throw std::runtime_error("bufferList_ == nullptr");
-    }
+    validateBufferList();
     UInt32 byteSize = frameCount * sizeof(AUValue);
     for (UInt32 channel = 0; channel < bufferList_->mNumberBuffers; ++channel) {
       bufferList_->mBuffers[channel].mDataByteSize = byteSize;
@@ -100,16 +95,20 @@ struct BufferFacet {
    */
   void setOffset(AUAudioFrameCount offset) {
     os_log_debug(log_, "setOffset - %d", offset);
+    validateBufferList();
     for (size_t channel = 0; channel < pointers_.size(); ++channel) {
       pointers_[channel] = static_cast<AUValue*>(bufferList_->mBuffers[channel].mData) + offset;
     }
   }
 
+  bool isLinked() const { return bufferList_ != nullptr; }
+  
   /**
    Release the underlying buffers.
    */
   void unlink() {
     os_log_debug(log_, "unlink - %lul", pointers_.size());
+    validateBufferList();
     bufferList_ = nullptr;
     for (size_t channel = 0; channel < pointers_.size(); ++channel) {
       pointers_[channel] = nullptr;
@@ -126,6 +125,7 @@ struct BufferFacet {
    */
   void copyInto(BufferFacet& destination, AUAudioFrameCount offset, AUAudioFrameCount frameCount) const {
     os_log_debug(log_, "copyInto");
+    validateBufferList();
     auto outputs = destination.bufferList_;
     for (UInt32 channel = 0; channel < bufferList_->mNumberBuffers; ++channel) {
       if (bufferList_->mBuffers[channel].mData == outputs->mBuffers[channel].mData) {
@@ -142,10 +142,21 @@ struct BufferFacet {
   /// @returns the number of channels that are currently supported
   size_t channelCount() const { return pointers_.size(); }
 
-  /// @returns a BusBuffer instance for the sample pointers.
-  BusBuffers busBuffers() { return BusBuffers(pointers_); }
+  BusBuffers busBuffers() {
+    os_log_debug(log_, "busBuffers");
+    validateBufferList();
+    return BusBuffers(pointers_);
+  }
 
 private:
+
+  void validateBufferList() const {
+    if (bufferList_ == nullptr) {
+      os_log_error(log_, "bufferList_ == nullptr");
+      throw std::runtime_error("bufferList_ == nullptr");
+    }
+  }
+
   AudioBufferList* bufferList_{nullptr};
   std::vector<AUValue*> pointers_{};
   os_log_t log_;

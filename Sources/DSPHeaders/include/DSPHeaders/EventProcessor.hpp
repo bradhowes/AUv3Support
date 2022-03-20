@@ -64,10 +64,14 @@ public:
   void setRenderingFormat(NSInteger busCount, AVAudioFormat* format, AUAudioFrameCount maxFramesToRender) {
     os_log_info(log_, "setRenderingFormat - busCount: %ld", (long)busCount);
 
+    // We want an internal buffer for each bus that we can generate output on.
     while (buffers_.size() < size_t(busCount)) {
       buffers_.emplace_back(loggingSubsystem_);
       facets_.emplace_back(loggingSubsystem_);
     }
+
+    // Extra facet to use for input buffer used by a `pullInputBlock`
+    facets_.emplace_back(loggingSubsystem_);
 
     // Setup sample buffers to have the right format and capacity
     for (auto& entry : buffers_) {
@@ -110,6 +114,8 @@ public:
                 buffers_.size());
     assert(outputBusNumber < buffers_.size());
 
+    // Get a buffer to use to read into if there is a `pullInputBlock`. We will also modify it in-place if necessary
+    // use it for an output buffer if necessary.
     auto& buffer{buffers_[outputBusNumber]};
     if (frameCount > buffer.capacity()) {
       os_log_error(log_, "processAndRender - too many frames - frameCount: %d capacity: %d", frameCount,
@@ -117,8 +123,15 @@ public:
       return kAudioUnitErr_TooManyFramesToProcess;
     }
 
+    BufferFacet& input{inputFacet()};
+    assert(!input.isLinked());
+
     // This only applies for effects -- instruments do not have anything to pull.
     if (pullInputBlock) {
+
+      input.setBufferList(output, buffer.mutableAudioBufferList());
+      input.setFrameCount(frameCount);
+
       os_log_info(log_, "processAndRender - pulling input");
       AudioUnitRenderActionFlags actionFlags = 0;
       auto status = buffer.pullInput(&actionFlags, timestamp, frameCount, outputBusNumber, pullInputBlock);
@@ -127,10 +140,6 @@ public:
         return status;
       }
     }
-
-    // Setup the output buffers to accept samples. For in-place rendering, the `output` buffer list will have null
-    // buffer points, so this will have it point to the internal buffer.
-    setOutputBuffer(outputBusNumber, output, frameCount);
 
     // Generate samples into the output buffer.
     render(outputBusNumber, timestamp, frameCount, realtimeEventListHead);
@@ -159,6 +168,8 @@ protected:
   }
 
 private:
+
+  BufferFacet& inputFacet() { assert(!facets_.empty()); return facets_.back(); }
 
   void render(NSInteger outputBusNumber, AudioTimeStamp const* timestamp, AUAudioFrameCount frameCount,
               AURenderEvent const* events)
@@ -221,17 +232,21 @@ private:
 
   void renderFrames(NSInteger outputBusNumber, AUAudioFrameCount frameCount, AUAudioFrameCount processedFrameCount)
   {
-    auto& inputs{buffers_[outputBusNumber].bufferFacet()};
-    if (isBypassed()) {
-      inputs.copyInto(facets_[outputBusNumber], processedFrameCount, frameCount);
+    auto& input{inputFacet()};
+    if (input.isLinked() && isBypassed()) {
+      input.copyInto(facets_[outputBusNumber], processedFrameCount, frameCount);
       return;
     }
 
-    auto& outputs{facets_[outputBusNumber]};
-    inputs.setOffset(processedFrameCount);
-    outputs.setOffset(processedFrameCount);
+    for (size_t busIndex = 0; busIndex < buffers_.size(); ++busIndex) {
+      auto& facet{facets_[busIndex]};
+      facet.setBufferList(buffers_[busIndex].mutableAudioBufferList());
+      facet.setFrameCount(frameCount);
+      facet.setOffset(processedFrameCount);
+    }
 
-    derived_.doRendering(outputBusNumber, inputs.busBuffers(), outputs.busBuffers(), frameCount);
+    auto& output{facets_[outputBusNumber]};
+    derived_.doRendering(outputBusNumber, input.busBuffers(), output.busBuffers(), frameCount);
   }
 
   T& derived_;

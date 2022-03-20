@@ -29,7 +29,9 @@ static AUAudioFrameCount maxFrames = 100;
 - (void)testMono {
   SampleBuffer buffer{"abc"};
   buffer.allocate(monoFormat, maxFrames);
-  BufferFacet& facet{buffer.bufferFacet()};
+  BufferFacet facet{"def"};
+  facet.setChannelCount(1);
+  facet.setBufferList(buffer.mutableAudioBufferList());
   XCTAssertEqual(1, facet.channelCount());
   BusBuffers bb{facet.busBuffers()};
   XCTAssertTrue(bb.isMono());
@@ -38,7 +40,9 @@ static AUAudioFrameCount maxFrames = 100;
 - (void)testStereo {
   SampleBuffer buffer{"abc"};
   buffer.allocate(stereoFormat, maxFrames);
-  BufferFacet& facet{buffer.bufferFacet()};
+  BufferFacet facet{"def"};
+  facet.setChannelCount(2);
+  facet.setBufferList(buffer.mutableAudioBufferList());
   XCTAssertEqual(2, facet.channelCount());
   BusBuffers bb{facet.busBuffers()};
   XCTAssertTrue(bb.isStereo());
@@ -113,14 +117,9 @@ static AUAudioFrameCount maxFrames = 100;
   XCTAssertEqual(4.0, right[3]);
 }
 
-- (void)testUnlink {
-  SampleBuffer stereoBuffer{"abc"};
-  stereoBuffer.allocate(stereoFormat, maxFrames);
-
+- (void)testUnlinked {
   BufferFacet facet{"abc"};
-  facet.unlink();
-  BusBuffers bb{facet.busBuffers()};
-  XCTAssertFalse(bb.isValid());
+  XCTAssertThrows(facet.busBuffers());
 }
 
 @end

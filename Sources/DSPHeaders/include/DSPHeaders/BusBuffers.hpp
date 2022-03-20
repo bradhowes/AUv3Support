@@ -7,8 +7,6 @@
 #include <vector>
 
 #import <AudioToolbox/AudioToolbox.h>
-#import <AudioUnit/AudioUnit.h>
-#import <AVFoundation/AVFoundation.h>
 
 namespace DSPHeaders {
 
@@ -26,7 +24,7 @@ public:
 
    @param buffers the AUValue pointers to use
    */
-  explicit BusBuffers(const std::vector<AUValue*>& buffers) : buffers_{buffers} {}
+  explicit BusBuffers(std::vector<AUValue*>& buffers) : buffers_{buffers} {}
 
   /// @returns true if the buffer collection is usable
   bool isValid() const noexcept { return !buffers_.empty(); }
@@ -132,7 +130,7 @@ public:
   AUValue** data() { return buffers_.data(); }
 
 private:
-  std::vector<AUValue*> buffers_;
+  std::vector<AUValue*>& buffers_;
 };
 
 } // end namespace

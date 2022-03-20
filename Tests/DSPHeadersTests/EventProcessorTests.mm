@@ -51,7 +51,7 @@ struct MockEffect : public EventProcessor<MockEffect>
   auto effect = MockEffect();
   AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
   AUAudioFrameCount maxFrames = 512;
-  effect.setRenderingFormat(1, format, maxFrames);
+  effect.setRenderingFormat(2, format, maxFrames);
 
   AVAudioPCMBuffer* buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:format frameCapacity:maxFrames];
   AudioTimeStamp timestamp = AudioTimeStamp();

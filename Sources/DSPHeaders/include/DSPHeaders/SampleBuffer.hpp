@@ -21,8 +21,7 @@ namespace DSPHeaders {
  */
 struct SampleBuffer {
 
-  SampleBuffer(std::string loggingSubsystem) : log_{os_log_create(loggingSubsystem.c_str(), "SampleBuffer")},
-  facet_{loggingSubsystem}
+  SampleBuffer(std::string loggingSubsystem) : log_{os_log_create(loggingSubsystem.c_str(), "SampleBuffer")}
   {}
 
   /**
@@ -37,8 +36,6 @@ struct SampleBuffer {
     maxFramesToRender_ = maxFrames;
     buffer_ = [[AVAudioPCMBuffer alloc] initWithPCMFormat: format frameCapacity: maxFrames];
     mutableAudioBufferList_ = buffer_.mutableAudioBufferList;
-    facet_.setChannelCount([format channelCount]);
-    facet_.setBufferList(mutableAudioBufferList_);
   }
   
   /**
@@ -55,7 +52,6 @@ struct SampleBuffer {
 
     buffer_ = nullptr;
     mutableAudioBufferList_ = nullptr;
-    facet_.unlink();
   }
   
   /**
@@ -113,18 +109,16 @@ struct SampleBuffer {
   /// Obtain a mutable version of the internal AudioBufferList.
   AudioBufferList* mutableAudioBufferList() const { return mutableAudioBufferList_; }
 
-  /// Obtain a C++ vector facet using the internal buffer.
-  BufferFacet& bufferFacet() { return facet_; }
-
   /// Obtain the number of channels in the buffer
-  size_t channelCount() const { return buffer_ != nullptr ? facet_.channelCount() : 0; }
+  size_t channelCount() const {
+    return mutableAudioBufferList_ != nullptr ? mutableAudioBufferList_->mNumberBuffers : 0;
+  }
 
 private:
   os_log_t log_;
   AUAudioFrameCount maxFramesToRender_;
   AVAudioPCMBuffer* buffer_{nullptr};
   AudioBufferList* mutableAudioBufferList_{nullptr};
-  BufferFacet facet_;
 };
 
 } // end namespace DSPHeaders
