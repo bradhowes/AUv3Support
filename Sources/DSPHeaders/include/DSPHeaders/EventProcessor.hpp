@@ -123,16 +123,14 @@ public:
       return kAudioUnitErr_TooManyFramesToProcess;
     }
 
-    BufferFacet& input{inputFacet()};
-    assert(!input.isLinked());
-
     // This only applies for effects -- instruments do not have anything to pull.
+    BufferFacet& input{inputFacet()};
     if (pullInputBlock) {
+      os_log_info(log_, "processAndRender - pulling input");
 
       input.setBufferList(output, buffer.mutableAudioBufferList());
       input.setFrameCount(frameCount);
 
-      os_log_info(log_, "processAndRender - pulling input");
       AudioUnitRenderActionFlags actionFlags = 0;
       auto status = buffer.pullInput(&actionFlags, timestamp, frameCount, outputBusNumber, pullInputBlock);
       if (status != noErr) {
@@ -141,15 +139,8 @@ public:
       }
     }
 
-    for (size_t busIndex = 0; busIndex < buffers_.size(); ++busIndex) {
-      auto& facet{facets_[busIndex]};
-      facet.setBufferList(buffers_[busIndex].mutableAudioBufferList());
-      facet.setFrameCount(frameCount);
-    }
-
-    // Generate samples into the output buffer.
+    linkBuffers(frameCount);
     render(outputBusNumber, timestamp, frameCount, realtimeEventListHead);
-
     unlinkBuffers();
 
     return noErr;
@@ -202,6 +193,14 @@ private:
 
       // Process the events for the current time
       events = processEventsUntil(now, events);
+    }
+  }
+
+  void linkBuffers(AUAudioFrameCount frameCount)
+  {
+    for (size_t busIndex = 0; busIndex < buffers_.size(); ++busIndex) {
+      facets_[busIndex].setBufferList(buffers_[busIndex].mutableAudioBufferList());
+      facets_[busIndex].setFrameCount(frameCount);
     }
   }
 
