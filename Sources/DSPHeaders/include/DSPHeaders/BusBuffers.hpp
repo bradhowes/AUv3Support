@@ -86,7 +86,7 @@ public:
   {
     size_t size{buffers_.size()};
     for (size_t index = 0; index < size; ++index) {
-      buffers_[index][frame] = (index % 2) ? oddSample : evenSample;
+      buffers_[index][frame] += (index % 2) ? oddSample : evenSample;
     }
   }
 

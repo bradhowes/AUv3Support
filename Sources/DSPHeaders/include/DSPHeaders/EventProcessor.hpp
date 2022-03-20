@@ -63,6 +63,7 @@ public:
    */
   void setRenderingFormat(NSInteger busCount, AVAudioFormat* format, AUAudioFrameCount maxFramesToRender) {
     os_log_info(log_, "setRenderingFormat - busCount: %ld", (long)busCount);
+    auto channelCount{[format channelCount]};
 
     // We want an internal buffer for each bus that we can generate output on.
     while (buffers_.size() < size_t(busCount)) {
@@ -73,14 +74,19 @@ public:
     // Extra facet to use for input buffer used by a `pullInputBlock`
     facets_.emplace_back(loggingSubsystem_);
 
+    // Setup facets to have the right channel count so we do not allocate while rendering
+    for (auto& entry : facets_) {
+      entry.setChannelCount(channelCount);
+    }
+
     // Setup sample buffers to have the right format and capacity
     for (auto& entry : buffers_) {
       entry.allocate(format, maxFramesToRender);
     }
 
-    // Setup facets to have the right channel count so we do not allocate while rendering
-    for (auto& entry : facets_) {
-      entry.setChannelCount([format channelCount]);
+    // Link the output buffers with their corresponding facets. This only needs to be done once.
+    for (size_t busIndex = 0; busIndex < buffers_.size(); ++busIndex) {
+      facets_[busIndex].setBufferList(buffers_[busIndex].mutableAudioBufferList());
     }
   }
 
@@ -89,7 +95,11 @@ public:
    */
   void renderingStopped() {
     os_log_info(log_, "renderingStopped");
-    unlinkBuffers();
+
+    for (auto& entry : facets_) {
+      if (entry.isLinked()) entry.unlink();
+    }
+
     for (auto& entry : buffers_) {
       entry.release();
     }
@@ -139,9 +149,8 @@ public:
       }
     }
 
-    linkBuffers(frameCount);
+    facets_[outputBusNumber].setFrameCount(frameCount);
     render(outputBusNumber, timestamp, frameCount, realtimeEventListHead);
-    unlinkBuffers();
 
     return noErr;
   }
@@ -149,20 +158,13 @@ public:
 protected:
   os_log_t log_;
 
-
   /**
-   Obtain a `busBuffer` for the given bus. Setup the buffers so that they indicate that they hold `frameCount` samples.
+   Obtain a `busBuffer` for the given bus.
 
    @param bus the bus to whose buffers will be pointed to
-   @param frameCount the number of frames that will be found in the buffers
    @returns BusBuffers instance
    */
-  BusBuffers busBuffers(size_t bus, AUAudioFrameCount frameCount)
-  {
-    facets_[bus].setBufferList(buffers_[bus].mutableAudioBufferList());
-    facets_[bus].setFrameCount(frameCount);
-    return facets_[bus].busBuffers();
-  }
+  BusBuffers busBuffers(size_t bus) { return facets_[bus].busBuffers(); }
 
 private:
 
@@ -193,14 +195,6 @@ private:
 
       // Process the events for the current time
       events = processEventsUntil(now, events);
-    }
-  }
-
-  void linkBuffers(AUAudioFrameCount frameCount)
-  {
-    for (size_t busIndex = 0; busIndex < buffers_.size(); ++busIndex) {
-      facets_[busIndex].setBufferList(buffers_[busIndex].mutableAudioBufferList());
-      facets_[busIndex].setFrameCount(frameCount);
     }
   }
 

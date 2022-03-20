@@ -78,7 +78,8 @@ struct SampleBuffer {
   }
 
   /**
-   Update the buffer to reflect that it will hold frameCount frames.
+   Update the buffer to reflect that has or will hold frameCount frames. NOTE: this value must be <= max value given in
+   the `allocate` method.
    
    @param frameCount the number of frames to expect to place in the buffer
    */
