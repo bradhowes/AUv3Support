@@ -14,15 +14,20 @@
 namespace DSPHeaders {
 
 /**
- Provides a simple std::vector view of an N-channel AudioBufferList.
+ Provides a simple view of an N-channel AudioBufferList as a collection of AUValue pointers.
  */
 struct BufferFacet {
 
+  /**
+   Construct a new instance.
+
+   @param loggingSubsystem the string constant to use for the log subsystem parameter for `os_log_create` call.
+   */
   BufferFacet(std::string loggingSubsystem) : log_{os_log_create(loggingSubsystem.c_str(), "BufferFacet")} {}
 
   /**
-   Set the expected number of channels to support during rendering. The goal is to not encountered any memory
-   allocations while rendering.
+   Set the expected number of channels to support during rendering. The goal is to not encounter any memory
+   allocations while rendering, so this *must* be called before rendering is started.
 
    @param channelCount the number of channels to expect
    */
@@ -34,7 +39,8 @@ struct BufferFacet {
   }
 
   /**
-   Set the underlying buffers to use to hold and report out data. There are two options:
+   Set the underlying buffers to use to hold and report out data. This is to be run within a render thread and will not
+   allocate any memory. There are two options:
 
    - bufferList has non-nullptr mData values -- use it as the source
    - bufferList has nullptr mData values && inPlaceSource != nullptr -- use the inPlaceSource mData elements
@@ -66,9 +72,20 @@ struct BufferFacet {
       throw std::runtime_error("numBuffers != pointers_.size()");
     }
 
-    for (UInt32 channel = 0; channel < numBuffers; ++channel) {
-      pointers_[channel] = static_cast<AUValue*>(bufferList_->mBuffers[channel].mData);
-      assert(pointers_[channel] != nullptr);
+    setOffset(0);
+  }
+
+  /**
+   Set the facet to start at the given offset into the source buffers. Once done, the std::vector AUValue
+   pointers will start `offset` samples into the underlying buffer.
+
+   @param offset number of samples to offset.
+   */
+  void setOffset(AUAudioFrameCount offset) {
+    os_log_debug(log_, "setOffset - %d", offset);
+    validateBufferList();
+    for (size_t channel = 0; channel < pointers_.size(); ++channel) {
+      pointers_[channel] = static_cast<AUValue*>(bufferList_->mBuffers[channel].mData) + offset;
     }
   }
 
@@ -87,22 +104,9 @@ struct BufferFacet {
     }
   }
 
-  /**
-   Set the facet to start at the given offset into the source buffers. Once done, the std::vector and AUValue
-   pointers will start `offset` samples into the underlying buffer.
-
-   @param offset number of samples to offset.
-   */
-  void setOffset(AUAudioFrameCount offset) {
-    os_log_debug(log_, "setOffset - %d", offset);
-    validateBufferList();
-    for (size_t channel = 0; channel < pointers_.size(); ++channel) {
-      pointers_[channel] = static_cast<AUValue*>(bufferList_->mBuffers[channel].mData) + offset;
-    }
-  }
-
+  /// @returns true if the facet is linked to a buffer
   bool isLinked() const { return bufferList_ != nullptr; }
-  
+
   /**
    Release the underlying buffers.
    */
@@ -142,6 +146,7 @@ struct BufferFacet {
   /// @returns the number of channels that are currently supported
   size_t channelCount() const { return pointers_.size(); }
 
+  /// @returns new BusBuffers instance that refers to our collection of AUValue pointers for storing render samples.
   BusBuffers busBuffers() {
     os_log_debug(log_, "busBuffers");
     validateBufferList();
