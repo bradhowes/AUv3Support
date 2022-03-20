@@ -5,7 +5,7 @@
 
 # Overview
 
-Swift package containing useful code for AUv3 app extensions. There are three products so far in this package:
+Swift package containing useful code for AUv3 app extensions. There are four products so far in this package:
 
 - AUv3-Support -- collection of extensions and classes for both the AudioUnit components that is packaged
   as an AUv3 app extension and the host app that contains it. Because it will be linked to the AUv3 app
@@ -17,7 +17,10 @@ Swift package containing useful code for AUv3 app extensions. There are three pr
 - AUv3-Support-macOS -- similar to the above but for macOS. Unfortunately, the setup is not as straight-forward on
   macOS as it is for iOS. So far I have not been able to get a good load from a storyboard held in this package:
   menu items not connected to delegate slots, toolbar buttons not connected to the window.
-
+- DSPHeaders -- collection of C++17 headers for classes that are useful when creating AUv3 kernels. These were written
+  specifically for use in a audio unit render thread, so there should be no memory allocations done once a render thread
+  is started.
+  
 These libraries are now being used by my [SimplyFlange](https://github.com/bradhowes/SimplyFlange), 
 [SimplyPhaser](https://github.com/bradhowes/SimplyPhaser), and
 [AUv3Template](https://github.com/bradhowes/AUv3Template) projects.

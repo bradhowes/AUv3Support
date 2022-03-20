@@ -15,9 +15,7 @@ namespace DSPHeaders {
 
 /**
  Maintains a buffer of PCM samples which can be used to save samples from an upstream node. Internally uses an
- `AVAudioPCMBuffer` to deal with the audio format of the upstream node. It also uses `BufferFacet` to present the
- buffers as a collection of AUValue pointers (std::vector<AUValue*>) to make it easier for working with the buffers
- and index accounting.
+ `AVAudioPCMBuffer` to deal with specifics involving the audio format.
  */
 struct SampleBuffer {
 
