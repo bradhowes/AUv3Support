@@ -151,8 +151,14 @@ public:
 
     facets_[outputBusNumber].setBufferList(output, buffer.mutableAudioBufferList());
     facets_[outputBusNumber].setFrameCount(frameCount);
+
     render(outputBusNumber, timestamp, frameCount, realtimeEventListHead);
 
+    os_log_debug(log_, "processAndRender - output: %p", output);
+    os_log_debug(log_, "processAndRender - output[0].mDataByteByteSize: %d (%p)", output->mBuffers[0].mDataByteSize,
+                 &output->mBuffers[0]);
+    os_log_debug(log_, "processAndRender - output[1].mDataByteByteSize: %d (%p)", output->mBuffers[1].mDataByteSize,
+                 &output->mBuffers[1]);
     return noErr;
   }
 
