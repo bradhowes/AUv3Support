@@ -149,6 +149,7 @@ public:
       }
     }
 
+    facets_[outputBusNumber].setBufferList(output, buffer.mutableAudioBufferList());
     facets_[outputBusNumber].setFrameCount(frameCount);
     render(outputBusNumber, timestamp, frameCount, realtimeEventListHead);
 
