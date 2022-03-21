@@ -2,7 +2,7 @@ import AudioUnit
 import XCTest
 @testable import AUv3Support
 
-fileprivate class MockAudioUnit: AUAudioUnitPresetsFacade {
+private class MockAudioUnit: AUAudioUnitPresetsFacade {
   static let log = Shared.logger("SubSystem", "Category")
   private let log = MockAudioUnit.log
 
@@ -29,10 +29,10 @@ fileprivate class MockAudioUnit: AUAudioUnitPresetsFacade {
   }
 }
 
-fileprivate final class UserPresetsManagerTests: XCTestCase {
+class UserPresetsManagerTests: XCTestCase {
 
-  var mock: MockAudioUnit!
-  var upm: UserPresetsManager!
+  private var mock: MockAudioUnit!
+  private var upm: UserPresetsManager!
 
   override func setUpWithError() throws {
     mock = MockAudioUnit()

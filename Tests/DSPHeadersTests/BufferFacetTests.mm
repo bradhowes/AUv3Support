@@ -119,7 +119,7 @@ static AUAudioFrameCount maxFrames = 100;
 
 - (void)testUnlinked {
   BufferFacet facet{"abc"};
-  XCTAssertThrows(facet.busBuffers());
+  XCTAssertThrows(facet.unlink());
 }
 
 @end

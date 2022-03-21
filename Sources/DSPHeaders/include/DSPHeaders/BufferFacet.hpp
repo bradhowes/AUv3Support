@@ -149,7 +149,6 @@ struct BufferFacet {
   /// @returns new BusBuffers instance that refers to our collection of AUValue pointers for storing render samples.
   BusBuffers busBuffers() {
     os_log_debug(log_, "busBuffers");
-    validateBufferList();
     return BusBuffers(pointers_);
   }
 

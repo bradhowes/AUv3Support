@@ -125,7 +125,7 @@ static AUAudioFrameCount maxFrames = 100;
   facet.setBufferList(stereoBuffer.mutableAudioBufferList());
   facet.unlink();
   XCTAssertFalse(facet.isLinked());
-  XCTAssertThrows(facet.busBuffers());
+  XCTAssertThrows(facet.unlink());
 }
 
 @end
