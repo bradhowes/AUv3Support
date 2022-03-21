@@ -156,9 +156,9 @@ public:
 
     os_log_debug(log_, "processAndRender - output: %p", output);
     os_log_debug(log_, "processAndRender - output[0].mDataByteByteSize: %d (%p)", output->mBuffers[0].mDataByteSize,
-                 &output->mBuffers[0]);
+                 output->mBuffers[0].mData);
     os_log_debug(log_, "processAndRender - output[1].mDataByteByteSize: %d (%p)", output->mBuffers[1].mDataByteSize,
-                 &output->mBuffers[1]);
+                 output->mBuffers[1].mData);
     return noErr;
   }
 
