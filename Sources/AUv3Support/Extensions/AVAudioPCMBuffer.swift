@@ -7,28 +7,30 @@ import AVFoundation
 // samples.
 public extension AVAudioPCMBuffer {
 
-  /// - returns pointer to array of AUValue values representing the left channel of a stereo buffer pair.
-  var leftPtr: UnsafeMutableBufferPointer<AUValue> {
-    precondition(format.isStandard)
-    return UnsafeMutableBufferPointer<AUValue>(UnsafeMutableAudioBufferListPointer(mutableAudioBufferList)[0])
+  /**
+   Obtain an UnsafeMutableBufferPointer for the given channel in the buffer
+
+   - parameter index: the channel to return
+   - returns: the UnsafeMutableBufferPointer for the channel data
+   */
+  subscript(index : Int) -> UnsafeMutableBufferPointer<AUValue> {
+    get {
+      UnsafeMutableBufferPointer<AUValue>(UnsafeMutableAudioBufferListPointer(mutableAudioBufferList)[index])
+    }
   }
 
+  /// - returns pointer to array of AUValue values representing the left channel of a stereo buffer pair.
+  var leftPtr: UnsafeMutableBufferPointer<AUValue> { self[0] }
+
   /// - returns pointer to array of AUValue values representing the right channel of a stereo buffer pair.
-  var rightPtr: UnsafeMutableBufferPointer<AUValue> {
-    precondition(format.isStandard && format.channelCount > 1)
-    return UnsafeMutableBufferPointer<AUValue>(UnsafeMutableAudioBufferListPointer(mutableAudioBufferList)[1])
-  }
+  var rightPtr: UnsafeMutableBufferPointer<AUValue> { self[1] }
 
   /**
    Clear the buffer so that all `frameLength` samples are 0.0.
    */
   func zeros() {
-    precondition(format.isStandard)
-    let channelCount = Int(format.channelCount)
-    let buffers = UnsafeMutableAudioBufferListPointer(mutableAudioBufferList)
-    for index in 0..<channelCount {
-      let ptr = UnsafeMutableBufferPointer<AUValue>(buffers[index])
-      vDSP_vclr(ptr.baseAddress!, 1, vDSP_Length(frameLength))
+    for index in 0..<Int(format.channelCount) {
+      vDSP_vclr(self[index].baseAddress!, 1, vDSP_Length(frameLength))
     }
   }
 
@@ -48,17 +50,15 @@ public extension AVAudioPCMBuffer {
    - parameter frameCount: the number of frames to append
    */
   func append(_ buffer: AVAudioPCMBuffer, startingFrame: AVAudioFramePosition, frameCount: AVAudioFrameCount) {
-    precondition(format.isStandard)
     precondition(format == buffer.format, "Format mismatch")
     precondition(startingFrame + AVAudioFramePosition(frameCount) <= AVAudioFramePosition(buffer.frameLength),
                  "Insufficient audio in buffer")
     precondition(frameLength + frameCount <= frameCapacity, "Insufficient space in buffer")
 
-    memcpy(leftPtr.baseAddress!.advanced(by: Int(frameLength)), buffer.leftPtr.baseAddress,
-           Int(frameCount) * stride * MemoryLayout<Float>.size)
-
-    memcpy(rightPtr.baseAddress!.advanced(by: Int(frameLength)), buffer.rightPtr.baseAddress,
-           Int(frameCount) * stride * MemoryLayout<Float>.size)
+    for index in 0..<Int(format.channelCount) {
+      memcpy(self[index].baseAddress!.advanced(by: Int(frameLength)), buffer[index].baseAddress,
+             Int(frameCount) * stride * MemoryLayout<Float>.size)
+    }
 
     frameLength += frameCount
   }
