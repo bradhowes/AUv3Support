@@ -7,53 +7,35 @@ import XCTest
 import AVFAudio
 
 class AVAudioPCMBufferTests: XCTestCase {
-  override func setUp() {}
+  private let frameCount: AVAudioFrameCount = 512
+  private var format: AVAudioFormat!
+  private var buffer: AVAudioPCMBuffer!
+
+  override func setUp() {
+    format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 44100.0, channels: 2, interleaved: false)
+    guard format != nil else {
+      XCTFail("invalid format")
+      return
+    }
+
+    buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount)
+    guard buffer != nil else {
+      XCTFail("unable to allocate buffer")
+      return
+    }
+  }
+
   override func tearDown() {}
 
   func testLeftPtr() {
-    guard let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 44100.0, channels: 2, interleaved: false) else {
-      XCTFail("invalid format")
-      return
-    }
-
-    let frameCount = 512
-    guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(frameCount)) else {
-      XCTFail("unable to allocate buffer")
-      return
-    }
-
-    let leftPtr = buffer.leftPtr
-    XCTAssertNotNil(leftPtr.baseAddress)
+    XCTAssertNotNil(buffer.leftPtr.baseAddress)
   }
 
   func testRightPtr() {
-    guard let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 44100.0, channels: 2, interleaved: false) else {
-      XCTFail("invalid format")
-      return
-    }
-
-    let frameCount = 512
-    guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(frameCount)) else {
-      XCTFail("unable to allocate buffer")
-      return
-    }
-
-    let rightPtr = buffer.rightPtr
-    XCTAssertNotNil(rightPtr.baseAddress)
+    XCTAssertNotNil(buffer.rightPtr.baseAddress)
   }
 
-  func testClear() {
-    guard let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 44100.0, channels: 2, interleaved: false) else {
-      XCTFail("invalid format")
-      return
-    }
-
-    let frameCount: AVAudioFrameCount = 512
-    guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
-      XCTFail("unable to allocate buffer")
-      return
-    }
-
+  func testZeros() {
     buffer.frameLength = frameCount
     for index in 0..<frameCount {
       buffer.leftPtr[Int(index)] = 2.1 * AUValue(index)
@@ -63,7 +45,7 @@ class AVAudioPCMBufferTests: XCTestCase {
     XCTAssertEqual(511.0 * 2.1, buffer.leftPtr[511])
     XCTAssertEqual(511.0 * 1.1, buffer.rightPtr[511])
 
-    buffer.clear()
+    buffer.zeros()
 
     XCTAssertEqual(0.0, buffer.leftPtr[0])
     XCTAssertEqual(0.0, buffer.rightPtr[0])
@@ -72,18 +54,8 @@ class AVAudioPCMBufferTests: XCTestCase {
   }
 
   func testAppend() {
-    guard let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 44100.0, channels: 2, interleaved: false) else {
-      XCTFail("invalid format")
-      return
-    }
-
-    let frameCount: AVAudioFrameCount = 512
+    let source = buffer!
     guard let destination = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount * 2) else {
-      XCTFail("unable to allocate buffer")
-      return
-    }
-
-    guard let source = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
       XCTFail("unable to allocate buffer")
       return
     }
