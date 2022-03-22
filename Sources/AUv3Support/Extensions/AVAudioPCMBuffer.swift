@@ -5,7 +5,7 @@ import AVFoundation
 
 // These extension pertain to common AUv3 use-cases where we have one or more buffers of non-interleaved AUValue
 // samples.
-extension AVAudioPCMBuffer {
+public extension AVAudioPCMBuffer {
 
   /// - returns pointer to array of AUValue values representing the left channel of a stereo buffer pair.
   var leftPtr: UnsafeMutableBufferPointer<AUValue> {
