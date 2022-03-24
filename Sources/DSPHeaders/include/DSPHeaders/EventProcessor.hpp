@@ -33,7 +33,7 @@ public:
   /**
    Construct new instance.
 
-   @param log the log identifier to use for our logging statements
+   @param subsystem the name to use for the subsystem of os_log_t entities.
    */
   EventProcessor(std::string subsystem) :
   derived_{static_cast<T&>(*this)}, loggingSubsystem_{subsystem}, log_{os_log_create(subsystem.c_str(), "Kernel")},
@@ -122,11 +122,12 @@ public:
   {
     os_log_info(log_, "processAndRender - frameCount: %d bus: %ld size: %lu", frameCount, (long)outputBusNumber,
                 buffers_.size());
-    assert(outputBusNumber < buffers_.size());
+    size_t outputBusIndex = size_t(outputBusNumber);
+    assert(outputBusIndex < buffers_.size());
 
     // Get a buffer to use to read into if there is a `pullInputBlock`. We will also modify it in-place if necessary
     // use it for an output buffer if necessary.
-    auto& buffer{buffers_[outputBusNumber]};
+    auto& buffer{buffers_[outputBusIndex]};
     if (frameCount > buffer.capacity()) {
       os_log_error(log_, "processAndRender - too many frames - frameCount: %d capacity: %d", frameCount,
                    buffer.capacity());
@@ -149,12 +150,12 @@ public:
       }
     }
 
-    facets_[outputBusNumber].setBufferList(output, buffer.mutableAudioBufferList());
-    facets_[outputBusNumber].setFrameCount(frameCount);
+    facets_[outputBusIndex].setBufferList(output, buffer.mutableAudioBufferList());
+    facets_[outputBusIndex].setFrameCount(frameCount);
 
     render(outputBusNumber, timestamp, frameCount, realtimeEventListHead);
 
-    os_log_debug(log_, "processAndRender - output: %p", output);
+    os_log_debug(log_, "processAndRender - output: %p", static_cast<void*>(output));
     os_log_debug(log_, "processAndRender - output[0].mDataByteByteSize: %d (%p)", output->mBuffers[0].mDataByteSize,
                  output->mBuffers[0].mData);
     os_log_debug(log_, "processAndRender - output[1].mDataByteByteSize: %d (%p)", output->mBuffers[1].mDataByteSize,
@@ -232,6 +233,8 @@ private:
 
   void renderFrames(NSInteger outputBusNumber, AUAudioFrameCount frameCount, AUAudioFrameCount processedFrameCount)
   {
+    size_t outputBusIndex = size_t(outputBusNumber);
+
     // This method can be called multiple times during one `processAndRender` call due to interleaved audio events
     // such as MIDI messages. We will generate in total `frameCount` + `processedFrameCount` samples, but maybe not in
     // one shot. As a result, we must adjust buffer pointers by the number of processed samples so far before we
@@ -245,12 +248,12 @@ private:
     // directly or copy samples over to the output buffer and be done.
     auto& input{inputFacet()};
     if (input.isLinked() && isBypassed()) {
-      input.copyInto(facets_[outputBusNumber], processedFrameCount, frameCount);
+      input.copyInto(facets_[outputBusIndex], processedFrameCount, frameCount);
       return;
     }
 
     // Pass off to the kernel to render the desired number of samples.
-    auto& output{facets_[outputBusNumber]};
+    auto& output{facets_[outputBusIndex]};
     derived_.doRendering(outputBusNumber, input.busBuffers(), output.busBuffers(), frameCount);
   }
 
