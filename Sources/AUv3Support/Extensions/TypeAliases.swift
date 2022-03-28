@@ -14,9 +14,21 @@ public typealias Switch = UISwitch
 public typealias View = UIView
 public typealias ViewController = UIViewController
 
-extension UIView: TagHolder {}
+extension UIView: ParameterAddressHolder {
+  public var parameterAddress: UInt64 {
+    get { UInt64(tag) }
+    set {
+      precondition(newValue <= Int.max)
+      tag = Int(newValue)
+    }
+  }
+}
 
 extension UISwitch: AUParameterValueProvider, BooleanControl {
+  public var booleanState: Bool {
+    get { isOn }
+    set { isOn = newValue }
+  }
   public var value: AUValue { isOn ? 1.0 : 0.0 }
 }
 
@@ -61,10 +73,10 @@ public extension NSTextField {
   }
 }
 
-public extension NSSwitch {
+public extension NSSwitch: BooleanControl {
 
   /// Replicate the `isOn` property found in `UISwitch`.
-  var isOn: Bool {
+  var booleanState: Bool {
     get { state == .on }
     set { state = newValue ? .on : .off }
   }

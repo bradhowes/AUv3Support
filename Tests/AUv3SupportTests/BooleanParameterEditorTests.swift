@@ -7,9 +7,9 @@ fileprivate class MockControl: NSObject, BooleanControl, AUParameterValueProvide
   let log = MockControl.log
   var expectation: XCTestExpectation?
   var value: AUValue = 0.0
-  var isOn: Bool = false {
+  var booleanState: Bool = false {
     didSet {
-      print("MockControl.isOn didSet - \(isOn)")
+      print("MockControl.isOn didSet - \(booleanState)")
       expectation?.fulfill()
     }
   }
@@ -56,28 +56,28 @@ final class BooleanParameterEditorTests: XCTestCase {
 
   func testEditorParameterChanged() throws {
     let expectation = self.expectation(description: "control changed state via param change")
-    XCTAssertEqual(control.isOn, false)
+    XCTAssertEqual(control.booleanState, false)
     XCTAssertEqual(control.value, 0.0)
     control.expectation = expectation
     param.setValue(1.0, originator: nil)
     wait(for: [expectation], timeout: 2.0)
-    XCTAssertEqual(control.isOn, true)
+    XCTAssertEqual(control.booleanState, true)
   }
 
   func testEditorSetEditedValue() throws {
     let expectation = self.expectation(description: "control changed state via editing change")
-    XCTAssertEqual(control.isOn, false)
+    XCTAssertEqual(control.booleanState, false)
     XCTAssertEqual(control.value, 0.0)
     control.expectation = expectation
     editor.setEditedValue(1.0)
     wait(for: [expectation], timeout: 2.0)
-    XCTAssertEqual(control.isOn, true)
+    XCTAssertEqual(control.booleanState, true)
     XCTAssertEqual(control.value, 1.0)
   }
 
   func testControlChanged() throws {
     let expectation = self.expectation(description: "control changed state via control change")
-    XCTAssertEqual(control.isOn, false)
+    XCTAssertEqual(control.booleanState, false)
     XCTAssertEqual(control.value, 0.0)
     control.expectation = expectation
     let otherControl = MockControl()

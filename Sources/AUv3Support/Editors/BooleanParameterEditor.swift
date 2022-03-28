@@ -3,8 +3,10 @@
 import CoreAudioKit
 import os
 
+/// Protocol for controls that can provide a boolean (true/false) state.
 public protocol BooleanControl: NSObject {
-  var isOn: Bool { get set }
+  /// Current value of the object's boolean state
+  var booleanState: Bool { get set }
 }
 
 /**
@@ -33,8 +35,13 @@ public final class BooleanParameterEditor: NSObject {
 
 extension BooleanParameterEditor: AUParameterEditor {
 
+  /**
+   Notification that the parameter should change due to a widget control change.
+
+   - parameter source: the control that caused the change
+   */
   public func controlChanged(source: AUParameterValueProvider) {
-    os_log(.info, log: log, "controlChanged - new: %f state: %d", source.value, booleanControl.isOn)
+    os_log(.info, log: log, "controlChanged - new: %f state: %d", source.value, booleanControl.booleanState)
     precondition(Thread.isMainThread, "controlChanged found running on non-main thread")
 
     let value = source.value
@@ -47,29 +54,40 @@ extension BooleanParameterEditor: AUParameterEditor {
     }
   }
 
+  /**
+   Notification that the AUParameter value changed
+   */
   public func parameterChanged() {
     os_log(.info, log: log, "parameterChanged - %f", parameter.value)
     DispatchQueue.main.async(execute: handleParameterChanged)
   }
 
-  private func handleParameterChanged() {
-    precondition(Thread.isMainThread, "handleParameterChanged found running on non-main thread")
-    setState(parameter.value)
-  }
+  /**
+   Apply a new value to both the control and the parameter.
 
+   - parameter value: the new value to use
+   */
   public func setEditedValue(_ value: AUValue) {
     os_log(.info, log: log, "setEditedValue - %f", value)
     precondition(Thread.isMainThread, "setEditedValue found running on non-main thread")
     setState(value)
     parameter.setValue(value, originator: parameterObserverToken)
   }
+}
 
-  private func setState(_ value: AUValue) {
-    os_log(.info, log: log, "setState - value: %f current: %d", value, booleanControl.isOn)
+private extension BooleanParameterEditor {
+
+  func handleParameterChanged() {
+    precondition(Thread.isMainThread, "handleParameterChanged found running on non-main thread")
+    setState(parameter.value)
+  }
+
+  func setState(_ value: AUValue) {
+    os_log(.info, log: log, "setState - value: %f current: %d", value, booleanControl.booleanState)
     let newState = value >= 0.5 ? true : false
-    if newState != booleanControl.isOn {
+    if newState != booleanControl.booleanState {
       os_log(.info, log: log, "setState - setting to %d", newState)
-      booleanControl.isOn = newState
+      booleanControl.booleanState = newState
     }
   }
 }

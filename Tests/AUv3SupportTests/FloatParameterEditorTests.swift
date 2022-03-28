@@ -9,7 +9,7 @@ fileprivate class MockParam: AUParameterValueProvider {
 fileprivate class MockControl: NSObject, RangedControl {
   static let log = Shared.logger("foo", "bar")
   let log = MockControl.log
-  var tag: Int = -1
+  var parameterAddress: UInt64 = 0
   var value: AUValue = 0.0 {
     didSet {
       expectation?.fulfill()
