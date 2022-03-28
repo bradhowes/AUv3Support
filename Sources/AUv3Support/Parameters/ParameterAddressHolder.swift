@@ -9,7 +9,7 @@ import AudioUnit
  `ParameterAddressHolder` will be extended to support whatever custom type a `ParameterAddressHolder` should return.
  */
 public protocol ParameterAddressHolder: NSObject {
-  var parameterAddress: UInt64 { get set }
+  var parameterAddress: AUParameterAddress { get set }
 }
 
 public extension ParameterAddressHolder {
