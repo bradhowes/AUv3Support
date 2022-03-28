@@ -64,8 +64,17 @@ public extension NSView {
   }
 }
 
-public extension NSTextField {
+extension NSControl: ParameterAddressHolder {
+  public var parameterAddress: AUParameterAddress {
+    get { AUParameterAddress(tag) }
+    set {
+      precondition(newValue < Int.max)
+      tag = Int(newValue)
+    }
+  }
+}
 
+public extension NSTextField {
   /// Replicate the `text` property found in `UILabel`.
   var text: String? {
     get { self.stringValue }
@@ -73,16 +82,15 @@ public extension NSTextField {
   }
 }
 
-public extension NSSwitch: BooleanControl {
+extension NSSwitch: BooleanControl {
 
-  /// Replicate the `isOn` property found in `UISwitch`.
-  var booleanState: Bool {
+  public var booleanState: Bool {
     get { state == .on }
     set { state = newValue ? .on : .off }
   }
 
   // Attempt at tinting a la UISwitch. Not exact but not too bad either.
-  func setTint(_ color: NSColor) {
+  public func setTint(_ color: NSColor) {
     wantsLayer = true
     layer?.backgroundColor = color.cgColor
     layer?.masksToBounds = true
@@ -90,8 +98,8 @@ public extension NSSwitch: BooleanControl {
   }
 }
 
-extension NSSwitch: AUParameterValueProvider, BooleanControl, TagHolder {
-  public var value: AUValue { isOn ? 1.0 : 0.0 }
+extension NSSwitch: AUParameterValueProvider {
+  public var value: AUValue { booleanState ? 1.0 : 0.0 }
 }
 
 /**
@@ -123,8 +131,7 @@ extension NSSwitch: AUParameterValueProvider, BooleanControl, TagHolder {
  }
 ```
  */
-final public class FocusAwareTextField: NSTextField, TagHolder {
-
+final public class FocusAwareTextField: NSTextField {
   /**
    Allow for others to identify when a NSTextField is the first responder. There are notifications from the NSWindow but
    this seems to be the easiest for AUv3 work. Perhaps it is a hack, but it works and I know of no other way to
