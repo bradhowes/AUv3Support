@@ -10,7 +10,7 @@ namespace DSPHeaders::Parameters {
 template <typename T>
 struct RampingParameter {
   RampingParameter() = default;
-  explicit RampingParameter(AUValue initialValue) : value_{initialValue} {}
+  explicit RampingParameter(AUValue initialValue) noexcept : value_{initialValue} {}
   ~RampingParameter() = default;
 
   /**
@@ -20,7 +20,7 @@ struct RampingParameter {
    @param target the ultimate value to use for the parameter
    @param duration the number of frames to transition over
    */
-  void set(T target, AUAudioFrameCount duration) {
+  void set(T target, AUAudioFrameCount duration) noexcept {
     if (duration > 0) {
       rampRemaining_ = duration;
       rampTarget_ = target;
@@ -37,7 +37,7 @@ struct RampingParameter {
 
    @return the current parameter value
    */
-  T get() const { return rampRemaining_ > 0 ? rampTarget_ : value_; }
+  T get() const noexcept { return rampRemaining_ > 0 ? rampTarget_ : value_; }
 
   /**
    Fetch the current value, incrementing the internal value if ramping is in effect. NOTE: unlike `get` this is not an
@@ -46,7 +46,7 @@ struct RampingParameter {
 
    @return the current parameter value
    */
-  T frameValue() {
+  T frameValue() noexcept {
     if (rampRemaining_ > 0) {
       value_ = (--rampRemaining_ == 0) ? rampTarget_ : (value_ + rampStep_);
     }
@@ -59,7 +59,7 @@ struct RampingParameter {
 
    @return the current internal parameter value
    */
-  T internal() const { return get(); }
+  T internal() const noexcept { return get(); }
 
 private:
   T value_;

@@ -19,7 +19,7 @@ namespace DSPHeaders {
  */
 struct SampleBuffer {
 
-  SampleBuffer(std::string loggingSubsystem) : log_{os_log_create(loggingSubsystem.c_str(), "SampleBuffer")}
+  SampleBuffer(std::string loggingSubsystem) noexcept : log_{os_log_create(loggingSubsystem.c_str(), "SampleBuffer")}
   {}
 
   /**
@@ -28,7 +28,7 @@ struct SampleBuffer {
    @param format the format of the samples
    @param maxFrames the maximum number of frames to be found in the upstream output
    */
-  void allocate(AVAudioFormat* format, AUAudioFrameCount maxFrames)
+  void allocate(AVAudioFormat* format, AUAudioFrameCount maxFrames) noexcept
   {
     os_log_info(log_, "allocate - maxFrames: %d", maxFrames);
     maxFramesToRender_ = maxFrames;
@@ -63,12 +63,17 @@ struct SampleBuffer {
    */
   AUAudioUnitStatus pullInput(AudioUnitRenderActionFlags* actionFlags, AudioTimeStamp const* timestamp,
                               AVAudioFrameCount frameCount, NSInteger inputBusNumber,
-                              AURenderPullInputBlock pullInputBlock)
+                              AURenderPullInputBlock pullInputBlock) noexcept
   {
     os_log_debug(log_, "pullInput - %llu", timestamp->mHostTime);
     if (pullInputBlock == nullptr) {
       os_log_error(log_, "pullInputBlock == nullptr");
       return kAudioUnitErr_NoConnection;
+    }
+
+    if (frameCount > maxFramesToRender_) {
+      os_log_error(log_, "frameCount > maxFramesToRender");
+      return kAudioUnitErr_TooManyFramesToProcess;
     }
 
     setFrameCount(frameCount);
@@ -83,19 +88,10 @@ struct SampleBuffer {
    
    @param frameCount the number of frames to expect to place in the buffer
    */
-  void setFrameCount(AVAudioFrameCount frameCount)
+  void setFrameCount(AVAudioFrameCount frameCount) noexcept
   {
     os_log_debug(log_, "setFrameCount - %d", frameCount);
-    if (frameCount > maxFramesToRender_) {
-      os_log_error(log_, "frameCount > maxFramesToRender");
-      throw std::runtime_error("frameCount > maxFramesToRender");
-    }
-
-    if (mutableAudioBufferList_ == nullptr) {
-      os_log_error(log_, "mutableAudioBufferList_ == nullptr");
-      throw std::runtime_error("mutableAudioBufferList_ == nullptr");
-    }
-
+    assert(frameCount <= maxFramesToRender_ && mutableAudioBufferList_ != nullptr);
     UInt32 byteSize = frameCount * sizeof(AUValue);
     for (UInt32 channel = 0; channel < mutableAudioBufferList_->mNumberBuffers; ++channel) {
       mutableAudioBufferList_->mBuffers[channel].mDataByteSize = byteSize;
@@ -103,13 +99,13 @@ struct SampleBuffer {
   }
 
   /// Obtain the maximum size of the input buffer
-  AUAudioFrameCount capacity() const { return maxFramesToRender_; }
+  AUAudioFrameCount capacity() const noexcept { return maxFramesToRender_; }
 
   /// Obtain a mutable version of the internal AudioBufferList.
-  AudioBufferList* mutableAudioBufferList() const { return mutableAudioBufferList_; }
+  AudioBufferList* mutableAudioBufferList() const noexcept { return mutableAudioBufferList_; }
 
   /// Obtain the number of channels in the buffer
-  size_t channelCount() const {
+  size_t channelCount() const noexcept {
     return mutableAudioBufferList_ != nullptr ? mutableAudioBufferList_->mNumberBuffers : 0;
   }
 

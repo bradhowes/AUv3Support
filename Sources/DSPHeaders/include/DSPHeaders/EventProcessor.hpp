@@ -35,7 +35,7 @@ public:
 
    @param subsystem the name to use for the subsystem of os_log_t entities.
    */
-  EventProcessor(std::string subsystem) :
+  EventProcessor(std::string subsystem) noexcept :
   derived_{static_cast<T&>(*this)}, loggingSubsystem_{subsystem}, log_{os_log_create(subsystem.c_str(), "Kernel")},
   buffers_{}, facets_{}
   {}
@@ -45,7 +45,7 @@ public:
 
    @param bypass if true disable filter processing and just copy samples from input to output
    */
-  void setBypass(bool bypass) {
+  void setBypass(bool bypass) noexcept {
     os_log_info(log_, "setBypass: %d", bypass);
     bypassed_ = bypass;
   }
@@ -53,7 +53,7 @@ public:
   /**
    Get current bypass mode
    */
-  bool isBypassed() { return bypassed_; }
+  bool isBypassed() const noexcept { return bypassed_; }
 
   /**
    Update kernel and buffers to support the given format.
@@ -61,7 +61,7 @@ public:
    @param format the sample format to expect
    @param maxFramesToRender the maximum number of frames to expect on input
    */
-  void setRenderingFormat(NSInteger busCount, AVAudioFormat* format, AUAudioFrameCount maxFramesToRender) {
+  void setRenderingFormat(NSInteger busCount, AVAudioFormat* format, AUAudioFrameCount maxFramesToRender) noexcept {
     os_log_info(log_, "setRenderingFormat - busCount: %ld", (long)busCount);
     auto channelCount{[format channelCount]};
 
@@ -93,7 +93,7 @@ public:
   /**
    Rendering has stopped. Free up any resources it used.
    */
-  void renderingStopped() {
+  void renderingStopped() noexcept {
     os_log_info(log_, "renderingStopped");
 
     for (auto& entry : facets_) {
@@ -118,7 +118,7 @@ public:
    */
   AUAudioUnitStatus processAndRender(const AudioTimeStamp* timestamp, UInt32 frameCount, NSInteger outputBusNumber,
                                      AudioBufferList* output, const AURenderEvent* realtimeEventListHead,
-                                     AURenderPullInputBlock pullInputBlock)
+                                     AURenderPullInputBlock pullInputBlock) noexcept
   {
     os_log_info(log_, "processAndRender - frameCount: %d bus: %ld size: %lu", frameCount, (long)outputBusNumber,
                 buffers_.size());
@@ -172,14 +172,14 @@ protected:
    @param bus the bus to whose buffers will be pointed to
    @returns BusBuffers instance
    */
-  BusBuffers busBuffers(size_t bus) { return facets_[bus].busBuffers(); }
+  BusBuffers busBuffers(size_t bus) noexcept { return facets_[bus].busBuffers(); }
 
 private:
 
-  BufferFacet& inputFacet() { assert(!facets_.empty()); return facets_.back(); }
+  BufferFacet& inputFacet() noexcept { assert(!facets_.empty()); return facets_.back(); }
 
   void render(NSInteger outputBusNumber, AudioTimeStamp const* timestamp, AUAudioFrameCount frameCount,
-              AURenderEvent const* events)
+              AURenderEvent const* events) noexcept
   {
     auto zero = AUEventSampleTime(0);
     auto now = AUEventSampleTime(timestamp->mSampleTime);
@@ -206,14 +206,14 @@ private:
     }
   }
 
-  void unlinkBuffers()
+  void unlinkBuffers() noexcept
   {
     for (auto& entry : facets_) {
       if (entry.isLinked()) entry.unlink();
     }
   }
 
-  AURenderEvent const* processEventsUntil(AUEventSampleTime now, AURenderEvent const* event)
+  AURenderEvent const* processEventsUntil(AUEventSampleTime now, AURenderEvent const* event) noexcept
   {
     // See http://devnotes.kymatica.com/auv3_parameters.html for some nice details and advice about parameter event
     // processing.

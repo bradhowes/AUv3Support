@@ -62,7 +62,7 @@ public:
    @param intensity a "gain" value that is applied to final filter value
    @param samplesPerFilterUpdate number of sample values to emit before updating the filter parameters
    */
-  PhaseShifter(const FrequencyBands& bands, T sampleRate, T intensity, int samplesPerFilterUpdate = 10)
+  PhaseShifter(const FrequencyBands& bands, T sampleRate, T intensity, int samplesPerFilterUpdate = 10) noexcept
   : bands_(bands), sampleRate_{sampleRate}, intensity_{intensity}, samplesPerFilterUpdate_{samplesPerFilterUpdate}
   {
     updateCoefficients(0.0);
@@ -73,12 +73,12 @@ public:
    
    @param intensity new value to use
    */
-  void setIntensity(double intensity) { intensity_ = intensity; }
+  void setIntensity(double intensity) noexcept { intensity_ = intensity; }
   
   /**
    Reset the audio processor.
    */
-  void reset() {
+  void reset() noexcept {
     sampleCounter_ = 0;
     for (auto& filter : filters_) {
       filter.reset();
@@ -92,7 +92,7 @@ public:
    @param input the audio input signal to inject into the filters
    @returns filtered audio output
    */
-  T process(T modulation, T input) {
+  T process(T modulation, T input) noexcept {
     
     // With samplersPerFilterUpdate_ == 1, this replicates the phaser processing described in
     // "Designing Audio Effect Plugins in C++" by Will C. Pirkle (2019).
@@ -124,7 +124,7 @@ public:
   
 private:
   
-  void updateCoefficients(T modulation) {
+  void updateCoefficients(T modulation) noexcept {
     assert(filters_.size() == bands_.size());
     for (auto index = 0; index < filters_.size(); ++index) {
       auto const& band = bands_[index];

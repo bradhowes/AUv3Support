@@ -33,7 +33,7 @@ public:
    @param frequency the frequency of the oscillator
    @param waveform the waveform to emit
    */
-  LFO(T sampleRate, T frequency, LFOWaveform waveform)
+  LFO(T sampleRate, T frequency, LFOWaveform waveform) noexcept
   : valueGenerator_{WaveformGenerator(waveform)}, sampleRate_{sampleRate}, waveform_{waveform}
   {
     setFrequency(frequency, 0);
@@ -43,12 +43,12 @@ public:
   /**
    Create a new instance.
    */
-  LFO(T sampleRate, T frequency) : LFO(sampleRate, frequency, LFOWaveform::sinusoid) {}
+  LFO(T sampleRate, T frequency) noexcept : LFO(sampleRate, frequency, LFOWaveform::sinusoid) {}
 
   /**
    Create a new instance.
    */
-  LFO() : LFO(44100.0, 1.0, LFOWaveform::sinusoid) {}
+  LFO() noexcept : LFO(44100.0, 1.0, LFOWaveform::sinusoid) {}
   
   /**
    Initialize the LFO with the given parameters.
@@ -56,7 +56,7 @@ public:
    @param sampleRate number of samples per second
    @param frequency the frequency of the oscillator
    */
-  void setSampleRate(T sampleRate) {
+  void setSampleRate(T sampleRate) noexcept {
 
     // We don't keep around the LFO frequency. It can be recalculated but that depends on existing sampleRate_ value.
     // Save the current frequency value and then reapply it after changing sampleRate_.
@@ -70,17 +70,17 @@ public:
    
    @param waveform the waveform to emit
    */
-  void setWaveform(LFOWaveform waveform) {
+  void setWaveform(LFOWaveform waveform) noexcept {
     waveform_ = waveform;
     valueGenerator_ = WaveformGenerator(waveform);
   }
-  
+
   /**
    Set the frequency of the oscillator.
    
    @param frequency the frequency to operate at
    */
-  void setFrequency(T frequency, AUAudioFrameCount duration) {
+  void setFrequency(T frequency, AUAudioFrameCount duration) noexcept {
     assert(sampleRate_ != 0.0);
     phaseIncrement_.set(frequency / sampleRate_, duration);
   }
@@ -88,28 +88,26 @@ public:
   /**
    Restart from a known zero state.
    */
-  void reset() {
-    moduloCounter_ = phaseIncrement_.get() > 0 ? 0.0 : 1.0;
-  }
+  void reset() noexcept { moduloCounter_ = phaseIncrement_.get() > 0 ? 0.0 : 1.0; }
   
   /**
    Obtain the current value of the oscillator.
    
    @returns current waveform value
    */
-  T value() { return valueGenerator_(moduloCounter_); }
+  T value() noexcept { return valueGenerator_(moduloCounter_); }
   
   /**
    Obtain the current value of the oscillator that is 90° advanced from what `value()` would return.
    
    @returns current 90° advanced waveform value
    */
-  T quadPhaseValue() const { return valueGenerator_(quadPhaseCounter_); }
+  T quadPhaseValue() const noexcept { return valueGenerator_(quadPhaseCounter_); }
   
   /**
    Increment the oscillator to the next value.
    */
-  void increment() {
+  void increment() noexcept {
     moduloCounter_ = incrementModuloCounter(moduloCounter_, phaseIncrement_.frameValue());
     quadPhaseCounter_ = incrementModuloCounter(moduloCounter_, 0.25);
   }
@@ -119,14 +117,14 @@ public:
 
    @return frequency in Hz
    */
-  T frequency() const { return phaseIncrement_.get() * sampleRate_; }
+  T frequency() const noexcept { return phaseIncrement_.get() * sampleRate_; }
 
-  LFOWaveform waveform() const { return waveform_; }
+  LFOWaveform waveform() const noexcept { return waveform_; }
 
 private:
   using ValueGenerator = T (*)(T);
   
-  static ValueGenerator WaveformGenerator(LFOWaveform waveform) {
+  static ValueGenerator WaveformGenerator(LFOWaveform waveform) noexcept {
     switch (waveform) {
       case LFOWaveform::sinusoid: return sineValue;
       case LFOWaveform::sawtooth: return sawtoothValue;
@@ -135,18 +133,20 @@ private:
     }
   }
 
-  static T wrappedModuloCounter(T counter, T inc) {
+  static T wrappedModuloCounter(T counter, T inc) noexcept {
     if (inc > 0 && counter >= 1.0) return counter - 1.0;
     if (inc < 0 && counter <= 0.0) return counter + 1.0;
     return counter;
   }
 
-  static T incrementModuloCounter(T counter, T inc) { return wrappedModuloCounter(counter + inc, inc); }
+  static T incrementModuloCounter(T counter, T inc) noexcept { return wrappedModuloCounter(counter + inc, inc); }
 
-  static T sineValue(T counter) { return DSP::parabolicSine(M_PI - counter * 2.0 * M_PI); }
-  static T sawtoothValue(T counter) { return DSP::unipolarToBipolar(counter); }
-  static T triangleValue(T counter) { return DSP::unipolarToBipolar(std::abs(DSP::unipolarToBipolar(counter))); }
-  static T squareValue(T counter) { return counter >= 0.5 ? 1.0 : -1.0; }
+  static T sineValue(T counter) noexcept { return DSP::parabolicSine(M_PI - counter * 2.0 * M_PI); }
+  static T sawtoothValue(T counter) noexcept { return DSP::unipolarToBipolar(counter); }
+  static T triangleValue(T counter) noexcept {
+    return DSP::unipolarToBipolar(std::abs(DSP::unipolarToBipolar(counter)));
+  }
+  static T squareValue(T counter) noexcept { return counter >= 0.5 ? 1.0 : -1.0; }
 
   T sampleRate_;
   ValueGenerator valueGenerator_;

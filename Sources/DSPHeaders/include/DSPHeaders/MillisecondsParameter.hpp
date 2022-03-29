@@ -16,7 +16,7 @@ public:
   using super = RampingParameter<T>;
 
   MillisecondsParameter() = default;
-  explicit MillisecondsParameter(T milliseconds) : super(milliseconds) {}
+  explicit MillisecondsParameter(T milliseconds) noexcept : super(milliseconds) {}
   ~MillisecondsParameter() = default;
 };
 

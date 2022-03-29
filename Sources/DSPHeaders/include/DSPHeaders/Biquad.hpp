@@ -41,7 +41,7 @@ struct Coefficients {
    @param _b1 B1 coefficient
    @param _b2 B2 coefficient
    */
-  Coefficients(T _a0, T _a1, T _a2, T _b1, T _b2) : a0{_a0}, a1{_a1}, a2{_a2}, b1{_b1}, b2{_b2} {}
+  Coefficients(T _a0, T _a1, T _a2, T _b1, T _b2) noexcept : a0{_a0}, a1{_a1}, a2{_a2}, b1{_b1}, b2{_b2} {}
 
   Coefficients() = default;
 
@@ -59,35 +59,35 @@ struct Coefficients {
    @param VV the value to use
    @returns updated Coefficients collection
    */
-  Coefficients A0(T VV) { return Coefficients(VV, a1, a2, b1, b2); }
+  Coefficients A0(T VV) noexcept { return Coefficients(VV, a1, a2, b1, b2); }
   /**
    Set the A1 coefficient, the second coefficient in the numerator
    
    @param VV the value to use
    @returns updated Coefficients collection
    */
-  Coefficients A1(T VV) { return Coefficients(a0, VV, a2, b1, b2); }
+  Coefficients A1(T VV) noexcept { return Coefficients(a0, VV, a2, b1, b2); }
   /**
    Set the A2 coefficient, the third coefficient in the numerator
    
    @param VV the value to use
    @returns updated Coefficients collection
    */
-  Coefficients A2(T VV) { return Coefficients(a0, a1, VV, b1, b2); }
+  Coefficients A2(T VV) noexcept { return Coefficients(a0, a1, VV, b1, b2); }
   /**
    Set the B1 coefficient, the second coefficient in the denominator
    
    @param VV the value to use
    @returns updated Coefficients collection
    */
-  Coefficients B1(T VV) { return Coefficients(a0, a1, a2, VV, b2); }
+  Coefficients B1(T VV) noexcept { return Coefficients(a0, a1, a2, VV, b2); }
   /**
    Set the B2 coefficient, the third coefficient in the denominator
    
    @param VV the value to use
    @returns updated Coefficients collection
    */
-  Coefficients B2(T VV) { return Coefficients(a0, a1, a2, b1, VV); }
+  Coefficients B2(T VV) noexcept { return Coefficients(a0, a1, a2, b1, VV); }
   
   /**
    A 1-pole low-pass filter coefficients generator.
@@ -96,7 +96,7 @@ struct Coefficients {
    @param frequency the cutoff frequency of the filter
    @returns Coefficients collection
    */
-  static Coefficients<T> LPF1(T sampleRate, T frequency) {
+  static Coefficients<T> LPF1(T sampleRate, T frequency) noexcept {
     double theta = 2.0 * M_PI * frequency / sampleRate;
     double gamma = std::cos(theta) / (1.0 + std::sin(theta));
     return Coefficients((1.0 - gamma) / 2.0, (1.0 - gamma) / 2.0, 0.0, -gamma, 0.0);
@@ -109,7 +109,7 @@ struct Coefficients {
    @param frequency the cutoff frequency of the filter
    @returns Coefficients collection
    */
-  static Coefficients<T> HPF1(T sampleRate, T frequency) {
+  static Coefficients<T> HPF1(T sampleRate, T frequency) noexcept {
     double theta = 2.0 * M_PI * frequency / sampleRate;
     double gamma = std::cos(theta) / (1.0 + std::sin(theta));
     return Coefficients((1.0 + gamma) / 2.0, (1.0 + gamma) / -2.0, 0.0, -gamma, 0.0);
@@ -123,7 +123,7 @@ struct Coefficients {
    @param resonance the filter resonance parameter (Q)
    @returns Coefficients collection
    */
-  static Coefficients<T> LPF2(T sampleRate, T frequency, T resonance) {
+  static Coefficients<T> LPF2(T sampleRate, T frequency, T resonance) noexcept {
     double theta = 2.0 * M_PI * frequency / sampleRate;
     double d = 1.0 / resonance / 2.0;
     double sinTheta = d * std::sin(theta);
@@ -141,7 +141,7 @@ struct Coefficients {
    @param resonance the filter resonance parameter (Q)
    @returns Coefficients collection
    */
-  static Coefficients<T> HPF2(T sampleRate, T frequency, T resonance) {
+  static Coefficients<T> HPF2(T sampleRate, T frequency, T resonance) noexcept {
     double theta = 2.0 * M_PI * frequency / sampleRate;
     double d = 1.0 / resonance;
     double beta = 0.5 * (1 - d / 2.0 * std::sin(theta)) / (1 + d / 2.0 * std::sin(theta));
@@ -157,7 +157,7 @@ struct Coefficients {
    @param frequency the cutoff frequency of the filter
    @returns Coefficients collection
    */
-  static Coefficients<T> APF1(T sampleRate, T frequency) {
+  static Coefficients<T> APF1(T sampleRate, T frequency) noexcept {
     double tangent = std::tan(M_PI * frequency / sampleRate);
     double alpha = (tangent - 1.0) / (tangent + 1.0);
     return Coefficients(alpha, 1.0, 0.0, alpha, 0.0);
@@ -171,7 +171,7 @@ struct Coefficients {
    @param resonance the filter resonance parameter (Q)
    @returns Coefficients collection
    */
-  static Coefficients<T> APF2(T sampleRate, T frequency, T resonance) {
+  static Coefficients<T> APF2(T sampleRate, T frequency, T resonance) noexcept {
     double bandwidth = frequency / resonance;
     double argTan = M_PI * bandwidth / sampleRate;
     if (argTan >= 0.95 * M_PI / 2.0) argTan = 0.95 * M_PI / 2.0;
@@ -188,7 +188,7 @@ struct Coefficients {
    @param sampleCount the number of samples to ramp over
    @return new Coefficients instance with the delta values to ramp with
    */
-  Coefficients rampFactor(const Coefficients& goal, size_t sampleCount) const
+  Coefficients rampFactor(const Coefficients& goal, size_t sampleCount) const noexcept
   {
     double factor = 1.0 / sampleCount;
     return Coefficients((goal.a0 - a0) * factor,
@@ -203,7 +203,7 @@ struct Coefficients {
 
    @param change the delta to apply to the current coefficients.
    */
-  void operator +=(const Coefficients& change)
+  void operator +=(const Coefficients& change) noexcept
   {
     a0 += change.a0;
     a1 += change.a1;
@@ -258,7 +258,7 @@ struct Base {
    @param value the value to inspect
    @returns value or 0.0
    */
-  static ValueType forceMinToZero(ValueType value) {
+  static ValueType forceMinToZero(ValueType value) noexcept {
     static constexpr ValueType noiseFloor = 2.0e-10;
     return (value > 0.0 && value <= noiseFloor) || (value < 0.0 && -value <= noiseFloor) ? 0.0 : value;
   }
@@ -278,7 +278,7 @@ struct Direct : public Base<T> {
    @param coefficients the filter coefficients to use
    @returns transformed value
    */
-  static T transform(T input, State<T>& state, const Coefficients<T>& coefficients) {
+  static T transform(T input, State<T>& state, const Coefficients<T>& coefficients) noexcept {
     T output = coefficients.a0 * input + coefficients.a1 * state.x_z1 + coefficients.a2 * state.x_z2 -
     coefficients.b1 * state.y_z1 - coefficients.b2 * state.y_z2;
     output = Base<T>::forceMinToZero(output);
@@ -294,7 +294,7 @@ struct Direct : public Base<T> {
    
    @returns state convolved with coefficients
    */
-  static T storageComponent(const State<T>& state, const Coefficients<T>& coefficients) {
+  static T storageComponent(const State<T>& state, const Coefficients<T>& coefficients) noexcept {
     return coefficients.a1 * state.x_z1 + coefficients.a2 * state.x_z2 - coefficients.b1 * state.y_z1 -
     coefficients.b2 * state.y_z2;
   }
@@ -312,7 +312,7 @@ struct Canonical : Base<T> {
    @param coefficients the filter coefficients to use
    @returns transformed value
    */
-  static T transform(T input, State<T>& state, const Coefficients<T>& coefficients) {
+  static T transform(T input, State<T>& state, const Coefficients<T>& coefficients) noexcept {
     T theta = input - coefficients.b1 * state.x_z1 - coefficients.b2 * state.x_z2;
     T output = coefficients.a0 * theta + coefficients.a1 * state.x_z1 + coefficients.a2 * state.x_z2;
     output = Base<T>::forceMinToZero(output);
@@ -326,7 +326,7 @@ struct Canonical : Base<T> {
    
    @returns always 0.0
    */
-  static T storageComponent(const State<T>&, const Coefficients<T>&) { return 0.0; }
+  static T storageComponent(const State<T>&, const Coefficients<T>&) noexcept { return 0.0; }
 };
 
 /// Transform for the transposed 'direct' biquad structure
@@ -341,7 +341,7 @@ struct DirectTranspose : Base<T> {
    @param coefficients the filter coefficients to use
    @returns transformed value
    */
-  static T transform(T input, State<T>& state, const Coefficients<T>& coefficients) {
+  static T transform(T input, State<T>& state, const Coefficients<T>& coefficients) noexcept {
     T theta = input + state.y_z1;
     T output = coefficients.a0 * theta + state.x_z1;
     output = Base<T>::forceMinToZero(output);
@@ -357,7 +357,7 @@ struct DirectTranspose : Base<T> {
    
    @returns always 0.0
    */
-  static T storageComponent(const State<T>&, const Coefficients<T>&) { return 0.0; }
+  static T storageComponent(const State<T>&, const Coefficients<T>&) noexcept { return 0.0; }
 };
 
 /// Transform for the transposed 'canonical' biquad structure (min state)
@@ -372,7 +372,7 @@ struct CanonicalTranspose : Base<T> {
    @param coefficients the filter coefficients to use
    @returns transformed value
    */
-  static T transform(T input, State<T>& state, const Coefficients<T>& coefficients) {
+  static T transform(T input, State<T>& state, const Coefficients<T>& coefficients) noexcept {
     T output = Base<T>::forceMinToZero(coefficients.a0 * input + state.x_z1);
     state.x_z1 = coefficients.a1 * input - coefficients.b1 * output + state.x_z2;
     state.x_z2 = coefficients.a2 * input - coefficients.b2 * output;
@@ -384,7 +384,7 @@ struct CanonicalTranspose : Base<T> {
    
    @returns the Z1 state value
    */
-  static T storageComponent(const State<T>& state, const Coefficients<T>&) { return state.x_z1; }
+  static T storageComponent(const State<T>& state, const Coefficients<T>&) noexcept { return state.x_z1; }
 };
 
 } // namespace Transform
@@ -405,53 +405,53 @@ public:
 
    @param coefficients the filter coefficients to use
    */
-  explicit Filter(const CoefficientsType& coefficients) : coefficients_{coefficients}, state_{} {}
+  explicit Filter(const CoefficientsType& coefficients) noexcept : coefficients_{coefficients}, state_{} {}
 
   /**
    Create a new filter using the given biquad coefficients.
 
    @param coefficients the filter coefficients to use
    */
-  explicit Filter(CoefficientsType&& coefficients) : coefficients_{coefficients}, state_{} {}
+  explicit Filter(CoefficientsType&& coefficients) noexcept : coefficients_{coefficients}, state_{} {}
 
   Filter() = default;
   
   /**
    Use a new set of biquad coefficients.
    */
-  void setCoefficients(const CoefficientsType& coefficients) { coefficients_ = coefficients; }
+  void setCoefficients(const CoefficientsType& coefficients) noexcept { coefficients_ = coefficients; }
 
   /**
    Use a new set of biquad coefficients.
    */
-  void setCoefficients(CoefficientsType&& coefficients) { coefficients_ = coefficients; }
+  void setCoefficients(CoefficientsType&& coefficients) noexcept { coefficients_ = coefficients; }
   
   /**
    Reset internal state.
    */
-  void reset() { state_ = StateType(); }
+  void reset() noexcept { state_ = StateType(); }
 
   /**
    Apply the filter to a given value.
    */
-  ValueType transform(ValueType input) { return Transformer::transform(input, state_, coefficients_); }
+  ValueType transform(ValueType input) noexcept { return Transformer::transform(input, state_, coefficients_); }
   
   /**
    Obtain the `gain` value from the coefficients.
    */
-  ValueType gainValue() const { return coefficients_.a0; }
+  ValueType gainValue() const noexcept { return coefficients_.a0; }
   
   /**
    Obtain a calculated state value. This used in some of Pirkle's signal processing algorithms.
    */
-  ValueType storageComponent() const { return Transformer::storageComponent(state_, coefficients_); }
+  ValueType storageComponent() const noexcept { return Transformer::storageComponent(state_, coefficients_); }
 
 private:
 
   /**
    Obtain writable reference to current coefficients. Only used by RampingAdapter
    */
-  CoefficientsType& coefficients() { return coefficients_; }
+  CoefficientsType& coefficients() noexcept { return coefficients_; }
 
   CoefficientsType coefficients_;
   StateType state_;
@@ -488,7 +488,7 @@ public:
    @param filter the filter to ramp
    @param sampleCount the sample count to ramp over when `setCoefficients` is invoked.
    */
-  RampingAdapter(const FilterType& filter, size_t sampleCount) : filter_{filter}, sampleCount_{sampleCount}
+  RampingAdapter(const FilterType& filter, size_t sampleCount) noexcept : filter_{filter}, sampleCount_{sampleCount}
   {
     assert(sampleCount > 0);
   }
@@ -499,7 +499,8 @@ public:
    @param filter the filter to ramp
    @param sampleCount the sample count to ramp over when `setCoefficients` is invoked.
    */
-  RampingAdapter(FilterType&& filter, size_t sampleCount) : filter_{std::move(filter)}, sampleCount_{sampleCount}
+  RampingAdapter(FilterType&& filter, size_t sampleCount) noexcept :
+  filter_{std::move(filter)}, sampleCount_{sampleCount}
   {
     assert(sampleCount > 0);
   }
@@ -509,7 +510,7 @@ public:
 
    @param coefficients new coefficients to use
    */
-  void setCoefficients(const CoefficientsType& coefficients)
+  void setCoefficients(const CoefficientsType& coefficients) noexcept
   {
     rampRemaining_ = sampleCount_;
     goal_ = coefficients;
@@ -521,7 +522,7 @@ public:
 
    @param coefficients new coefficients to use
    */
-  void setCoefficients(CoefficientsType&& coefficients)
+  void setCoefficients(CoefficientsType&& coefficients) noexcept
   {
     rampRemaining_ = sampleCount_;
     goal_ = std::forward(coefficients);
@@ -534,7 +535,7 @@ public:
    @param input the sample to filter
    @returns filtered sample
    */
-  ValueType transform(ValueType input)
+  ValueType transform(ValueType input) noexcept
   {
     if (rampRemaining_ > 0) {
       --rampRemaining_;
@@ -555,12 +556,12 @@ public:
   /**
    Obtain the `gain` value from the coefficients.
    */
-  ValueType gainValue() const { return filter_.gainValue(); }
+  ValueType gainValue() const noexcept { return filter_.gainValue(); }
 
   /**
    Obtain a calculated state value. This used in some of Pirkle's signal processing algorithms.
    */
-  ValueType storageComponent() const { return filter_.storageComponent(); }
+  ValueType storageComponent() const noexcept { return filter_.storageComponent(); }
 
 private:
   FilterType filter_;

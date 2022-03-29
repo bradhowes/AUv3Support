@@ -23,7 +23,7 @@ struct BufferFacet {
 
    @param loggingSubsystem the string constant to use for the log subsystem parameter for `os_log_create` call.
    */
-  BufferFacet(std::string loggingSubsystem) : log_{os_log_create(loggingSubsystem.c_str(), "BufferFacet")} {}
+  BufferFacet(std::string loggingSubsystem) noexcept : log_{os_log_create(loggingSubsystem.c_str(), "BufferFacet")} {}
 
   /**
    Set the expected number of channels to support during rendering. The goal is to not encounter any memory
@@ -144,10 +144,10 @@ struct BufferFacet {
   }
 
   /// @returns the number of channels that are currently supported
-  size_t channelCount() const { return pointers_.size(); }
+  size_t channelCount() const noexcept { return pointers_.size(); }
 
   /// @returns new BusBuffers instance that refers to our collection of AUValue pointers for storing render samples.
-  BusBuffers busBuffers() {
+  BusBuffers busBuffers() noexcept {
     os_log_debug(log_, "busBuffers");
     return BusBuffers(pointers_);
   }

@@ -12,14 +12,14 @@ namespace DSPHeaders::Parameters {
 struct BoolParameter {
 
   BoolParameter() = default;
-  explicit BoolParameter(bool init) : value_{init} {};
+  explicit BoolParameter(bool init) noexcept : value_{init} {};
   ~BoolParameter() = default;
 
-  void set(AUValue value) { value_ = value != 0.0; }
+  void set(AUValue value) noexcept { value_ = value != 0.0; }
 
-  AUValue get() const { return value_ ? 1.0 : 0.0; }
+  AUValue get() const noexcept { return value_ ? 1.0 : 0.0; }
 
-  operator bool() const { return value_; }
+  operator bool() const noexcept { return value_; }
 
 private:
   bool value_;

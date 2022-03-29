@@ -24,7 +24,7 @@ public:
 
    @param buffers the AUValue pointers to use
    */
-  explicit BusBuffers(std::vector<AUValue*>& buffers) : buffers_{buffers} {}
+  explicit BusBuffers(std::vector<AUValue*>& buffers) noexcept : buffers_{buffers} {}
 
   /// @returns true if the buffer collection is usable
   bool isValid() const noexcept { return !buffers_.empty(); }
@@ -96,7 +96,7 @@ public:
    @param index the index of the channel to get
    @returns the sample pointer at the given channel index
    */
-  AUValue* operator[](size_t index) const { return buffers_[index]; }
+  AUValue* operator[](size_t index) const noexcept { return buffers_[index]; }
 
   /**
    Obtain the modifiable sample pointer for the given channel index.
@@ -104,7 +104,7 @@ public:
    @param index the index of the channel to get
    @returns reference to the sample pointer at the given channel index
    */
-  AUValue*& operator[](size_t index) { return buffers_[index]; }
+  AUValue*& operator[](size_t index) noexcept { return buffers_[index]; }
 
   /**
    Adjust the buffer pointers so that they start `frames` later. Currently, this is only uses in unit tests. There is
@@ -113,7 +113,7 @@ public:
 
    @param frames the amount to shift
    */
-  void shiftOver(AUAudioFrameCount frames)
+  void shiftOver(AUAudioFrameCount frames) noexcept
   {
     for (auto& buffer : buffers_ ) {
       buffer += frames;
@@ -121,13 +121,13 @@ public:
   }
 
   /// @returns number of channel buffers
-  size_t size() const { return buffers_.size(); }
+  size_t size() const noexcept { return buffers_.size(); }
 
   /// @returns pointer to first AUValue pointer (first channel in bundle)
-  AUValue* const* data() const { return buffers_.data(); }
+  AUValue* const* data() const noexcept { return buffers_.data(); }
 
   /// @returns pointer to first AUValue pointer (first channel in bundle)
-  AUValue** data() { return buffers_.data(); }
+  AUValue** data() noexcept { return buffers_.data(); }
 
 private:
   std::vector<AUValue*>& buffers_;
