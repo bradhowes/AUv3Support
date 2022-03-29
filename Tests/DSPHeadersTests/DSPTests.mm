@@ -60,6 +60,32 @@ using namespace DSPHeaders;
   }
 }
 
+- (void)testInterpolationCubic4thOrderInterpolate {
+  double epsilon = 1.0e-18;
+
+  auto v = DSPHeaders::DSP::Interpolation::cubic4thOrder(0.0, 1, 2, 3, 4);
+  XCTAssertEqualWithAccuracy(2.0, v, epsilon);
+
+  v = DSPHeaders::DSP::Interpolation::cubic4thOrder(0.5, 1, 2, 3, 4);
+  XCTAssertEqualWithAccuracy(1 * -0.0625 + 2 * 0.5625 + 3 * 0.5625 + 4 * -0.0625, v, epsilon);
+
+  v = DSPHeaders::DSP::Interpolation::cubic4thOrder(0.99999, 1, 2, 3, 4);
+  XCTAssertEqualWithAccuracy(2.9990234375, v, epsilon);
+}
+
+- (void)testInterpolationLinearInterpolate {
+  double epsilon = 1.0e-18;
+
+  auto v = DSPHeaders::DSP::Interpolation::linear(0.0, 1, 2);
+  XCTAssertEqualWithAccuracy(1.0, v, epsilon);
+
+  v = DSPHeaders::DSP::Interpolation::linear(0.5, 1, 2);
+  XCTAssertEqualWithAccuracy(0.5 * 1.0 + 0.5 * 2.0, v, epsilon);
+
+  v = DSPHeaders::DSP::Interpolation::linear(0.9, 1.0, 2.0);
+  XCTAssertEqualWithAccuracy((1.0 - 0.9) * 1.0 + 0.9 * 2.0, v, epsilon);
+}
+
 - (void)testZZZ {
   for (float modulator = -1.0; modulator <= 1.0; modulator += 0.1) {
     auto a = DSP::unipolarModulation<float>(DSP::bipolarToUnipolar<float>(modulator), 0.0, 10.0);

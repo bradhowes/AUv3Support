@@ -2,6 +2,7 @@
 
 #pragma once
 
+#import <array>
 #import <algorithm>
 #import <cmath>
 
@@ -64,5 +65,45 @@ template <typename T> auto parabolicSine(T angle) noexcept {
   T y = B * angle + C * angle * std::abs(angle);
   return P * (y * std::abs(y) - y) + y;
 }
+
+namespace Interpolation {
+
+/**
+ Interpolate a value from two values.
+
+ @param partial indication of affinity for one of the two values. Values [0-0.5) favor x0, while values (0.5-1.0)
+ favor x1. A value of 0.5 equally favors both.
+ @param x0 first value to use
+ @param x1 second value to use
+ */
+inline constexpr double linear(double partial, double x0, double x1) noexcept { return partial * (x1 - x0) + x0; }
+
+/**
+ Types and configuration for the cubic 4th order interpolator.
+ */
+struct Cubic4thOrder {
+  static constexpr size_t TableSize = 1024;
+  using WeightsEntry = std::array<double, 4>;
+  static std::array<WeightsEntry, TableSize> weights_;
+};
+
+/**
+ Interpolate a value from four values.
+
+ @param partial location between the second value and the third. By definition it should always be < 1.0
+ @param x0 first value to use
+ @param x1 second value to use
+ @param x2 third value to use
+ @param x3 fourth value to use
+ */
+inline static double cubic4thOrder(double partial, double x0, double x1, double x2, double x3) noexcept {
+  // Partial is expected to be < 1.0 so with truncation index should always be in range [0, 1)
+  size_t index = size_t(partial * Cubic4thOrder::TableSize);
+  assert(index < Cubic4thOrder::TableSize);
+  const auto& w{Cubic4thOrder::weights_[index]};
+  return x0 * w[0] + x1 * w[1] + x2 * w[2] + x3 * w[3];
+}
+
+} // Interpolation namespace
 
 } // end namespace DSPHeaders::DSP
