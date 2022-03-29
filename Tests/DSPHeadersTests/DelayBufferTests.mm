@@ -29,17 +29,23 @@ using namespace DSPHeaders;
 }
 
 - (void)testReadFromOffset{
-  auto buffer = DelayBuffer<float>(8);
-  XCTAssertEqual(8, buffer.size());
+  auto buffer = DelayBuffer<float>(4);
+  XCTAssertEqual(4, buffer.size());
   buffer.write(1.2);
   buffer.write(2.4);
   buffer.write(3.6);
   XCTAssertEqualWithAccuracy(buffer.readFromOffset(1), 2.4, 0.001);
   XCTAssertEqualWithAccuracy(buffer.readFromOffset(2), 1.2, 0.001);
   XCTAssertEqualWithAccuracy(buffer.readFromOffset(3), 0.0, 0.001);
+  XCTAssertEqualWithAccuracy(buffer.readFromOffset(4), 3.6, 0.001);
+
+  XCTAssertEqualWithAccuracy(buffer.readFromOffset(0), 3.6, 0.001);
+  XCTAssertEqualWithAccuracy(buffer.readFromOffset(-1), 0.0, 0.001);
+  XCTAssertEqualWithAccuracy(buffer.readFromOffset(-2), 1.2, 0.001);
+  XCTAssertEqualWithAccuracy(buffer.readFromOffset(-3), 2.4, 0.001);
 }
 
-- (void)testWrapping {
+- (void)testWriteWrapping {
   double epsilon = 1.0e-14;
   auto buffer = DelayBuffer<double>(4, DelayBuffer<double>::Interpolator::linear);
   XCTAssertEqual(4, buffer.size());

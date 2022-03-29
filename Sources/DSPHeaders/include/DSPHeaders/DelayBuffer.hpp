@@ -65,7 +65,7 @@ public:
    @param offset how many samples before the current write position to return
    @return sample from buffer
    */
-  T readFromOffset(int offset) const noexcept { return buffer_[(writePos_ - 1 - offset) & wrapMask_]; }
+  T readFromOffset(ssize_t offset) const noexcept { return buffer_[(writePos_ - 1 - offset) & wrapMask_]; }
 
   /**
    Obtain a sample from the buffer.
@@ -79,7 +79,7 @@ public:
   }
 
 private:
-  using InterpolatorProc = T (DelayBuffer::*)(size_t, T) const noexcept;
+  using InterpolatorProc = T (DelayBuffer::*)(ssize_t, T) const noexcept;
 
   static size_t smallestPowerOf2For(double value) noexcept {
     return size_t(std::pow(2.0, std::ceil(std::log2(std::fmax(value, 1.0)))));
@@ -89,7 +89,7 @@ private:
     return kind == Interpolator::linear ? &DelayBuffer::linearInterpolate : &DelayBuffer::cubic4thOrderInterpolate;
   }
 
-  T at(int offset) const noexcept { return readFromOffset(offset); }
+  T at(ssize_t offset) const noexcept { return readFromOffset(offset); }
 
   /**
    Obtain a linearly interpolated sample for a given index value.
@@ -98,7 +98,7 @@ private:
    @param partial the non-integral part of the index
    @returns interpolated sample result
    */
-  T linearInterpolate(size_t whole, T partial) const noexcept {
+  T linearInterpolate(ssize_t whole, T partial) const noexcept {
     return DSP::Interpolation::linear(partial, at(whole), at(whole + 1));
   }
 
@@ -109,7 +109,7 @@ private:
    @param partial the non-integral part of the index
    @returns interpolated sample result
    */
-  T cubic4thOrderInterpolate(size_t whole, T partial) const noexcept {
+  T cubic4thOrderInterpolate(ssize_t whole, T partial) const noexcept {
     return DSP::Interpolation::cubic4thOrder(partial, at(whole - 1), at(whole), at(whole + 1), at(whole + 2));
   }
 
