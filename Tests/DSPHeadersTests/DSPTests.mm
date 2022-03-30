@@ -53,8 +53,8 @@ using namespace DSPHeaders;
 }
 
 - (void)testParabolicSineAccuracy {
-  for (int index = 0; index < 360.0; ++index) {
-    auto theta = 2.0 * M_PI * index / 360.0 - M_PI;
+  for (int index = 0; index < 36000.0; ++index) {
+    auto theta = 2.0 * M_PI * index / 36000.0 - M_PI;
     auto real = std::sin(theta);
     XCTAssertEqualWithAccuracy(DSP::parabolicSine(theta), real, 0.0011);
   }

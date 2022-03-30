@@ -103,7 +103,7 @@ public:
     }
     
     // Calculate gamma values from the individual filters.
-    for (auto index = 1; index <= filters_.size(); ++index) {
+    for (size_t index = 1; index <= filters_.size(); ++index) {
       gammas_[index] = filters_[filters_.size() - index].gainValue() * gammas_[index - 1];
     }
     

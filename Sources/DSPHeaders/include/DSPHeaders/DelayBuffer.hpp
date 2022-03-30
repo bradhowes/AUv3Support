@@ -65,7 +65,7 @@ public:
    @param offset how many samples before the current write position to return
    @return sample from buffer
    */
-  T readFromOffset(ssize_t offset) const noexcept { return buffer_[(writePos_ - 1 - offset) & wrapMask_]; }
+  T readFromOffset(ssize_t offset) const noexcept { return buffer_[size_t(writePos_ - 1 - offset) & wrapMask_]; }
 
   /**
    Obtain a sample from the buffer.

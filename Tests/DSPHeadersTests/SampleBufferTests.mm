@@ -27,7 +27,7 @@ static AUAudioFrameCount maxFrames = 100;
 
 - (void)testInit {
   SampleBuffer buffer{"abc"};
-  XCTAssertEqual(buffer.capacity(), 0);
+  XCTAssertEqual(buffer.capacity(), size_t(0));
   XCTAssertEqual(buffer.mutableAudioBufferList(), nullptr);
 
   buffer.allocate(format, maxFrames);

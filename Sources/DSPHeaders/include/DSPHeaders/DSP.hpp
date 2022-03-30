@@ -6,6 +6,8 @@
 #import <algorithm>
 #import <cmath>
 
+#import "DSPHeaders/ConstMath.hpp"
+
 namespace DSPHeaders::DSP {
 
 /**
@@ -59,11 +61,12 @@ template <typename T> constexpr auto bipolarModulation(T modulator, T minValue, 
  @returns approximate sin value
  */
 template <typename T> constexpr auto parabolicSine(T angle) noexcept {
-  const T B = 4.0 / M_PI;
-  const T C = -4.0 / (M_PI * M_PI);
-  const T P = 0.225;
-  T y = B * angle + C * angle * std::abs(angle);
-  return P * (y * std::abs(y) - y) + y;
+  constexpr T B{ 4.0 / M_PI};
+  constexpr T C{-4.0 / (M_PI * M_PI)};
+  constexpr T P{0.225};
+  const T y{B * angle + C * angle * ConstMath::abs<T>(angle)};
+  const T Py{P * y};
+  return Py * ConstMath::abs<T>(y) - Py + y;
 }
 
 namespace Interpolation {
