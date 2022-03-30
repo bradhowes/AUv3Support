@@ -9,8 +9,11 @@ namespace DSPHeaders::Parameters {
  */
 template <typename T>
 struct RampingParameter {
+
   RampingParameter() = default;
+
   explicit RampingParameter(AUValue initialValue) noexcept : value_{initialValue} {}
+
   ~RampingParameter() = default;
 
   /**
@@ -66,11 +69,6 @@ private:
   T rampTarget_;
   T rampStep_;
   AUAudioFrameCount rampRemaining_{0};
-
-  RampingParameter(const RampingParameter&) = delete;
-  RampingParameter(RampingParameter&&) = delete;
-  RampingParameter& operator =(const RampingParameter&) = delete;
-  RampingParameter& operator =(const RampingParameter&&) = delete;
 };
 
 } // end namespace DSPHeaders::Parameters

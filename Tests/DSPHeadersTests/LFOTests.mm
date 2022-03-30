@@ -147,5 +147,9 @@ using namespace DSPHeaders;
   SamplesEqual(osc.value(), -1.0);
 }
 
+- (void)testInContainer {
+  std::vector<LFO<float>> lfos;
+  lfos.emplace_back(44100.0, 12.0, LFOWaveform::sinusoid);
+}
 
 @end
