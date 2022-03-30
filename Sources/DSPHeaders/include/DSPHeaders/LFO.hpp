@@ -25,10 +25,10 @@ namespace DSPHeaders {
 template <typename T>
 class LFO {
 public:
-  
+
   /**
    Create a new instance.
-   
+
    @param sampleRate number of samples per second
    @param frequency the frequency of the oscillator
    @param waveform the waveform to emit
@@ -39,22 +39,22 @@ public:
     setFrequency(frequency, 0);
     reset();
   }
-  
-  /**
-   Create a new instance.
-   */
-  LFO(T sampleRate, T frequency) noexcept : LFO(sampleRate, frequency, LFOWaveform::sinusoid) {}
 
   /**
    Create a new instance.
-   */
-  LFO() noexcept : LFO(44100.0, 1.0, LFOWaveform::sinusoid) {}
-  
-  /**
-   Initialize the LFO with the given parameters.
-   
+
    @param sampleRate number of samples per second
    @param frequency the frequency of the oscillator
+   */
+  LFO(T sampleRate, T frequency) noexcept : LFO(sampleRate, frequency, LFOWaveform::sinusoid) {}
+
+  /// Create a new instance.
+  LFO() noexcept : LFO(44100.0, 1.0, LFOWaveform::sinusoid) {}
+
+  /**
+   Set the sample rate to use.
+   
+   @param sampleRate number of samples per second
    */
   void setSampleRate(T sampleRate) noexcept {
 
@@ -79,31 +79,27 @@ public:
    Set the frequency of the oscillator.
    
    @param frequency the frequency to operate at
+   @param rampingDuration number of samples to ramp over
    */
-  void setFrequency(T frequency, AUAudioFrameCount duration) noexcept {
+  void setFrequency(T frequency, AUAudioFrameCount rampingDuration) noexcept {
     assert(sampleRate_ != 0.0);
-    phaseIncrement_.set(frequency / sampleRate_, duration);
+    phaseIncrement_.set(frequency / sampleRate_, rampingDuration);
   }
 
-  /**
-   Restart from a known zero state.
-   */
+  /// Restart from a known zero state.
   void reset() noexcept { moduloCounter_ = phaseIncrement_.get() > 0 ? 0.0 : 1.0; }
   
-  /**
-   Obtain the current value of the oscillator.
-   
-   @returns current waveform value
-   */
+  /// @returns current value of the oscillator
   T value() noexcept { return valueGenerator_(moduloCounter_); }
   
-  /**
-   Obtain the current value of the oscillator that is 90° advanced from what `value()` would return.
-   
-   @returns current 90° advanced waveform value
-   */
+  /// @returns current value of the oscillator that is 90° ahead of what `value()` returns
   T quadPhaseValue() const noexcept { return valueGenerator_(quadPhaseCounter_); }
-  
+
+  /// @returns current value of the oscillator that is 90° behind what `value()` returns
+  T negativeQuadPhaseValue() const noexcept {
+    return valueGenerator_(wrappedModuloCounter(quadPhaseCounter_ - 5.0, phaseIncrement_));
+  }
+
   /**
    Increment the oscillator to the next value.
    */
@@ -112,13 +108,10 @@ public:
     quadPhaseCounter_ = incrementModuloCounter(moduloCounter_, 0.25);
   }
 
-  /**
-   Obtain the current frequency of the LFO.
-
-   @return frequency in Hz
-   */
+   /// @returns current frequency in Hz
   T frequency() const noexcept { return phaseIncrement_.get() * sampleRate_; }
 
+  /// @returns the current waveform in effect for the LFO
   LFOWaveform waveform() const noexcept { return waveform_; }
 
 private:
