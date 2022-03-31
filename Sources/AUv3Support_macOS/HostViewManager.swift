@@ -127,7 +127,7 @@ extension HostViewManager {
 
   @IBAction private func togglePlay(_ sender: NSButton) {
     audioUnitLoader.togglePlayback()
-    let isPlaying = config.playButton.state == .on
+    let isPlaying = audioUnitLoader.isPlaying
     config.playButton.state = isPlaying ? .on : .off
     config.playMenuItem.title = isPlaying ? "Stop" : "Play"
 

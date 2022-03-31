@@ -58,7 +58,6 @@ public final class AudioUnitLoader: NSObject {
   private var avAudioUnit: AVAudioUnit?
   private var auAudioUnit: AUAudioUnit? { avAudioUnit?.auAudioUnit }
   private var viewController: ViewController?
-  private var isPlaying: Bool { playEngine.isPlaying }
   private let lastStateKey = "lastStateKey"
   private let playEngine: SimplePlayEngine
   private let componentDescription: AudioComponentDescription
@@ -68,6 +67,8 @@ public final class AudioUnitLoader: NSObject {
   private let delayBeforeNextLocateAttempt = 0.2
   private var notificationRegistration: NSObjectProtocol?
   private var hasUpdates = false
+
+  public var isPlaying: Bool { playEngine.isPlaying }
 
   /**
    The loops that are available.
