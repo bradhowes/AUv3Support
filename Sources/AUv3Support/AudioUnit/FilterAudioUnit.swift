@@ -21,10 +21,10 @@ public final class FilterAudioUnit: AUAudioUnit {
     case unableToInitialize(String)
   }
 
-  /// The signal processing kernel that performs the rendering of audio samples
-  private var kernel: AudioRenderer?
+  /// The signal processing kernel that performs the rendering of audio samples.
+  private var kernel: AudioRenderer!
   /// Runtime parameter definitions for the audio unit
-  private var parameters: ParameterSource?
+  private var parameters: ParameterSource!
 
   /// The associated view controller for the audio unit that shows the controls
   public weak var viewConfigurationManager: AudioUnitViewConfigurationManager?
@@ -117,7 +117,7 @@ extension FilterAudioUnit {
 
     // At start, configure effect to do something interesting. Hosts can and should update the effect state after it is
     // initialized via `fullState` attribute.
-    currentPreset = parameters.factoryPresets.first
+    // currentPreset = parameters.factoryPresets.first
 
     os_log(.debug, log: log, "configure END")
   }
@@ -132,15 +132,15 @@ extension FilterAudioUnit {
   override public var outputBusses: AUAudioUnitBusArray { _outputBusses }
   /// Parameter tree containing filter parameters that are exposed for external control. No setting is allowed.
   override public var parameterTree: AUParameterTree? {
-    get { parameters?.parameterTree }
+    get { parameters.parameterTree }
     set { fatalError("attempted to set new parameterTree") }
   }
   /// Factory presets for the filter
-  override public var factoryPresets: [AUAudioUnitPreset]? { parameters?.factoryPresets }
+  override public var factoryPresets: [AUAudioUnitPreset]? { parameters.factoryPresets }
   /// Announce support for user presets
   override public var supportsUserPresets: Bool { true }
   /// Obtain the current bypass setting
-  override public var shouldBypassEffect: Bool { didSet { kernel?.setBypass(shouldBypassEffect); }}
+  override public var shouldBypassEffect: Bool { didSet { kernel.setBypass(shouldBypassEffect); }}
   /// Announce that the filter can work directly on upstream sample buffers
   override public var canProcessInPlace: Bool { true }
 
@@ -155,16 +155,14 @@ extension FilterAudioUnit {
     }
     set {
       os_log(.info, log: log, "set currentPreset - %{public}s", newValue.descriptionOrNil)
-      guard _currentPreset != newValue else {
-        return
-      }
+      guard _currentPreset != newValue else { return }
 
       if let preset = newValue {
         if preset.number >= 0 {
           os_log(.info, log: log, "factoryPreset %d", preset.number)
           _currentPreset = preset
           os_log(.info, log: log, "updating parameters")
-          parameters?.useFactoryPreset(preset)
+          parameters.useFactoryPreset(preset)
           return
         }
 
@@ -198,7 +196,7 @@ extension FilterAudioUnit {
       // format has not been published. For now, we will use it but a better implementation would be to encode/decode
       // our own format and rely on that instead of the binary blob that AUAudioUnit provides us.
       var value = super.fullState ?? [String: Any]()
-      parameters?.storeParameters(into: &value)
+      parameters.storeParameters(into: &value)
       if let preset = _currentPreset {
 
         // Record into the state the active preset name and number. This will allow us to recover it later when given
@@ -218,9 +216,9 @@ extension FilterAudioUnit {
          let name = state[kAUPresetNameKey] as? String,
          let number = state[kAUPresetNumberKey] as? NSNumber {
         os_log(.info, log: log, "name %{public}s number %d", name, number.intValue)
-        _currentPreset = AUAudioUnitPreset(number: number.intValue, name: name)
+        currentPreset = AUAudioUnitPreset(number: number.intValue, name: name)
       } else {
-        _currentPreset = nil
+        currentPreset = nil
       }
     }
   }
@@ -295,7 +293,7 @@ extension FilterAudioUnit {
 extension FilterAudioUnit {
 
   override public func parametersForOverview(withCount: Int) -> [NSNumber] {
-    parameters?.parameters[0..<withCount].map { NSNumber(value: $0.address) } ?? []
+    parameters.parameters[0..<withCount].map { NSNumber(value: $0.address) }
   }
 
   override public func supportedViewConfigurations(_ available: [AUAudioUnitViewConfiguration]) -> IndexSet {

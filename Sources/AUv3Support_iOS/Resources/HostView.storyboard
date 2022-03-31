@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="19529" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
-    <device id="retina4_0" orientation="portrait" appearance="light"/>
+    <device id="retina4_7" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="19519"/>
@@ -15,17 +15,17 @@
             <objects>
                 <viewController modalPresentationStyle="fullScreen" id="BYZ-38-t0r" customClass="HostViewController" customModule="AUv3Support_iOS" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleAspectFit" id="8bC-Xf-vdC">
-                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="YiJ-1a-ELQ" userLabel="Controls Header View">
-                                <rect key="frame" x="8" y="0.0" width="304" height="59.5"/>
+                                <rect key="frame" x="8" y="0.0" width="359" height="59.5"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="6SP-IR-0pE" userLabel="Header">
-                                        <rect key="frame" x="35" y="0.0" width="234" height="59.5"/>
+                                        <rect key="frame" x="39" y="0.0" width="281" height="59.5"/>
                                         <subviews>
                                             <stackView opaque="NO" contentMode="scaleToFill" distribution="equalSpacing" alignment="center" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="2HW-yE-4lC" userLabel="Controls">
-                                                <rect key="frame" x="0.0" y="0.0" width="234" height="31"/>
+                                                <rect key="frame" x="0.0" y="0.0" width="281" height="31"/>
                                                 <subviews>
                                                     <button opaque="NO" contentMode="scaleToFill" horizontalCompressionResistancePriority="751" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tzZ-pe-UL7" userLabel="Play">
                                                         <rect key="frame" x="0.0" y="3" width="25" height="25"/>
@@ -68,13 +68,23 @@
                                                         <color key="tintColor" systemColor="systemTealColor"/>
                                                         <state key="normal" image="user"/>
                                                     </button>
+                                                    <button opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aBM-QG-hno" userLabel="Review Button">
+                                                        <rect key="frame" x="250" y="2.5" width="31" height="26"/>
+                                                        <fontDescription key="fontDescription" type="system" pointSize="11"/>
+                                                        <state key="normal" title="v1.0.0">
+                                                            <color key="titleColor" systemColor="systemTealColor"/>
+                                                        </state>
+                                                        <connections>
+                                                            <action selector="visitAppStore:" destination="BYZ-38-t0r" eventType="touchUpInside" id="DzG-8d-fUm"/>
+                                                        </connections>
+                                                    </button>
                                                 </subviews>
                                             </stackView>
-                                            <stackView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Urn-1t-R6l">
-                                                <rect key="frame" x="0.0" y="39" width="234" height="20.5"/>
+                                            <stackView opaque="NO" contentMode="scaleToFill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="Urn-1t-R6l">
+                                                <rect key="frame" x="0.0" y="39" width="281" height="20.5"/>
                                                 <subviews>
                                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="presetName" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rex-SM-lPc">
-                                                        <rect key="frame" x="0.0" y="0.0" width="234" height="20.5"/>
+                                                        <rect key="frame" x="0.0" y="0.0" width="281" height="20.5"/>
                                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                         <color key="textColor" name="Labels"/>
                                                         <nil key="highlightedColor"/>
@@ -94,16 +104,16 @@
                                 </constraints>
                             </view>
                             <containerView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="68k-M7-cHK">
-                                <rect key="frame" x="0.0" y="59.5" width="320" height="508.5"/>
+                                <rect key="frame" x="0.0" y="59.5" width="375" height="607.5"/>
                             </containerView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ygb-hY-iRR" userLabel="Instructions">
-                                <rect key="frame" x="16" y="127.5" width="288" height="313"/>
+                                <rect key="frame" x="17" y="177.5" width="341" height="312"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="Lo8-6H-cG5">
-                                        <rect key="frame" x="20" y="20" width="248" height="273"/>
+                                        <rect key="frame" x="20" y="20" width="301" height="272"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SpA-lQ-J6u">
-                                                <rect key="frame" x="0.0" y="0.0" width="248" height="251"/>
+                                                <rect key="frame" x="0.0" y="0.0" width="301" height="234"/>
                                                 <string key="text"> The AUv3 component '__NAME__' is now available on your device and can be used in other AUv3 host apps such as GarageBand and Logic.
 
 You can continue to use this app to experiment, but you do not need to have it running to access the AUv3 component in other apps.
@@ -115,7 +125,7 @@ However, if you later delete this app from your device, the AUv3 component will 
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <button opaque="NO" contentMode="scaleToFill" verticalCompressionResistancePriority="749" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="z2I-ka-15q">
-                                                <rect key="frame" x="0.0" y="259" width="248" height="14"/>
+                                                <rect key="frame" x="0.0" y="242" width="301" height="30"/>
                                                 <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
                                                 <state key="normal" title="OK">
                                                     <color key="titleColor" systemColor="systemOrangeColor"/>
@@ -138,22 +148,11 @@ However, if you later delete this app from your device, the AUv3 component will 
                                     <constraint firstItem="Lo8-6H-cG5" firstAttribute="top" secondItem="ygb-hY-iRR" secondAttribute="top" constant="20" symbolic="YES" id="qIE-CR-8Lr"/>
                                 </constraints>
                             </view>
-                            <button opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aBM-QG-hno" userLabel="Review Button">
-                                <rect key="frame" x="8" y="542" width="31" height="26"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="11"/>
-                                <state key="normal" title="v1.0.0">
-                                    <color key="titleColor" systemColor="systemTealColor"/>
-                                </state>
-                                <connections>
-                                    <action selector="visitAppStore:" destination="BYZ-38-t0r" eventType="touchUpInside" id="DzG-8d-fUm"/>
-                                </connections>
-                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <accessibility key="accessibilityConfiguration" identifier="MainView" label="MainView"/>
                         <constraints>
-                            <constraint firstItem="aBM-QG-hno" firstAttribute="bottom" secondItem="6Tk-OE-BBY" secondAttribute="bottom" id="3iF-Br-EaT"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="YiJ-1a-ELQ" secondAttribute="trailing" constant="8" id="613-tJ-dOL"/>
                             <constraint firstItem="ygb-hY-iRR" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="Bja-f1-kFe"/>
                             <constraint firstItem="YiJ-1a-ELQ" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="8" id="I7e-co-4wx"/>
@@ -164,7 +163,6 @@ However, if you later delete this app from your device, the AUv3 component will 
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="68k-M7-cHK" secondAttribute="bottom" id="f0O-Cd-IJE"/>
                             <constraint firstItem="ygb-hY-iRR" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="8bC-Xf-vdC" secondAttribute="leading" constant="16" id="fxU-WO-gn6"/>
                             <constraint firstItem="YiJ-1a-ELQ" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="gcb-Ax-44p"/>
-                            <constraint firstItem="aBM-QG-hno" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="8" id="hbi-zb-RYf"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="68k-M7-cHK" secondAttribute="trailing" id="pxu-xY-NpT"/>
                         </constraints>
                     </view>
