@@ -117,7 +117,7 @@ extension FilterAudioUnit {
 
     // At start, configure effect to do something interesting. Hosts can and should update the effect state after it is
     // initialized via `fullState` attribute.
-    // currentPreset = parameters.factoryPresets.first
+    currentPreset = parameters.factoryPresets.first
 
     os_log(.debug, log: log, "configure END")
   }
