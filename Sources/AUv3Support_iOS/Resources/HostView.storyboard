@@ -22,10 +22,10 @@
                                 <rect key="frame" x="8" y="0.0" width="359" height="59.5"/>
                                 <subviews>
                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="6SP-IR-0pE" userLabel="Header">
-                                        <rect key="frame" x="39" y="0.0" width="281" height="59.5"/>
+                                        <rect key="frame" x="62.5" y="0.0" width="234" height="59.5"/>
                                         <subviews>
                                             <stackView opaque="NO" contentMode="scaleToFill" distribution="equalSpacing" alignment="center" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="2HW-yE-4lC" userLabel="Controls">
-                                                <rect key="frame" x="0.0" y="0.0" width="281" height="31"/>
+                                                <rect key="frame" x="0.0" y="0.0" width="234" height="31"/>
                                                 <subviews>
                                                     <button opaque="NO" contentMode="scaleToFill" horizontalCompressionResistancePriority="751" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tzZ-pe-UL7" userLabel="Play">
                                                         <rect key="frame" x="0.0" y="3" width="25" height="25"/>
@@ -68,8 +68,19 @@
                                                         <color key="tintColor" systemColor="systemTealColor"/>
                                                         <state key="normal" image="user"/>
                                                     </button>
+                                                </subviews>
+                                            </stackView>
+                                            <stackView opaque="NO" contentMode="scaleToFill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="Urn-1t-R6l">
+                                                <rect key="frame" x="0.0" y="39" width="234" height="20.5"/>
+                                                <subviews>
+                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="presetName" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rex-SM-lPc">
+                                                        <rect key="frame" x="0.0" y="0.0" width="195" height="20.5"/>
+                                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                        <color key="textColor" name="Labels"/>
+                                                        <nil key="highlightedColor"/>
+                                                    </label>
                                                     <button opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aBM-QG-hno" userLabel="Review Button">
-                                                        <rect key="frame" x="250" y="2.5" width="31" height="26"/>
+                                                        <rect key="frame" x="203" y="0.0" width="31" height="20.5"/>
                                                         <fontDescription key="fontDescription" type="system" pointSize="11"/>
                                                         <state key="normal" title="v1.0.0">
                                                             <color key="titleColor" systemColor="systemTealColor"/>
@@ -78,17 +89,6 @@
                                                             <action selector="visitAppStore:" destination="BYZ-38-t0r" eventType="touchUpInside" id="DzG-8d-fUm"/>
                                                         </connections>
                                                     </button>
-                                                </subviews>
-                                            </stackView>
-                                            <stackView opaque="NO" contentMode="scaleToFill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="Urn-1t-R6l">
-                                                <rect key="frame" x="0.0" y="39" width="281" height="20.5"/>
-                                                <subviews>
-                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="presetName" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rex-SM-lPc">
-                                                        <rect key="frame" x="0.0" y="0.0" width="281" height="20.5"/>
-                                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                                        <color key="textColor" name="Labels"/>
-                                                        <nil key="highlightedColor"/>
-                                                    </label>
                                                 </subviews>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="20.5" id="cG4-OW-V0W"/>
