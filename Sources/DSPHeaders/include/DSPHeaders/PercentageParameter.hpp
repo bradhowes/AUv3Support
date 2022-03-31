@@ -15,7 +15,7 @@ public:
   using super = RampingParameter<T>;
 
   PercentageParameter() = default;
-  explicit PercentageParameter(T value) noexcept : super(value) {}
+  explicit PercentageParameter(T value) noexcept : super(normalize(value)) {}
   ~PercentageParameter() = default;
 
   /**
@@ -25,15 +25,16 @@ public:
    @param target the value in range [0-100] to use for the parameter
    @param duration the number of frames to transition over
    */
-  void set(T value, AUAudioFrameCount frameCount) noexcept { super::set(value / 100.0, frameCount); }
+  void set(T value, AUAudioFrameCount frameCount) noexcept { super::set(normalize(value), frameCount); }
 
-  /**
-   Obtain the current parameter value as a value in range [0-100]. Note that if ramping is in effect, this returns the
-   final value at the end of ramping. One must use `frameValue` to obtain the value during ramping.
-
-   @return the current parameter value in range [0-100]
-   */
+  /// @returns the current parameter value in range [0-100]
   T get() const noexcept { return super::get() * 100.0; }
+
+  /// @returns the current parameter value in range [0-1]
+  T normalized() const noexcept { return super::get(); }
+
+private:
+  inline static constexpr T normalize(T value) noexcept { return std::clamp(value / 100.0, 0.0, 1.0); }
 };
 
 } // end namespace DSPHeaders::Parameters
