@@ -25,6 +25,8 @@ public protocol ParameterSource {
   /**
    Add parameter values to the given state dictionary. This is not strictly necessary since the state dict already has
    the values in its `data` key, but that is in a binary format.
+
+   - parameter dict: the dictionary to update
    */
   func storeParameters(into dict: inout [String: Any])
 }
