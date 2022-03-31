@@ -12,9 +12,11 @@ struct RampingParameter {
 
   RampingParameter() = default;
 
-  explicit RampingParameter(AUValue initialValue) noexcept : value_{initialValue} {}
+  explicit RampingParameter(T initialValue) noexcept : value_{initialValue} {}
 
   ~RampingParameter() = default;
+
+  bool isRamping() const noexcept { return rampRemaining_ > 0; }
 
   /**
    Set the new parameter value. If the given duration is not zero, then transition to the new value over that number of
