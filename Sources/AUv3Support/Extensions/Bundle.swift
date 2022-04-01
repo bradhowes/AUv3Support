@@ -4,31 +4,22 @@ import Foundation
 
 private class Tag {}
 
-private extension Bundle {
+public protocol AppExtensionBundleInfo {
 
-  /**
-   Attempt to get a String value from the Bundle meta dictionary.
+  var bundleID: String { get }
 
-   - parameter key: what to fetch
-   - returns: the value found or an empty string
-   */
-  func info(for key: String) -> String { infoDictionary?[key] as? String ?? "" }
+  var auExtensionUrl: URL? { get }
+
+  func info(for key: String) -> String
 }
 
-public extension Bundle {
+public extension AppExtensionBundleInfo {
 
-  /// Obtain the bundle identifier or "" if there is not one
-  var bundleID: String { Bundle(for: Tag.self).bundleIdentifier?.lowercased() ?? "" }
-
-  /// Obtain the build scheme that was used to generate the bundle. Returns " Dev" or " Staging" or ""
   var scheme: String {
     if bundleID.contains(".dev") { return " Dev" }
     if bundleID.contains(".staging") { return " Staging" }
     return ""
   }
-}
-
-public extension Bundle {
 
   /// Obtain the release version number associated with the bundle or "" if none found
   var releaseVersionNumber: String { info(for: "CFBundleShortVersionString") }
@@ -39,6 +30,7 @@ public extension Bundle {
   /// Obtain a version string with the following format: "Version V.B[ S]"
   /// where V is the releaseVersionNumber, B is the buildVersionNumber and S is the scheme.
   var versionString: String { "Version \(releaseVersionNumber).\(buildVersionNumber)\(scheme)" }
+
 
   // NOTE: for the following values to have meaningful values, one must define them in an Info.plist file for the
   // bundle where this file resides.
@@ -61,8 +53,17 @@ public extension Bundle {
   var auComponentManufacturer: FourCharCode { FourCharCode(stringLiteral: info(for: "AU_COMPONENT_MANUFACTURER")) }
   /// Obtain the extension name
   var auExtensionName: String { auBaseName + "AU.appex" }
-  /// Obtain the extension URL
-  var auExtensionUrl: URL? { builtInPlugInsURL?.appendingPathComponent(auExtensionName) }
   /// Obtain the Apple Store ID for the component
   var appStoreId: String { info(for: "APP_STORE_ID") }
+}
+
+extension Bundle: AppExtensionBundleInfo {
+
+  public var bundleID: String { self.bundleIdentifier?.lowercased() ?? "" }
+
+  public var auExtensionUrl: URL? {
+    builtInPlugInsURL?.appendingPathComponent(auExtensionName)
+  }
+
+  public func info(for key: String) -> String { infoDictionary?[key] as? String ?? "" }
 }

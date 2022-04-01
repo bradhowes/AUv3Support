@@ -1,0 +1,248 @@
+import AudioToolbox
+import AVFoundation
+import CoreAudioKit
+
+import XCTest
+@testable import AUv3Support
+
+fileprivate let acd = AudioComponentDescription(componentType: FourCharCode("aufx"), componentSubType: FourCharCode("dely"),
+                                                componentManufacturer: FourCharCode("appl"),
+                                                componentFlags: 0, componentFlagsMask: 0)
+
+fileprivate class Parameters: ParameterSource {
+
+  var parameters: [AUParameter] = [
+    AUParameterTree.createParameter(withIdentifier: "First", name: "First Param", address: 123, min: 0, max: 100,
+                                    unit: .beats, unitName: nil, flags: [.flag_IsReadable, .flag_IsWritable],
+                                    valueStrings: nil, dependentParameters: nil),
+    AUParameterTree.createParameter(withIdentifier: "Second", name: "Second Param", address: 456, min: 0, max: 100,
+                                    unit: .milliseconds, unitName: nil, flags: [.flag_IsReadable, .flag_IsWritable],
+                                    valueStrings: nil, dependentParameters: nil),
+  ]
+
+  lazy var parameterTree: AUParameterTree = AUParameterTree.createTree(withChildren: parameters)
+
+  var factoryPresets: [AUAudioUnitPreset] = [.init(number: 0, name: "Preset 1"), .init(number: 1, name: "Preset 2")]
+
+  func useFactoryPreset(_ preset: AUAudioUnitPreset) {
+
+  }
+}
+
+fileprivate class Kernel: AudioRenderer {
+
+  var bypassed: Bool = false
+  var busCount: Int = 0
+  var format: AVAudioFormat = .init(commonFormat: .pcmFormatInt16, sampleRate: 44100.0, channels: 2, interleaved: true)!
+  var maxFramesToRender: AUAudioFrameCount = 0
+
+  var firstParam: AUValue = 0.0
+  var secondParam: AUValue = 0.0
+
+  var renderCount = 0
+
+  func setRenderingFormat(_ busCount: Int, format: AVAudioFormat, maxFramesToRender: AUAudioFrameCount) {
+    self.busCount = busCount
+    self.format = format
+    self.maxFramesToRender = maxFramesToRender
+  }
+
+  func renderingStopped() {
+    maxFramesToRender = 0
+  }
+
+  func internalRenderBlock() -> AUInternalRenderBlock {
+    let kernel = self
+    return { flags, timestamp, frameCount, outputBus, audioBuffer, eventsList, pullInputBlock in
+      kernel.renderCount += 1
+      return noErr
+    }
+  }
+
+  func setBypass(_ state: Bool) {
+    bypassed = state
+  }
+
+  func set(_ parameter: AUParameter, value: AUValue) {
+    switch parameter.address {
+    case 123: firstParam = value
+    case 456: secondParam = value
+    default: break
+    }
+  }
+
+  func get(_ parameter: AUParameter) -> AUValue {
+    switch parameter.address {
+    case 123: return firstParam
+    case 456: return secondParam
+    default: return 0.0
+    }
+  }
+}
+
+fileprivate class MockViewConfigurationManager: AudioUnitViewConfigurationManager {
+  var activeViewConfiguration: AUAudioUnitViewConfiguration?
+
+  func selectViewConfiguration(_ viewConfiguration: AUAudioUnitViewConfiguration) {
+    activeViewConfiguration = viewConfiguration
+  }
+}
+
+final class FilterAudioUnitTests: XCTestCase {
+
+  private var parameters: Parameters!
+  private var kernel: Kernel!
+  private var audioUnit: FilterAudioUnit!
+
+  override func setUpWithError() throws {
+    parameters = Parameters()
+    kernel = Kernel()
+    audioUnit = try FilterAudioUnit(componentDescription: acd)
+    audioUnit.configure(parameters: parameters, kernel: kernel)
+  }
+
+  override func tearDownWithError() throws {
+  }
+
+  func testInstantiate() throws {
+    let created = expectation(description: "FilterAudioUnit async")
+    FilterAudioUnit.instantiate(with: acd) { audioUnit, error in
+      guard let _ = audioUnit, error == nil else { XCTFail("failed"); return }
+      created.fulfill()
+    }
+
+    wait(for: [created], timeout: 5)
+  }
+
+  func testInitialState() throws {
+    XCTAssertFalse(audioUnit.shouldBypassEffect)
+    XCTAssertTrue(audioUnit.canProcessInPlace)
+    XCTAssertTrue(audioUnit.supportsUserPresets)
+    XCTAssertEqual(audioUnit.inputBusses.count, 1)
+    XCTAssertEqual(audioUnit.outputBusses.count, 1)
+  }
+
+  func testNames() throws {
+    XCTAssertEqual(audioUnit.audioUnitShortName, nil)
+    XCTAssertEqual(audioUnit.audioUnitName, "AUDelay")
+  }
+
+  func testConfigure() throws {
+    XCTAssertNotNil(audioUnit.currentPreset)
+    XCTAssertEqual(audioUnit.currentPreset?.number, parameters.factoryPresets.first?.number)
+    XCTAssertNotNil(audioUnit.parameterTree)
+    XCTAssertEqual(audioUnit.factoryPresets?.count, 2)
+  }
+
+  func testClearCurrentPresetIfFactoryPreset() throws {
+    XCTAssertNotNil(audioUnit.currentPreset)
+    audioUnit.clearCurrentPresetIfFactoryPreset()
+    XCTAssertNil(audioUnit.currentPreset)
+  }
+
+  func testShouldBypassEffect() throws {
+    XCTAssertFalse(audioUnit.shouldBypassEffect)
+    audioUnit.shouldBypassEffect = true
+    XCTAssertTrue(audioUnit.shouldBypassEffect)
+    XCTAssertTrue(kernel.bypassed)
+  }
+
+  func testFullStateHasPresetInfo() throws {
+    let state = audioUnit.fullState
+    XCTAssertNotNil(state)
+    XCTAssertEqual(state?[kAUPresetNumberKey] as? NSNumber, 0)
+    XCTAssertEqual(state?[kAUPresetNameKey] as? String, "Preset 1")
+  }
+
+  func testSettingFullStateChangesCurrentPreset() throws {
+    XCTAssertEqual(audioUnit.currentPreset?.number, 0)
+    var state = audioUnit.fullState
+    XCTAssertNotNil(state)
+    state?[kAUPresetNumberKey] = 1
+    audioUnit.fullState = state
+    XCTAssertEqual(audioUnit.currentPreset?.number, 1)
+
+    state?.removeValue(forKey: kAUPresetNumberKey)
+    audioUnit.fullState = state
+    XCTAssertNil(audioUnit.currentPreset)
+
+    state?.removeValue(forKey: kAUPresetNameKey)
+    audioUnit.fullState = state
+    XCTAssertNil(audioUnit.currentPreset)
+  }
+
+  func testAllocateResources() throws {
+    XCTAssertEqual(kernel.maxFramesToRender, 0)
+    try audioUnit.allocateRenderResources()
+    XCTAssertEqual(kernel.maxFramesToRender, 512)
+    XCTAssertEqual(kernel.busCount, 1)
+    audioUnit.deallocateRenderResources()
+    XCTAssertEqual(kernel.maxFramesToRender, 0)
+  }
+
+  func testParameterChanges() throws {
+    XCTAssertEqual(kernel.maxFramesToRender, 0)
+    XCTAssertEqual(kernel.firstParam, 0.0)
+    XCTAssertEqual(kernel.secondParam, 0.0)
+
+    parameters.parameters[0].setValue(12.34, originator: nil)
+    XCTAssertEqual(kernel.firstParam, 12.34)
+    parameters.parameters[1].setValue(56.78, originator: nil)
+    XCTAssertEqual(kernel.secondParam, 56.78)
+
+    // When rendering, parameter changes are scheduled to be delivered to the render thread, not directly to the kernel
+    try audioUnit.allocateRenderResources()
+    parameters.parameters[0].setValue(43.21, originator: nil)
+    XCTAssertEqual(kernel.firstParam, 12.34)
+  }
+
+  func testInternalRenderBlock() throws {
+    XCTAssertNotNil(audioUnit.renderBlock)
+    XCTAssertNotNil(audioUnit.internalRenderBlock)
+    XCTAssertEqual(kernel.renderCount, 0)
+
+    let buffer = AVAudioPCMBuffer(pcmFormat: .init(commonFormat: .pcmFormatInt16, sampleRate: 44100.0, channels: 2,
+                                                   interleaved: false)!, frameCapacity: 512)!
+
+    var flags: AudioUnitRenderActionFlags = .init()
+    var timestamp: AudioTimeStamp = .init()
+    let frameCount: AUAudioFrameCount = 1
+    let outputBus: Int = 0
+    let bufferList: UnsafeMutablePointer<AudioBufferList> = buffer.mutableAudioBufferList
+    let eventList: UnsafePointer<AURenderEvent>? = nil
+    let pullInputBlock: AURenderPullInputBlock? = nil
+    let result = audioUnit.internalRenderBlock(&flags, &timestamp, frameCount, outputBus, bufferList,
+                                               eventList, pullInputBlock)
+    XCTAssertEqual(result, noErr)
+    XCTAssertEqual(kernel.renderCount, 1)
+  }
+
+  func testParametersForOverview() {
+    var indices = audioUnit.parametersForOverview(withCount: 1)
+    XCTAssertEqual(indices.count, 1)
+    XCTAssertEqual(indices[0], 123)
+    indices = audioUnit.parametersForOverview(withCount: 2)
+    XCTAssertEqual(indices.count, 2)
+    XCTAssertEqual(indices[0], 123)
+    XCTAssertEqual(indices[1], 456)
+  }
+
+  func testViewManagement() {
+    XCTAssertNil(audioUnit.viewConfigurationManager)
+    XCTAssertEqual(IndexSet(integersIn: 0..<2), audioUnit.supportedViewConfigurations([
+      .init(width: 0, height: 0, hostHasController: false),
+      .init(width: 1, height: 0, hostHasController: false)
+    ]))
+
+    let mvcm = MockViewConfigurationManager()
+    audioUnit.viewConfigurationManager = mvcm
+    XCTAssertEqual(IndexSet(), audioUnit.supportedViewConfigurations([
+      .init(width: 0, height: 0, hostHasController: false),
+      .init(width: 1, height: 0, hostHasController: false)
+    ]))
+
+    audioUnit.select(.init(width: 100, height: 200, hostHasController: false))
+    XCTAssertEqual(mvcm.activeViewConfiguration?.width, 100)
+    XCTAssertEqual(mvcm.activeViewConfiguration?.height, 200)
+  }
+}

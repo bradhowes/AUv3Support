@@ -76,7 +76,8 @@ let package = Package(
     ),
     .testTarget(
       name: "AUv3SupportTests",
-      dependencies: ["AUv3Support"]
+      dependencies: ["AUv3Support"],
+      resources: [.copy("Resources")]
     ),
     .testTarget(
       name: "DSPHeadersTests",
