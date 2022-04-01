@@ -6,19 +6,17 @@ private let invalidCode = FourCharCode("????")
 
 class FourCharCodeTests: XCTestCase {
 
-  override func setUpWithError() throws {
+  func testInvalid() throws {
+    XCTAssertEqual(FourCharCode(""), invalidCode)
+    XCTAssertEqual(FourCharCode("1"), invalidCode)
+    XCTAssertEqual(FourCharCode("12"), invalidCode)
+    XCTAssertEqual(FourCharCode("123"), invalidCode)
+    XCTAssertEqual(FourCharCode("12345"), invalidCode)
   }
 
-  override func tearDownWithError() throws {
-  }
-
-  func testInit() throws {
-    XCTAssertEqual(FourCharCode(stringLiteral: ""), invalidCode)
-    XCTAssertEqual(FourCharCode(stringLiteral: "1"), invalidCode)
-    XCTAssertEqual(FourCharCode(stringLiteral: "12"), invalidCode)
-    XCTAssertEqual(FourCharCode(stringLiteral: "123"), invalidCode)
-    XCTAssertEqual(FourCharCode(stringLiteral: "12345"), invalidCode)
-
-    XCTAssertEqual(FourCharCode(stringLiteral: "1234").stringValue, "1234")
+  func testValid() {
+    XCTAssertEqual(FourCharCode("1234").stringValue, "1234")
+    let z = "9876"
+    XCTAssertEqual(FourCharCode(z).stringValue, "9876")
   }
 }

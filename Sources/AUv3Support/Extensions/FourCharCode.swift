@@ -22,14 +22,6 @@ extension FourCharCode: ExpressibleByStringLiteral {
     self = code
   }
   
-  public init(extendedGraphemeClusterLiteral value: String) {
-    self = FourCharCode(stringLiteral: value)
-  }
-  
-  public init(unicodeScalarLiteral value: String) {
-    self = FourCharCode(stringLiteral: value)
-  }
-  
   public init(_ value: String) {
     self = FourCharCode(stringLiteral: value)
   }
@@ -43,8 +35,8 @@ extension FourCharCode {
   public var stringValue: String {
     withUnsafePointer(to: bigEndian) { pointer in
       pointer.withMemoryRebound(to: UInt8.self, capacity: Self.bytesSizeForStringValue) { bytes in
-        String(bytes: UnsafeBufferPointer(start: bytes, count: Self.bytesSizeForStringValue),
-               encoding: .macOSRoman) ?? "????"
+        String(bytes: UnsafeBufferPointer(start: bytes, count: Self.bytesSizeForStringValue), encoding: .macOSRoman) ??
+        "????"
       }
     }
   }
