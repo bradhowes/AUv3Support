@@ -1,5 +1,5 @@
 [![CI](https://github.com/bradhowes/AUv3Support/actions/workflows/CI.yml/badge.svg)](https://github.com/bradhowes/AUv3Support/actions/workflows/CI.yml)
-![Swift](https://img.shields.io/badge/Swift-5.5-red.svg)
+[![COV](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/bradhowes/9216666566d5badd2c824d3524181377/raw/AUv3Support-coverage.json)](https://github.com/bradhowes/AUv3Support/blob/main/.github/workflows/CI.yml)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fbradhowes%2FAUv3Support%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/bradhowes/AUv3Support)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fbradhowes%2FAUv3Support%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/bradhowes/AUv3Support)
 [![License: MIT](https://img.shields.io/badge/License-MIT-A31F34.svg)](https://opensource.org/licenses/MIT)
