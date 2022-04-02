@@ -9,7 +9,7 @@ import AudioToolbox
 public protocol AUAudioUnitPresetsFacade: AnyObject {
 
   /// Obtain an array of factory presets that is never nil.
-  var factoryPresetsNonNil: [AUAudioUnitPreset] { get }
+  var factoryPresets: [AUAudioUnitPreset]? { get }
 
   /// Obtain an array of user presets.
   var userPresets: [AUAudioUnitPreset] { get }
@@ -24,11 +24,13 @@ public protocol AUAudioUnitPresetsFacade: AnyObject {
   func deleteUserPreset(_ preset: AUAudioUnitPreset) throws
 }
 
-extension AUAudioUnit: AUAudioUnitPresetsFacade {
+extension AUAudioUnitPresetsFacade {
 
   /// Variation of `factoryPresets` that is never nil.
   public var factoryPresetsNonNil: [AUAudioUnitPreset] { factoryPresets ?? [] }
 }
+
+extension AUAudioUnit: AUAudioUnitPresetsFacade {}
 
 /**
  Manager of user presets for the AUv3 component. Supports creation, renaming, and deletion. Also, manages the

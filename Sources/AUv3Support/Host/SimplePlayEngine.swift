@@ -8,7 +8,7 @@ import os.log
  */
 public final class SimplePlayEngine {
   static let bundle = Bundle(for: SimplePlayEngine.self)
-  static let bundleIdentifier = bundle.bundleIdentifier!
+  static let bundleIdentifier = bundle.bundleIdentifier ?? "unknown"
 
   private let log: OSLog
   private let engine = AVAudioEngine()
@@ -43,6 +43,7 @@ public final class SimplePlayEngine {
     self.log = .init(subsystem: name, category: "SimplePlayEngine")
     self.file = Self.audioFileResource(name: audioFileName)
     engine.attach(player)
+    engine.connect(player, to: engine.mainMixerNode, format: file.processingFormat)
   }
 }
 
@@ -58,6 +59,7 @@ extension SimplePlayEngine {
     os_log(.debug, log: log, "connectEffect BEGIN")
     defer { completion() }
     os_log(.debug, log: log, "connectEffect - attaching effect")
+    engine.disconnectNodeOutput(player)
     engine.attach(audioUnit)
     os_log(.debug, log: log, "connectEffect - player -> effect")
     engine.connect(player, to: audioUnit, format: file.processingFormat)

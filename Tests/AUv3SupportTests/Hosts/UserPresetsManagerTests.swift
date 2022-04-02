@@ -6,8 +6,8 @@ private class MockAudioUnit: AUAudioUnitPresetsFacade {
   static let log = Shared.logger("SubSystem", "Category")
   private let log = MockAudioUnit.log
 
-  var factoryPresetsNonNil: [AUAudioUnitPreset] = [.init(number: 0, name: "Zero"),
-                                                   .init(number: 1, name: "One")
+  var factoryPresets: [AUAudioUnitPreset]? = [.init(number: 0, name: "Zero"),
+                                              .init(number: 1, name: "One")
   ]
   var userPresets: [AUAudioUnitPreset] = [.init(number: -9, name: "The User 1"),
                                           .init(number: -4, name: "A User 2"),
@@ -59,6 +59,20 @@ class UserPresetsManagerTests: XCTestCase {
     XCTAssertNil(upm.currentPreset)
   }
 
+  func testNoPresets() {
+    mock.factoryPresets = nil
+    mock.userPresets = []
+    upm = UserPresetsManager(for: mock)
+
+    XCTAssertNotNil(mock.factoryPresetsNonNil)
+    XCTAssertEqual(mock.factoryPresetsNonNil.count, 0)
+    XCTAssertEqual(upm.nextNumber, -1)
+    XCTAssertEqual(upm.nextNumber, -1)
+
+    XCTAssertNoThrow(upm.makeCurrentPreset(number: 0))
+    XCTAssertNil(upm.currentPreset)
+  }
+
   func testMakeCurrent() {
     upm.makeCurrentPreset(name: "blah")
     XCTAssertNil(upm.currentPreset)
@@ -93,6 +107,10 @@ class UserPresetsManagerTests: XCTestCase {
     XCTAssertEqual(upm.currentPreset?.name, "A New Hope")
     XCTAssertEqual(upm.presetsOrderedByName.map { $0.name },
                    ["A New Hope", "A User 2", "Blah User 3", "The User 1"])
+    try upm.create(name: "Another")
+    try upm.create(name: "And Another")
+    try upm.create(name: "And Another 1")
+    try upm.create(name: "And Another 2")
   }
 
   func testDeleteCurrent() throws {
@@ -109,6 +127,9 @@ class UserPresetsManagerTests: XCTestCase {
                    ["A User 2", "Blah User 3"])
     upm.makeCurrentPreset(number: -9)
     XCTAssertNil(upm.currentPreset)
+
+    upm.makeCurrentPreset(number: 0)
+    try upm.deleteCurrent()
   }
 
   func testUpdate() throws {
@@ -119,6 +140,9 @@ class UserPresetsManagerTests: XCTestCase {
     XCTAssertEqual(upm.currentPreset?.name, "Skippy")
     XCTAssertEqual(upm.presetsOrderedByName.map { $0.name },
                    ["A User 2", "Blah User 3", "Skippy"])
+
+    upm.makeCurrentPreset(number: 0)
+    try upm.update(preset: AUAudioUnitPreset(number: 1, name: "Blah"))
   }
 
   func testRename() throws {
@@ -129,5 +153,8 @@ class UserPresetsManagerTests: XCTestCase {
     XCTAssertEqual(upm.currentPreset?.name, "Crisis")
     XCTAssertEqual(upm.presetsOrderedByName.map { $0.name },
                    ["Blah User 3", "Crisis", "The User 1"])
+
+    upm.makeCurrentPreset(number: 0)
+    try upm.renameCurrent(to: "Blah")
   }
 }

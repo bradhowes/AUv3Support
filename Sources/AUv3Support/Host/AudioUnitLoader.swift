@@ -258,7 +258,7 @@ public extension AudioUnitLoader {
    Restore the state of the AUv3 component using values found in UserDefaults.
    */
   func restore() {
-    guard let audioUnit = auAudioUnit else { fatalError() }
+    guard let audioUnit = auAudioUnit else { return }
     os_log(.debug, log: log, "restore BEGIN")
 
     let lastState = UserDefaults.standard.dictionary(forKey: lastStateKey)

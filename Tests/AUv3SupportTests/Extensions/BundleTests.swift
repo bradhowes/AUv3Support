@@ -15,21 +15,20 @@ class BundleTests: XCTestCase {
 
   func testAppExtensionBundleInfo() {
     let us = Bundle(for: BundleTests.self)
-    // print(us.resourcePath)
-
     var path = us.resourcePath!
-    // print(path)
 
     if !FileManager.default.fileExists(atPath: path) {
-      // AUv3SupportPackage_AUv3SupportTests.bundle/Resources
       path = "/" + path.split(separator: "/").dropLast(3).joined(separator: "/").appending("/AUv3SupportPackage_AUv3SupportTests.bundle/Resources")
-      print(path)
     } else {
+#if os(iOS)
       path = path.appending("/AUv3SupportPackage_AUv3SupportTests.bundle/Resources")
+#elseif os(macOS)
+      path = path.appending("/AUv3SupportPackage_AUv3SupportTests.bundle/Contents/Resources/Resources")
+#endif
     }
 
     path = path.appending("/Info.plist")
-    // print(path)
+    print(path)
 
     let dict = NSDictionary(contentsOfFile: path)!
     let bundle = MockBundle(dict: dict)

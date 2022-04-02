@@ -8,6 +8,10 @@ fileprivate enum ParameterAddress: UInt64, ParameterAddressProvider {
   case two
 }
 
+fileprivate class Blob: NSObject, ParameterAddressHolder {
+  var parameterAddress: AUParameterAddress = 0
+}
+
 final class ParameterDefinitionTests: XCTestCase {
 
   func testBoolDef() throws {
@@ -19,6 +23,17 @@ final class ParameterDefinitionTests: XCTestCase {
     XCTAssertEqual(a.range.upperBound, 1.0)
     XCTAssertFalse(a.ramping)
     XCTAssertFalse(a.logScale)
+    let param = a.parameter
+    XCTAssertFalse(param.flags.contains(.flag_CanRamp))
+    XCTAssertTrue(param.flags.contains(.flag_IsReadable))
+    XCTAssertTrue(param.flags.contains(.flag_IsWritable))
+    XCTAssertFalse(param.flags.contains(.flag_DisplayLogarithmic))
+  }
+
+  func testParameterAddressHolder() throws {
+    let blob = Blob()
+    blob.setParameterAddress(ParameterAddress.one)
+    XCTAssertEqual(blob.parameterAddress, 1234)
   }
 
   func testPercentDef() throws {
@@ -42,5 +57,11 @@ final class ParameterDefinitionTests: XCTestCase {
     XCTAssertEqual(a.range.upperBound, 32.0)
     XCTAssertTrue(a.ramping)
     XCTAssertTrue(a.logScale)
+
+    let param = a.parameter
+    XCTAssertTrue(param.flags.contains(.flag_CanRamp))
+    XCTAssertTrue(param.flags.contains(.flag_IsReadable))
+    XCTAssertTrue(param.flags.contains(.flag_IsWritable))
+    XCTAssertTrue(param.flags.contains(.flag_DisplayLogarithmic))
   }
 }
