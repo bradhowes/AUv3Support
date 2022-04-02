@@ -26,6 +26,16 @@ These libraries are now being used by my [SimplyFlange](https://github.com/bradh
 [SimplyPhaser](https://github.com/bradhowes/SimplyPhaser), and
 [AUv3Template](https://github.com/bradhowes/AUv3Template) projects.
 
+# Credits
+
+All of the code has been written by myself over the course of several years working on AUv3 app extensions. There are a collection of 
+routines in [ConstMath](Sources/SF2Lib/include/SF2Lib/ConstMath.hpp) that provide compile-time values for sine, natural log, and 
+exponential function. These are used to generate some lookup tables at compile time. The functions that do this were taken from 
+Lakshay Garg's [compile_time](https://github.com/lakshayg/compile_time) (no specific license) repo and Keith O'Hara's 
+[GCEM](https://github.com/kthohr/gcem) (Apache license) repo. I started off with `compile_time` but I lifted the natural log function 
+from `GCEM`. Note that the use of these compile-time methods are *only* for a very limited set of use-cases, all of which are not that 
+demanding in terms of precision.
+
 # AUv3Support
 
 In the AUv3-Support product you will find various classes and extensions to make things easier when working with AUv3
