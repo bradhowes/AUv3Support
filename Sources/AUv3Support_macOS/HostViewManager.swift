@@ -23,7 +23,17 @@ public final class HostViewManager: NSObject {
   private var currentPresetObserverToken: NSKeyValueObservation?
   private var userPresetsObserverToken: NSKeyValueObservation?
 
+  public static let showedInitialAlertKey = "showedInitialAlert"
+
   private var showingInitialPrompt = false
+
+  public static var alwaysShowInstructions: Bool = false
+
+  public static var showInstructions: Bool {
+    let firstTime = (UserDefaults.standard.bool(forKey: showedInitialAlertKey) == false) || alwaysShowInstructions
+    let takingSnapshots = CommandLine.arguments.first { $0 == "snaps" } != nil
+    return firstTime && !takingSnapshots
+  }
 
   public init(config: HostViewConfig) {
     self.config = config
@@ -55,15 +65,12 @@ public final class HostViewManager: NSObject {
 extension HostViewManager {
 
   public func showInitialPrompt() {
-    let showedAlertKey = "showedInitialAlert"
-    guard UserDefaults.standard.bool(forKey: showedAlertKey) == false else {
-      return
-    }
+    guard Self.showInstructions else { return }
 
     disablePlaying()
     showingInitialPrompt = true
 
-    UserDefaults.standard.set(true, forKey: showedAlertKey)
+    UserDefaults.standard.set(true, forKey: Self.showedInitialAlertKey)
     let alert = NSAlert()
     alert.alertStyle = .informational
     alert.messageText = "AUv3 Component Installed"

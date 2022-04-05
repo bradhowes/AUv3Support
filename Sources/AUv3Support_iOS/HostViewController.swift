@@ -42,9 +42,18 @@ extension Shared {
 public final class HostViewController: UIViewController {
   private var log: OSLog!
 
+  public static let showedInitialAlertKey = "showedInitialAlert"
+
+  public static var alwaysShowInstructions: Bool = false
+
+  public static var showInstructions: Bool {
+    let firstTime = (UserDefaults.standard.bool(forKey: showedInitialAlertKey) == false) || alwaysShowInstructions
+    let takingSnapshots = CommandLine.arguments.first { $0 == "snaps" } != nil
+    return firstTime && !takingSnapshots
+  }
+
   public var config: HostViewConfig?
 
-  private let showedInitialAlert = "showedInitialAlert"
 
   private var audioUnitLoader: AudioUnitLoader?
   public var userPresetsManager: UserPresetsManager?
@@ -123,11 +132,7 @@ applications.
 
     applyTheme()
 
-    let alwaysShow = false
-    if UserDefaults.standard.bool(forKey: showedInitialAlert) == false || alwaysShow {
-      instructions.isHidden = false
-    }
-
+    instructions.isHidden = !Self.showInstructions
     config.appDelegate.setResigningActiveBlock {
       self.saveState()
       self.stopPlaying()
@@ -211,7 +216,7 @@ extension HostViewController {
 
   @IBAction public func dismissInstructions(_ sender: Any) {
     instructions.isHidden = true
-    UserDefaults.standard.set(true, forKey: showedInitialAlert)
+    UserDefaults.standard.set(true, forKey: Self.showedInitialAlertKey)
   }
 }
 

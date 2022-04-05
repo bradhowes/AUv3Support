@@ -80,6 +80,14 @@ let package = Package(
       resources: [.copy("Resources")]
     ),
     .testTarget(
+      name: "AUv3Support_iOSTests",
+      dependencies: ["AUv3Support", "AUv3Support_iOS"]
+    ),
+    .testTarget(
+      name: "AUv3Support_macOSTests",
+      dependencies: ["AUv3Support", "AUv3Support_macOS"]
+    ),
+    .testTarget(
       name: "DSPHeadersTests",
       dependencies: ["DSPHeaders"],
       exclude: ["Pirkle/README.md",
