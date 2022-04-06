@@ -216,7 +216,9 @@ extension FilterAudioUnit {
          let name = state[kAUPresetNameKey] as? String,
          let number = state[kAUPresetNumberKey] as? NSNumber {
         os_log(.info, log: log, "name %{public}s number %d", name, number.intValue)
-        currentPreset = AUAudioUnitPreset(number: number.intValue, name: name)
+        if _currentPreset?.name != name || _currentPreset?.number != number {
+          _currentPreset = AUAudioUnitPreset(number: number.intValue, name: name)
+        }
       } else {
         currentPreset = nil
       }
