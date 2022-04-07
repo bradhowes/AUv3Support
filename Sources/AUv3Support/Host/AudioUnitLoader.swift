@@ -265,7 +265,7 @@ public extension AudioUnitLoader {
     os_log(.debug, log: log, "restore - lastState: %{public}s", lastState.descriptionOrNil)
 
     if let lastState = lastState {
-      audioUnit.fullState = lastState
+      DispatchQueue.global(qos: .userInteractive).async { audioUnit.fullState = lastState }
     }
   }
 }
