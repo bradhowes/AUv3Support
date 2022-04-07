@@ -264,7 +264,10 @@ extension HostViewController: ActionSupporter {
   }
 
   public func confirmAction(title: String, message: String, _ closure: @escaping () -> Void) {
-    yesOrNo(title: title, message: message) { _ in closure() }
+    let controller = UIAlertController(title: title, message: message, preferredStyle: .alert)
+    controller.addAction(.init(title: "Continue", style: .destructive, handler: continuation))
+    controller.addAction(.init(title: "Cancel", style: .cancel))
+    present(controller, animated: true)
   }
 
   public func notifyFailure(title: String, message: String) {
@@ -283,13 +286,6 @@ extension HostViewController {
   public func notify(title: String, message: String) {
     let controller = UIAlertController(title: title, message: message, preferredStyle: .alert)
     controller.addAction(UIAlertAction(title: "OK", style: .default))
-    present(controller, animated: true)
-  }
-
-  public func yesOrNo(title: String, message: String, continuation: @escaping (UIAlertAction) -> Void) {
-    let controller = UIAlertController(title: title, message: message, preferredStyle: .alert)
-    controller.addAction(.init(title: "Continue", style: .default, handler: continuation))
-    controller.addAction(.init(title: "Cancel", style: .cancel))
     present(controller, animated: true)
   }
 }
