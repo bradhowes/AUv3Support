@@ -15,7 +15,7 @@ public extension AUViewController {
   static func updateEditorsOnPresetChange(_ audioUnit: FilterAudioUnit,
                                           editors: [AUParameterEditor]) -> NSKeyValueObservation {
     return audioUnit.observe(\.currentPreset) { _, _ in
-      DispatchQueue.main.async { editors.forEach { $0.updateControl() }
+      DispatchQueue.main.async { editors.forEach { $0.updateControl() } }
     }
   }
 }
