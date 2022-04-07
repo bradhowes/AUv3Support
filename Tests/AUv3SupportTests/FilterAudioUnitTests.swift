@@ -9,6 +9,20 @@ fileprivate let acd = AudioComponentDescription(componentType: FourCharCode("auf
                                                 componentManufacturer: FourCharCode("appl"),
                                                 componentFlags: 0, componentFlagsMask: 0)
 
+fileprivate class MockControl: NSObject, RangedControl {
+  static let log = Shared.logger("foo", "bar")
+  let log = MockControl.log
+  var parameterAddress: UInt64 = 0
+  var value: AUValue = 0.0 {
+    didSet {
+      expectation?.fulfill()
+    }
+  }
+  var minimumValue: Float = 0.0
+  var maximumValue: Float = 100.0
+  var expectation: XCTestExpectation?
+}
+
 fileprivate class Parameters: ParameterSource {
 
   var parameters: [AUParameter] = [
@@ -25,7 +39,15 @@ fileprivate class Parameters: ParameterSource {
   var factoryPresets: [AUAudioUnitPreset] = [.init(number: 0, name: "Preset 1"), .init(number: 1, name: "Preset 2")]
 
   func useFactoryPreset(_ preset: AUAudioUnitPreset) {
-
+    switch preset.number {
+    case 0:
+      parameters[0].setValue(10.0, originator: nil)
+      parameters[1].setValue(11.0, originator: nil)
+    case 1:
+      parameters[0].setValue(20.0, originator: nil)
+      parameters[1].setValue(21.0, originator: nil)
+    default: break
+    }
   }
 }
 
@@ -93,12 +115,18 @@ final class FilterAudioUnitTests: XCTestCase {
   private var parameters: Parameters!
   private var kernel: Kernel!
   private var audioUnit: FilterAudioUnit!
+  private var control: MockControl!
+  private var editor: FloatParameterEditor!
 
   override func setUpWithError() throws {
     parameters = Parameters()
     kernel = Kernel()
     audioUnit = try FilterAudioUnit(componentDescription: acd)
     audioUnit.configure(parameters: parameters, kernel: kernel)
+    control = MockControl()
+    editor = FloatParameterEditor(parameter: parameters.parameters[0],
+                                  formatter: { "\($0)" }, rangedControl: control,
+                                  label: nil)
   }
 
   override func tearDownWithError() throws {
@@ -180,10 +208,21 @@ final class FilterAudioUnitTests: XCTestCase {
     XCTAssertEqual(kernel.maxFramesToRender, 0)
   }
 
+  func testUseFactoryPreset() throws {
+    control.expectation = expectation(description: "control updated")
+    XCTAssertEqual(kernel.firstParam, 10.0)
+    XCTAssertEqual(kernel.secondParam, 11.0)
+    audioUnit.currentPreset = AUAudioUnitPreset(number: 1, name: "Blah")
+    XCTAssertEqual(kernel.firstParam, 20.0)
+    XCTAssertEqual(kernel.secondParam, 21.0)
+    waitForExpectations(timeout: 10.0)
+    XCTAssertEqual(control.value, 20.0)
+  }
+
   func testParameterChanges() throws {
     XCTAssertEqual(kernel.maxFramesToRender, 0)
-    XCTAssertEqual(kernel.firstParam, 0.0)
-    XCTAssertEqual(kernel.secondParam, 0.0)
+    XCTAssertEqual(kernel.firstParam, 10.0)
+    XCTAssertEqual(kernel.secondParam, 11.0)
 
     parameters.parameters[0].setValue(12.34, originator: nil)
     XCTAssertEqual(kernel.firstParam, 12.34)

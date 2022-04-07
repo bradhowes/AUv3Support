@@ -1,6 +1,7 @@
 // Copyright © 2021 Brad Howes. All rights reserved.
 
 import AudioToolbox
+import os.log
 
 /**
  Protocol for UI controls that can provide a parameter value.
@@ -25,16 +26,30 @@ public protocol AUParameterEditor: AnyObject {
    - parameter source: the control that caused the change
    */
   func controlChanged(source: AUParameterValueProvider)
+}
 
-  /**
-   Notification that the AUParameter value changed
-   */
-  func parameterChanged()
+public class AUParameterEditorBase: NSObject {
+  public let log: OSLog
+  public let parameter: AUParameter
 
-  /**
-   Apply a new value to both the control and the parameter.
+  public private(set) var parameterObserverToken: AUParameterObserverToken!
 
-   - parameter value: the new value to use
-   */
-  func setEditedValue(_ value: AUValue)
+  public init(parameter: AUParameter) {
+    self.log = Shared.logger("AUParameterEditor(" + parameter.displayName + ")")
+    self.parameter = parameter
+    super.init()
+
+    parameterObserverToken = parameter.token(byAddingParameterObserver: { address, value in
+      self.parameterChanged(address: address, value: value)
+    })
+  }
+
+  private func parameterChanged(address: AUParameterAddress, value: AUValue) {
+    os_log(.info, log: log, "parameterChanged BEGIN - address: %d value: %f", address, value)
+    guard address == self.parameter.address else { return }
+    DispatchQueue.main.async { self.handleParameterChanged(value: value) }
+    os_log(.info, log: log, "parameterChanged END")
+  }
+
+  @objc internal func handleParameterChanged(value: AUValue) {}
 }

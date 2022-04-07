@@ -12,24 +12,20 @@ public protocol BooleanControl: NSObject {
 /**
  An editor for a boolean parameter value that uses a switch element.
  */
-public final class BooleanParameterEditor: NSObject {
-  private let log = Shared.logger("BooleanParameterControl")
+public final class BooleanParameterEditor: AUParameterEditorBase {
   private let booleanControl: BooleanControl
 
-  public let parameter: AUParameter
   public var control: NSObject { booleanControl }
-  private var parameterObserverToken: AUParameterObserverToken!
 
   public init(parameter: AUParameter, booleanControl: BooleanControl) {
-    self.parameter = parameter
     self.booleanControl = booleanControl
-    super.init()
-
-    parameterObserverToken = parameter.token(byAddingParameterObserver: { [weak self] _, _ in
-      self?.parameterChanged()
-    })
-
+    super.init(parameter: parameter)
     setState(parameter.value)
+  }
+
+  internal override func handleParameterChanged(value: AUValue) {
+    precondition(Thread.isMainThread, "handleParameterChanged found running on non-main thread")
+    setState(value)
   }
 }
 
@@ -55,14 +51,6 @@ extension BooleanParameterEditor: AUParameterEditor {
   }
 
   /**
-   Notification that the AUParameter value changed
-   */
-  public func parameterChanged() {
-    os_log(.info, log: log, "parameterChanged - %f", parameter.value)
-    DispatchQueue.main.async(execute: handleParameterChanged)
-  }
-
-  /**
    Apply a new value to both the control and the parameter.
 
    - parameter value: the new value to use
@@ -76,11 +64,6 @@ extension BooleanParameterEditor: AUParameterEditor {
 }
 
 private extension BooleanParameterEditor {
-
-  func handleParameterChanged() {
-    precondition(Thread.isMainThread, "handleParameterChanged found running on non-main thread")
-    setState(parameter.value)
-  }
 
   func setState(_ value: AUValue) {
     os_log(.info, log: log, "setState - value: %f current: %d", value, booleanControl.booleanState)

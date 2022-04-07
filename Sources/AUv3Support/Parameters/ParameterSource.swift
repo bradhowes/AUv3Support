@@ -29,6 +29,8 @@ public protocol ParameterSource {
    - parameter dict: the dictionary to update
    */
   func storeParameters(into dict: inout [String: Any])
+
+  func useUserPreset(from dict: [String: Any])
 }
 
 extension ParameterSource {
@@ -36,6 +38,12 @@ extension ParameterSource {
   public func storeParameters(into dict: inout [String: Any]) {
     for parameter in parameters {
       dict[parameter.identifier] = parameter.value
+    }
+  }
+
+  public func useUserPreset(from dict: [String: Any]) {
+    for parameter in parameters {
+      parameter.value = dict[parameter.identifier] as! AUValue
     }
   }
 }

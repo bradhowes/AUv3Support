@@ -170,7 +170,7 @@ extension FilterAudioUnit {
         if let state = try? presetState(for: preset) {
           os_log(.info, log: log, "state: %{public}s", state.debugDescription)
           fullState = state
-          _currentPreset = preset
+          parameters.useUserPreset(from: state)
           return
         }
       }

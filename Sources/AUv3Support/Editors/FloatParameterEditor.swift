@@ -21,10 +21,7 @@ public protocol RangedControl: ParameterAddressHolder {
 /**
  An editor for a float value parameter that relies on a RangedControl to provide a value between a range of values.
  */
-public final class FloatParameterEditor: NSObject {
-  private let log: OSLog
-
-  public let parameter: AUParameter
+public final class FloatParameterEditor: AUParameterEditorBase {
   public var control: NSObject { return rangedControl }
 
   private let logSliderMinValue: Float = 0.0
@@ -37,7 +34,6 @@ public final class FloatParameterEditor: NSObject {
   private let useLogValues: Bool
   private var restoreNameTimer: Timer?
   private var hasActiveLabel: Bool = false
-  private var parameterObserverToken: AUParameterObserverToken!
 
   #if os(iOS)
   private var valueEditor: ValueEditor!
@@ -53,17 +49,11 @@ public final class FloatParameterEditor: NSObject {
    */
   public init(parameter: AUParameter, formatter: @escaping (AUValue) -> String, rangedControl: RangedControl,
               label: Label?) {
-    self.log = Shared.logger("FloatParameterEditor")
-    self.parameter = parameter
     self.formatter = formatter
     self.rangedControl = rangedControl
     self.label = label
     self.useLogValues = parameter.flags.contains(.flag_DisplayLogarithmic)
-    super.init()
-
-    self.parameterObserverToken = parameter.token(byAddingParameterObserver: { [weak self] _, _ in
-      self?.parameterChanged()
-    })
+    super.init(parameter: parameter)
 
     rangedControl.setParameterAddress(parameter.address)
     label?.setParameterAddress(parameter.address)
@@ -84,6 +74,12 @@ public final class FloatParameterEditor: NSObject {
       rangedControl.maximumValue = parameter.maxValue
       rangedControl.value = parameter.value
     }
+  }
+
+  internal override func handleParameterChanged(value: AUValue) {
+    precondition(Thread.isMainThread, "handleParameterChanged found running on non-main thread")
+    showNewValue(value)
+    rangedControl.value = useLogValues ? paramValueToControlLogValue(value) : value
   }
 }
 
@@ -135,22 +131,6 @@ extension FloatParameterEditor: AUParameterEditor {
       parameter.setValue(value, originator: parameterObserverToken)
     }
     os_log(.info, log: log, "controlChanged END")
-  }
-
-  /**
-   The parameter changed, perhaps due to a preset change or some external means. There is no expectation that it is
-   running on the main thread.
-   */
-  public func parameterChanged() {
-    os_log(.info, log: log, "parameterChanged BEGIN - address: %d value: %f", parameter.address, parameter.value)
-    DispatchQueue.main.async(execute: handleParameterChanged)
-    os_log(.info, log: log, "parameterChanged END")
-  }
-
-  private func handleParameterChanged() {
-    precondition(Thread.isMainThread, "handleParameterChanged found running on non-main thread")
-    showNewValue(parameter.value)
-    rangedControl.value = useLogValues ? paramValueToControlLogValue(parameter.value) : parameter.value
   }
 
   /**
