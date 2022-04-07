@@ -139,8 +139,8 @@ extension FloatParameterEditor: AUParameterEditor {
 
    - parameter value: the new value to use.
    */
-  public func setEditedValue(_ value: AUValue) {
-    os_log(.debug, log: log, "setEditedValue BEGIN - value: %f", value)
+  public func setValue(_ value: AUValue) {
+    os_log(.debug, log: log, "setValue BEGIN - value: %f", value)
     precondition(Thread.isMainThread, "setEditedValue found running on non-main thread")
 
     let newValue = value.clamped(to: parameter.minValue...parameter.maxValue)

@@ -93,7 +93,7 @@ extension ValueEditor {
        let stringValue = parameterValueEditor.text,
        let value = AUValue(stringValue),
        value != editor.parameter.value {
-      editing?.setEditedValue(value)
+      editing?.setValue(value)
     }
 
     editing = nil

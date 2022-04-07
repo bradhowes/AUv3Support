@@ -55,8 +55,8 @@ extension BooleanParameterEditor: AUParameterEditor {
 
    - parameter value: the new value to use
    */
-  public func setEditedValue(_ value: AUValue) {
-    os_log(.info, log: log, "setEditedValue - %f", value)
+  public func setValue(_ value: AUValue) {
+    os_log(.info, log: log, "setValue - %f", value)
     precondition(Thread.isMainThread, "setEditedValue found running on non-main thread")
     setState(value)
     parameter.setValue(value, originator: parameterObserverToken)

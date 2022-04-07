@@ -26,6 +26,8 @@ public protocol AUParameterEditor: AnyObject {
    - parameter source: the control that caused the change
    */
   func controlChanged(source: AUParameterValueProvider)
+
+  func setValue(_ value: AUValue)
 }
 
 public class AUParameterEditorBase: NSObject {
