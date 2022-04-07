@@ -227,8 +227,6 @@ extension HostViewManager {
     os_log(.debug, log: log, "updateView BEGIN")
     presetsMenuManager?.selectActive()
     showPresetName()
-    config.viewController.view.needsLayout = true
-    config.containerView.needsLayout = true
     audioUnitLoader.save()
     os_log(.debug, log: log, "updateView END")
   }
