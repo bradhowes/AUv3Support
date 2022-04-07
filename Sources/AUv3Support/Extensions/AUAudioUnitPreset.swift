@@ -3,10 +3,10 @@
 import AVFoundation
 
 public extension AUAudioUnitPreset {
-  
+
   /**
    Initialize new instance with given values
-   
+
    - parameter number: the unique number for this preset. Factory presets must be non-negative.
    - parameter name: the display name for the preset.
    */
