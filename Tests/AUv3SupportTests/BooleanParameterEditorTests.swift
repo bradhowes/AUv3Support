@@ -69,7 +69,7 @@ final class BooleanParameterEditorTests: XCTestCase {
     XCTAssertEqual(control.booleanState, false)
     XCTAssertEqual(control.value, 0.0)
     control.expectation = expectation
-    editor.setEditedValue(1.0)
+    editor.setValue(1.0)
     wait(for: [expectation], timeout: 2.0)
     XCTAssertEqual(control.booleanState, true)
     XCTAssertEqual(control.value, 1.0)

@@ -103,7 +103,7 @@ final class FloatParameterEditorTests: XCTestCase {
     expectation.expectedFulfillmentCount = 1
     XCTAssertEqual(control.value, 0.0)
     control.expectation = expectation
-    editor1.setEditedValue(78.3)
+    editor1.setValue(78.3)
     wait(for: [expectation], timeout: 2.0)
     XCTAssertEqual(control.value, 78.3)
     XCTAssertEqual(parameterValue1, 78.3)
@@ -114,7 +114,7 @@ final class FloatParameterEditorTests: XCTestCase {
     expectation.expectedFulfillmentCount = 1
     XCTAssertEqual(control.value, 0.0)
     control.expectation = expectation
-    editor2.setEditedValue(78.3)
+    editor2.setValue(78.3)
     wait(for: [expectation], timeout: 2.0)
     XCTAssertEqual(control.value, 8.647865)
     XCTAssertEqual(parameterValue2, 78.3)

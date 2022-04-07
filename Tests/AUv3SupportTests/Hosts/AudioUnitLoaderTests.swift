@@ -43,7 +43,6 @@ final class AudioUnitLoaderTests: XCTestCase {
     XCTAssertFalse(delegate.good)
 
     XCTAssertNoThrow(audioUnitLoader.save())
-    XCTAssertNoThrow(audioUnitLoader.restore())
   }
 
   func testConnected() throws {
@@ -55,9 +54,7 @@ final class AudioUnitLoaderTests: XCTestCase {
     wait(for: [exp], timeout: 30.0)
     XCTAssertTrue(delegate.good)
 
-    XCTAssertNoThrow(audioUnitLoader.restore())
     XCTAssertNoThrow(audioUnitLoader.save())
-    XCTAssertNoThrow(audioUnitLoader.restore())
 
     audioUnitLoader.cleanup()
   }

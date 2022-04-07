@@ -178,7 +178,7 @@ public final class AudioUnitLoader: NSObject {
         return
       }
 
-      self.restore()
+      self.restore(audioUnit: avAudioUnit.auAudioUnit)
 
       DispatchQueue.main.async {
         self.createViewController(avAudioUnit)
@@ -259,8 +259,7 @@ public extension AudioUnitLoader {
   /**
    Restore the state of the AUv3 component using values found in UserDefaults.
    */
-  private func restore() {
-    guard let audioUnit = auAudioUnit else { return }
+  private func restore(audioUnit: AUAudioUnit) {
     os_log(.debug, log: log, "restore BEGIN")
 
     let lastState = UserDefaults.standard.dictionary(forKey: lastStateKey)
