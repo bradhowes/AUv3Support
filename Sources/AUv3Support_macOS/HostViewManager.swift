@@ -114,7 +114,6 @@ extension HostViewManager: AudioUnitLoaderDelegate {
     avAudioUnit = audioUnit
     audioUnitViewController = viewController
     connectFilterView(audioUnit, viewController)
-    connectParametersToControls(audioUnit.auAudioUnit)
 
     updateView()
 
@@ -186,10 +185,12 @@ extension HostViewManager {
 
     enablePlaying()
 
+    connectParametersToControls(audioUnit.auAudioUnit)
+
     os_log(.debug, log: log, "connectFilterView END")
   }
 
-  public func connectParametersToControls(_ audioUnit: AUAudioUnit) {
+  private func connectParametersToControls(_ audioUnit: AUAudioUnit) {
     os_log(.debug, log: log, "connectParametersToControls BEGIN")
 
     currentPresetObserverToken = audioUnit.observe(\.currentPreset) { _, _ in

@@ -40,12 +40,14 @@ public class AUParameterEditorBase: NSObject {
 
   public init(parameter: AUParameter) {
     self.log = Shared.logger("AUParameterEditor(" + parameter.displayName + ")")
+    os_log(.info, log: log, "init BEGIN - %f", parameter.value)
     self.parameter = parameter
     super.init()
 
     parameterObserverToken = parameter.token(byAddingParameterObserver: { address, value in
       self.parameterChanged(address: address, value: value)
     })
+    os_log(.info, log: log, "init END")
   }
 
   private func parameterChanged(address: AUParameterAddress, value: AUValue) {
@@ -55,5 +57,5 @@ public class AUParameterEditorBase: NSObject {
     os_log(.info, log: log, "parameterChanged END")
   }
 
-  @objc internal func handleParameterChanged(value: AUValue) {}
+  @objc internal func handleParameterChanged(value: AUValue) { fatalError("method not overridden by child class")}
 }
