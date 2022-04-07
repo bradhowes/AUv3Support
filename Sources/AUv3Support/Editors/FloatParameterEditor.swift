@@ -133,6 +133,11 @@ extension FloatParameterEditor: AUParameterEditor {
     os_log(.info, log: log, "controlChanged END")
   }
 
+  public func updateControl() {
+    showNewValue(parameter.value)
+    rangedControl.value = useLogValues ? paramValueToControlLogValue(parameter.value) : parameter.value
+  }
+
   /**
    Change the parameter using a value that came entering a text value. This should always run on the main thread since
    it comes after editing the parameter value.
@@ -146,8 +151,7 @@ extension FloatParameterEditor: AUParameterEditor {
     let newValue = value.clamped(to: parameter.minValue...parameter.maxValue)
     os_log(.debug, log: log, "setEditedValue - using value: %f", newValue)
     parameter.setValue(newValue, originator: parameterObserverToken)
-    showNewValue(newValue)
-    rangedControl.value = useLogValues ? paramValueToControlLogValue(newValue) : newValue
+    updateControl()
     os_log(.debug, log: log, "setEditedValue END")
   }
 }

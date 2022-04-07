@@ -50,6 +50,10 @@ extension BooleanParameterEditor: AUParameterEditor {
     }
   }
 
+  public func updateControl() {
+    setState(parameter.value)
+  }
+
   /**
    Apply a new value to both the control and the parameter.
 

@@ -28,6 +28,8 @@ public protocol AUParameterEditor: AnyObject {
   func controlChanged(source: AUParameterValueProvider)
 
   func setValue(_ value: AUValue)
+
+  func updateControl()
 }
 
 public class AUParameterEditorBase: NSObject {
