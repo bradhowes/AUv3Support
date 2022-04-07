@@ -265,7 +265,7 @@ extension HostViewController: ActionSupporter {
 
   public func confirmAction(title: String, message: String, _ closure: @escaping () -> Void) {
     let controller = UIAlertController(title: title, message: message, preferredStyle: .alert)
-    controller.addAction(.init(title: "Continue", style: .destructive) { _ in closure() }
+    controller.addAction(.init(title: "Continue", style: .destructive, handler: { _ in closure() }))
     controller.addAction(.init(title: "Cancel", style: .cancel))
     present(controller, animated: true)
   }
