@@ -116,7 +116,6 @@ extension HostViewManager: AudioUnitLoaderDelegate {
     connectFilterView(audioUnit, viewController)
     connectParametersToControls(audioUnit.auAudioUnit)
 
-    audioUnitLoader.restore()
     updateView()
 
     os_log(.debug, log: log, "connected END")
