@@ -178,8 +178,6 @@ public final class AudioUnitLoader: NSObject {
         return
       }
 
-      self.restore(audioUnit: avAudioUnit.auAudioUnit)
-
       DispatchQueue.main.async {
         self.createViewController(avAudioUnit)
       }
@@ -221,6 +219,7 @@ public final class AudioUnitLoader: NSObject {
     os_log(.debug, log: log, "setting maximumFramesToRender: %d", maximumFramesToRender)
     avAudioUnit.auAudioUnit.maximumFramesToRender = maximumFramesToRender
 
+    restore(audioUnit: avAudioUnit.auAudioUnit)
     notifyDelegate()
   }
 
