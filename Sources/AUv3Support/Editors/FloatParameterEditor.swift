@@ -166,7 +166,7 @@ private extension FloatParameterEditor {
     }
     else if hasActiveLabel {
       hasActiveLabel = false
-      setEditedValue(label.floatValue)
+      setValue(label.floatValue)
     }
   }
 #endif
