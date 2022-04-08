@@ -43,7 +43,9 @@ extension ParameterSource {
 
   public func useUserPreset(from dict: [String: Any]) {
     for parameter in parameters {
-      parameter.value = dict[parameter.identifier] as! AUValue
+      if let value = dict[parameter.identifier] as? AUValue {
+        parameter.value = value
+      }
     }
   }
 }
