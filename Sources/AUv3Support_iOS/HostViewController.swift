@@ -53,14 +53,14 @@ public final class HostViewController: UIViewController {
   }
 
   public var config: HostViewConfig?
-
-
-  private var audioUnitLoader: AudioUnitLoader?
   public var userPresetsManager: UserPresetsManager?
 
   public var avAudioUnit: AVAudioUnit?
   public var auAudioUnit: AUAudioUnit? { avAudioUnit?.auAudioUnit }
   public var audioUnitViewController: UIViewController?
+
+  private var audioUnitLoader: AudioUnitLoader?
+  private var restored = false
 
   @IBOutlet private var playButton: UIButton!
   @IBOutlet private var bypassButton: UIButton!
@@ -68,11 +68,9 @@ public final class HostViewController: UIViewController {
   @IBOutlet private var presetSelection: UISegmentedControl!
   @IBOutlet private var userPresetsMenuButton: UIButton!
   @IBOutlet private var presetName: UILabel!
-
   @IBOutlet private var containerView: UIView!
-
-  @IBOutlet private weak var instructions: UIView!
-  @IBOutlet private weak var instructionsLabel: UILabel!
+  @IBOutlet private var instructions: UIView!
+  @IBOutlet private var instructionsLabel: UILabel!
 
   private var currentPresetObserverToken: NSKeyValueObservation?
   private var userPresetsObserverToken: NSKeyValueObservation?
@@ -407,10 +405,21 @@ private extension HostViewController {
 
   func updateView() {
     os_log(.debug, log: log, "updateView BEGIN")
-    guard let auAudioUnit = auAudioUnit else { return }
+    guard let audioUnitLoader = audioUnitLoader,
+          let auAudioUnit = auAudioUnit else {
+      return
+    }
+
     updatePresetMenu()
     updatePresetSelection(auAudioUnit)
-    audioUnitLoader?.save()
+
+    if !restored {
+      restored = true
+      audioUnitLoader.restore()
+    } else {
+      audioUnitLoader.save()
+    }
+
     os_log(.debug, log: log, "updateView END")
   }
 

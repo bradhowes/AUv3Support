@@ -50,6 +50,8 @@ public protocol AudioUnitLoaderDelegate: AnyObject {
  provides.
  */
 public final class AudioUnitLoader: NSObject {
+  private static let lastStateKey = "lastStateKey"
+
   private let log: OSLog
 
   /// Delegate to signal when everything is wired up.
@@ -58,7 +60,6 @@ public final class AudioUnitLoader: NSObject {
   private var avAudioUnit: AVAudioUnit?
   private var auAudioUnit: AUAudioUnit? { avAudioUnit?.auAudioUnit }
   private var viewController: ViewController?
-  private let lastStateKey = "lastStateKey"
   private let playEngine: SimplePlayEngine
   private let componentDescription: AudioComponentDescription
   private let searchCriteria: AudioComponentDescription
@@ -68,6 +69,7 @@ public final class AudioUnitLoader: NSObject {
   private var notificationRegistration: NSObjectProtocol?
   private var hasUpdates = false
 
+  public let lastState = UserDefaults.standard.dictionary(forKey: lastStateKey)
   public var isPlaying: Bool { playEngine.isPlaying }
 
   /**
@@ -219,7 +221,6 @@ public final class AudioUnitLoader: NSObject {
     os_log(.debug, log: log, "setting maximumFramesToRender: %d", maximumFramesToRender)
     avAudioUnit.auAudioUnit.maximumFramesToRender = maximumFramesToRender
 
-    restore(audioUnit: avAudioUnit.auAudioUnit)
     notifyDelegate()
   }
 
@@ -247,9 +248,9 @@ public extension AudioUnitLoader {
 
     if let lastState = audioUnit.fullState {
       os_log(.debug, log: log, "save - lastState: %{public}s", lastState.description)
-      UserDefaults.standard.set(lastState, forKey: lastStateKey)
+      UserDefaults.standard.set(lastState, forKey: Self.lastStateKey)
     } else {
-      UserDefaults.standard.removeObject(forKey: lastStateKey)
+      UserDefaults.standard.removeObject(forKey: Self.lastStateKey)
     }
 
     os_log(.debug, log: log, "save END")
@@ -258,15 +259,14 @@ public extension AudioUnitLoader {
   /**
    Restore the state of the AUv3 component using values found in UserDefaults.
    */
-  private func restore(audioUnit: AUAudioUnit) {
+  func restore() {
+    guard let audioUnit = auAudioUnit else { return }
     os_log(.debug, log: log, "restore BEGIN")
-
-    let lastState = UserDefaults.standard.dictionary(forKey: lastStateKey)
-    os_log(.debug, log: log, "restore - lastState: %{public}s", lastState.descriptionOrNil)
-
     if let lastState = lastState {
-      DispatchQueue.global(qos: .userInteractive).async { audioUnit.fullState = lastState }
+      os_log(.debug, log: log, "restore - lastState: %{public}s", lastState.description)
+      audioUnit.fullState = lastState
     }
+    os_log(.debug, log: log, "restore END")
   }
 }
 

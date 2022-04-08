@@ -10,7 +10,7 @@ public enum FilterAudioUnitFactory {}
 public extension FilterAudioUnitFactory {
 
   /**
-   Create a new FilterAudioUnit instance to run in an AVu3 container.
+   Create a new FilterAudioUnit instance to run in an AUv3 container.
 
    - parameter componentDescription: descriptions of the audio environment it will run in
    - parameter parameters: provider of AUParameter values that define the runtime parameters for the audio unit

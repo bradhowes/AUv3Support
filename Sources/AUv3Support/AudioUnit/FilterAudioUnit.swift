@@ -36,8 +36,16 @@ public final class FilterAudioUnit: AUAudioUnit {
 
   /// The active preset in use. This is the backing value for the `currentPreset` property.
   private var _currentPreset: AUAudioUnitPreset? {
-    willSet { willChangeValue(for: \.currentPreset) }
-    didSet { didChangeValue(for: \.currentPreset) }
+    willSet {
+      os_log(.info, log: log, "_currentPreset willChangeValue(for:.currentPreset) BEGIN")
+      willChangeValue(for: \.currentPreset)
+      os_log(.info, log: log, "_currentPreset willChangeValue(for:.currentPreset) END")
+    }
+    didSet {
+      os_log(.info, log: log, "_currentPreset didChangeValue(for:.currentPreset) BEGIN")
+      didChangeValue(for: \.currentPreset)
+      os_log(.info, log: log, "_currentPreset didChangeValue(for:.currentPreset) END")
+    }
   }
 
   private var inputBus: AUAudioUnitBus
