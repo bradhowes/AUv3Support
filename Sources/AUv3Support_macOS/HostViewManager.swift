@@ -12,6 +12,7 @@ public final class HostViewManager: NSObject {
   private let log = Shared.logger("HostViewManager")
   private let config: HostViewConfig
   private let audioUnitLoader: AudioUnitLoader
+  private var restored = false
 
   private var userPresetsManager: UserPresetsManager?
   private var presetsMenuManager: PresetsMenuManager?
@@ -92,10 +93,6 @@ applications.
         self.enablePlaying()
       }
     }
-  }
-
-  public func saveState() {
-    audioUnitLoader.save()
   }
 }
 
@@ -227,7 +224,14 @@ extension HostViewManager {
     os_log(.debug, log: log, "updateView BEGIN")
     presetsMenuManager?.selectActive()
     showPresetName()
-    audioUnitLoader.save()
+
+    if !restored {
+      restored = true
+      audioUnitLoader.restore()
+    } else {
+      audioUnitLoader.save()
+    }
+
     os_log(.debug, log: log, "updateView END")
   }
 }
