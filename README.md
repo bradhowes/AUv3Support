@@ -21,19 +21,19 @@ Swift package containing useful code for AUv3 app extensions. There are four pro
 - DSPHeaders -- collection of C++17 headers for classes that are useful when creating AUv3 kernels. These were written
   specifically for use in a audio unit render thread, so there should be no memory allocations done once a render thread
   is started.
-  
-These libraries are now being used by my [SimplyFlange](https://github.com/bradhowes/SimplyFlange), 
+
+These libraries are now being used by my [SimplyFlange](https://github.com/bradhowes/SimplyFlange),
 [SimplyPhaser](https://github.com/bradhowes/SimplyPhaser), and
 [AUv3Template](https://github.com/bradhowes/AUv3Template) projects.
 
 # Credits
 
-All of the code has been written by myself over the course of several years working on AUv3 app extensions. There are a collection of 
-routines in [ConstMath](Sources/SF2Lib/include/SF2Lib/ConstMath.hpp) that provide compile-time values for sine, natural log, and 
-exponential function. These are used to generate some lookup tables at compile time. The functions that do this were taken from 
-Lakshay Garg's [compile_time](https://github.com/lakshayg/compile_time) (no specific license) repo and Keith O'Hara's 
-[GCEM](https://github.com/kthohr/gcem) (Apache license) repo. I started off with `compile_time` but I lifted the natural log function 
-from `GCEM`. Note that the use of these compile-time methods are *only* for a very limited set of use-cases, all of which are not that 
+All of the code has been written by myself over the course of several years working on AUv3 app extensions. There are a collection of
+routines in [ConstMath](Sources/SF2Lib/include/SF2Lib/ConstMath.hpp) that provide compile-time values for sine, natural log, and
+exponential function. These are used to generate some lookup tables at compile time. The functions that do this were taken from
+Lakshay Garg's [compile_time](https://github.com/lakshayg/compile_time) (no specific license) repo and Keith O'Hara's
+[GCEM](https://github.com/kthohr/gcem) (Apache license) repo. I started off with `compile_time` but I lifted the natural log function
+from `GCEM`. Note that the use of these compile-time methods are *only* for a very limited set of use-cases, all of which are not that
 demanding in terms of precision.
 
 # AUv3Support
@@ -41,10 +41,10 @@ demanding in terms of precision.
 In the AUv3-Support product you will find various classes and extensions to make things easier when working with AUv3
 components:
 
-- Editors -- a collection of parameter editors that work on iOS and macOS via protocol conformance. They properly 
-update themselves when a audio unit loads a preset, and they properly communicate changes made by the user or by 
-another control, perhaps external. There is a 
-`BooleanParameterEditor` that works with a UISwitch/NSSwitch control, and there is a `FloatParameterEditor` that works 
+- Editors -- a collection of parameter editors that work on iOS and macOS via protocol conformance. They properly
+update themselves when a audio unit loads a preset, and they properly communicate changes made by the user or by
+another control, perhaps external. There is a
+`BooleanParameterEditor` that works with a UISwitch/NSSwitch control, and there is a `FloatParameterEditor` that works
 with anything that can report out a floating-point value as well as the min/max ranges the value may have.
 - AudioUnitLoader -- a basic AUv3 host that locates your AUv3 component and connects it up
 - SimplePlayEngine -- a simple AudioUnit graph that plays audio from a file and sends it through the loaded
@@ -55,14 +55,14 @@ with anything that can report out a floating-point value as well as the min/max 
 
 # AUv3Support-iOS
 
-Contains most of what is needed for a simple AUv3 host that will load your AUv3 component, show its UI controls, and 
+Contains most of what is needed for a simple AUv3 host that will load your AUv3 component, show its UI controls, and
 allow you to play audio through it. The basics for getting it to work are:
 
 1. Create a `HostViewConfig` that contains values specific to your AUv3 component and then pass it to the
 `Shared.embedHostView` static function along with your app's main `UIViewController` instance.
 2. Modify your `AppDelegate.swift` file to inherit from the AppDelegate found in this package. Something like this is
 good:
-```
+```swift
 import UIKit
 import AUv3Support
 import AUv3Support_iOS
@@ -75,7 +75,7 @@ final class AppDelegate: AUv3Support_iOS.AppDelegate {
 }
 ```
 3. Modify your `MainViewController.swift` to do the following:
-```
+```swift
 import AUv3Support
 import AUv3Support_iOS
 import CoreAudioKit
@@ -87,7 +87,7 @@ final class MainViewController: UIViewController {
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    
+
     guard let delegate = UIApplication.shared.delegate as? AppDelegate else { fatalError() }
 
     let bundle = Bundle.main
@@ -110,20 +110,20 @@ final class MainViewController: UIViewController {
 ```
 4. Profit!
 
-The `Actions` folder contains flows for managing user presets such as creating, deleting and renaming. The `HostView` 
+The `Actions` folder contains flows for managing user presets such as creating, deleting and renaming. The `HostView`
 storyboard holds a set of UI elements that are useful for a AUv3 demonstration app.
 
 # AUv3Support-macOS
 
 Unlike the above, macOS is a bit more involved because I have yet to get something simpler up and running. The big issue
-is getting the application's delegate, main window, and main view controller all established and functional when 
-unpacked from a package. So, until that is accomplished, one must pass a bucket-load of UI elements in a 
+is getting the application's delegate, main window, and main view controller all established and functional when
+unpacked from a package. So, until that is accomplished, one must pass a bucket-load of UI elements in a
 `HostViewConfig` and instantiate a `HostViewManager` with it. This should be done as early as possible, but it cannot be
-done before the main view controller has a window assigned to it. So, the best option is to do something like below, 
+done before the main view controller has a window assigned to it. So, the best option is to do something like below,
 where we monitor for a window being set on the view. The only remaining task is to show the initial prompt to the user
 on first-time launch.
 
-```
+```swift
   override func viewDidLoad() {
     super.viewDidLoad()
 
@@ -156,34 +156,34 @@ on first-time launch.
                                 viewController: self, containerView: containerView)
     hostViewManager = .init(config: config)
   }
-  
+
   override func viewDidAppear() {
     super.viewDidAppear()
     hostViewManager?.showInitialPrompt()
   }
 ```
 
-Not great, but not too cumbersome to use now. And it is nice to have abstracted out all of the common functionality my 
+Not great, but not too cumbersome to use now. And it is nice to have abstracted out all of the common functionality my
 audio unit apps share.
 
 # Usage Notes
 
 The packages here build just fine, and they work as-is when they direct dependencies to either other Swift packages or
-targets in an Xcode project that are *not* frameworks. When they *are* linked to a framework, there may be issues that 
-crop up which will break the build (not clear on the exact conditions). In my particular case with AUv3 app extensions, 
-the result was that the common framework that is shared between the app extension and the host app will embed within it 
-a Swift package dependency that is also present at the top-level of the host app. Apple rightly flags the duplication 
+targets in an Xcode project that are *not* frameworks. When they *are* linked to a framework, there may be issues that
+crop up which will break the build (not clear on the exact conditions). In my particular case with AUv3 app extensions,
+the result was that the common framework that is shared between the app extension and the host app will embed within it
+a Swift package dependency that is also present at the top-level of the host app. Apple rightly flags the duplication
 (plus some other issues) and refuses to upload the archive artifacts.
 
-The solution that works _for me_ was to have a Bash script run after the build step that deletes the embedded 
-frameworks. Sounds scary, but it works and Apple likes what it sees. More importantly, the apps run just fine on iOS 
-and macOS after this framework culling. Note again and well: if you use these directly with an app extension or app 
+The solution that works _for me_ was to have a Bash script run after the build step that deletes the embedded
+frameworks. Sounds scary, but it works and Apple likes what it sees. More importantly, the apps run just fine on iOS
+and macOS after this framework culling. Note again and well: if you use these directly with an app extension or app
 target then you should not have any issues.
 
-Here is the script I use; it works for both macOS and iOS 
+Here is the script I use; it works for both macOS and iOS
 projects: (`post-build.sh`):
 
-```
+```bash
 #!/bin/bash
 set -eu
 
@@ -217,10 +217,10 @@ echo "-- END post-build.sh"
 ```
 
 To use, edit the Xcode scheme that builds your application (iOS or macOS). Click on the disclosure arrow (>) for
-the __Build__ activity and then click on "Post-actions". Create a new action by clicking on the "+" at the bottom of 
+the __Build__ activity and then click on "Post-actions". Create a new action by clicking on the "+" at the bottom of
 the panel window. Make it look like below:
 
 ![Capto_Capture 2022-01-27_05-02-44_PM](https://user-images.githubusercontent.com/686946/151396388-225a8fb0-a47e-4f07-984f-f32843b31835.png)
 
-Be sure to add the script above to a "scripts" directory in your project folder, or just make sure that the path to the 
+Be sure to add the script above to a "scripts" directory in your project folder, or just make sure that the path to the
 script is correct for your situation.
