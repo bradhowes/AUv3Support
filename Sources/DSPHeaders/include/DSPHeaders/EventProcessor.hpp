@@ -148,19 +148,19 @@ public:
         os_log_error(log_, "processAndRender - pullInput failed - %d", status);
         return status;
       }
-    } else {
-
-      // Clear the output buffer before use.
-      UInt32 byteSize = frameCount * sizeof(AUValue);
-      for (UInt32 index = 0; index < output->mNumberBuffers; ++index) {
-        AudioBuffer& buffer = output->mBuffers[index];
-        assert(byteSize <= buffer.mDataByteSize);
-        memset(buffer.mData, 0, byteSize);
-      }
     }
 
     facets_[outputBusIndex].setBufferList(output, buffer.mutableAudioBufferList());
     facets_[outputBusIndex].setFrameCount(frameCount);
+
+    // Clear the output buffer before use when there is no input data.
+    if (!pullInputBlock) {
+      UInt32 byteSize = frameCount * sizeof(AUValue);
+      for (UInt32 index = 0; index < output->mNumberBuffers; ++index) {
+        AudioBuffer& buffer = output->mBuffers[index];
+        memset(buffer.mData, 0, byteSize);
+      }
+    }
 
     render(outputBusNumber, timestamp, frameCount, realtimeEventListHead);
 
