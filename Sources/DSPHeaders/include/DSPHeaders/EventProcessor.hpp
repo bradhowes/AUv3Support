@@ -148,6 +148,13 @@ public:
         os_log_error(log_, "processAndRender - pullInput failed - %d", status);
         return status;
       }
+    } else {
+
+      // Clear the output buffer before use.
+      for (UInt32 index = 0; index < output->mNumberBuffers; ++index) {
+        AudioBuffer& buffer = output->mBuffers[index];
+        memset(buffer.mData, 0, buffer.mDataByteSize);
+      }
     }
 
     facets_[outputBusIndex].setBufferList(output, buffer.mutableAudioBufferList());
