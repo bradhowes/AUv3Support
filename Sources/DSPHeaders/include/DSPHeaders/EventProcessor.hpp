@@ -151,9 +151,11 @@ public:
     } else {
 
       // Clear the output buffer before use.
+      UInt32 byteSize = frameCount * sizeof(AUValue);
       for (UInt32 index = 0; index < output->mNumberBuffers; ++index) {
         AudioBuffer& buffer = output->mBuffers[index];
-        memset(buffer.mData, 0, buffer.mDataByteSize);
+        assert(byteSize <= buffer.mDataByteSize);
+        memset(buffer.mData, 0, byteSize);
       }
     }
 
