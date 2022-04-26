@@ -56,53 +56,40 @@ extension SimplePlayEngine {
    @param completion closure to call when finished
    */
   public func connectEffect(audioUnit: AVAudioUnit, completion: @escaping (() -> Void) = {}) {
-    os_log(.debug, log: log, "connectEffect BEGIN")
     defer { completion() }
-    os_log(.debug, log: log, "connectEffect - attaching effect")
     engine.disconnectNodeOutput(player)
     engine.attach(audioUnit)
-    os_log(.debug, log: log, "connectEffect - player -> effect")
     engine.connect(player, to: audioUnit, format: file.processingFormat)
-    os_log(.debug, log: log, "connectEffect - effect -> mixer (speaker)")
     engine.connect(audioUnit, to: engine.mainMixerNode, format: file.processingFormat)
-    os_log(.debug, log: log, "connectEffect END")
   }
 
   /**
    Start playback of the audio file player.
    */
   public func start() {
-    os_log(.debug, log: log, "start BEGIN")
     stateChangeQueue.sync {
       guard !player.isPlaying else { return }
       updateAudioSession(active: true)
       beginLoop()
       do {
-        os_log(.debug, log: log, "start - starting engine")
         try engine.start()
       } catch {
         fatalError("failed to start AVAudioEngine")
       }
-      os_log(.debug, log: log, "start - starting player")
       player.play()
     }
-    os_log(.debug, log: log, "start END")
   }
 
   /**
    Stop playback of the audio file player.
    */
   public func stop() {
-    os_log(.debug, log: log, "stop BEGIN")
     stateChangeQueue.sync {
       guard player.isPlaying else { return }
-      os_log(.debug, log: log, "stop - stopping player")
       player.stop()
-      os_log(.debug, log: log, "stop - stopping engine")
       engine.stop()
       updateAudioSession(active: false)
     }
-    os_log(.debug, log: log, "stop END")
   }
 
   /**
@@ -120,7 +107,6 @@ private extension SimplePlayEngine {
 
   private func updateAudioSession(active: Bool) {
     #if os(iOS)
-    os_log(.debug, log: log, "updateAudioSession BEGIN - active: %d", active)
     let session = AVAudioSession.sharedInstance()
     do {
       try session.setCategory(.playback, mode: .default)
@@ -128,7 +114,6 @@ private extension SimplePlayEngine {
     } catch {
       fatalError("Could not set Audio Session active \(active). error: \(error).")
     }
-    os_log(.debug, log: log, "updateAudioSession END")
     #endif
   }
 

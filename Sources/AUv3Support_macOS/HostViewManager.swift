@@ -99,7 +99,6 @@ applications.
 extension HostViewManager: AudioUnitLoaderDelegate {
 
   public func connected(audioUnit: AVAudioUnit, viewController: NSViewController) {
-    os_log(.debug, log: log, "connected BEGIN")
     let userPresetsManager = UserPresetsManager(for: audioUnit.auAudioUnit)
     self.userPresetsManager = userPresetsManager
 
@@ -113,15 +112,11 @@ extension HostViewManager: AudioUnitLoaderDelegate {
     connectFilterView(audioUnit, viewController)
 
     updateView()
-
-    os_log(.debug, log: log, "connected END")
   }
 
   public func failed(error: AudioUnitLoaderError) {
-    os_log(.error, log: log, "failed BEGIN - error: %{public}s", error.description)
     let message = "Unable to load the AUv3 component. \(error.description)"
     notify(title: "AUv3 Failure", message: message)
-    os_log(.debug, log: log, "failed END")
   }
 }
 
@@ -172,7 +167,6 @@ extension HostViewManager {
   }
 
   private func connectFilterView(_ audioUnit: AVAudioUnit, _ viewController: NSViewController) {
-    os_log(.debug, log: log, "connectFilterView BEGIN")
     config.containerView.addSubview(viewController.view)
     viewController.view.pinToSuperviewEdges()
 
@@ -183,24 +177,16 @@ extension HostViewManager {
     enablePlaying()
 
     connectParametersToControls(audioUnit.auAudioUnit)
-
-    os_log(.debug, log: log, "connectFilterView END")
   }
 
   private func connectParametersToControls(_ audioUnit: AUAudioUnit) {
-    os_log(.debug, log: log, "connectParametersToControls BEGIN")
-
     currentPresetObserverToken = audioUnit.observe(\.currentPreset) { _, _ in
-      os_log(.debug, log: self.log, "currentPreset changed - %{public}s", audioUnit.currentPreset.descriptionOrNil)
       DispatchQueue.main.async { self.updateView() }
     }
 
     userPresetsObserverToken = audioUnit.observe(\.userPresets) { _, _ in
-      os_log(.info, log: self.log, "userPresets changed")
       DispatchQueue.main.async { self.presetsMenuManager?.build() }
     }
-
-    os_log(.debug, log: log, "connectParametersToControls END")
   }
 
   private func showPresetName() {
@@ -221,7 +207,6 @@ extension HostViewManager {
   }
 
   private func updateView() {
-    os_log(.debug, log: log, "updateView BEGIN")
     presetsMenuManager?.selectActive()
     showPresetName()
 
@@ -231,8 +216,6 @@ extension HostViewManager {
     } else {
       audioUnitLoader.save()
     }
-
-    os_log(.debug, log: log, "updateView END")
   }
 }
 

@@ -32,23 +32,15 @@ public:
 
   /**
    Construct new instance.
-
-   @param subsystem the name to use for the subsystem of os_log_t entities.
    */
-  EventProcessor(std::string subsystem) noexcept :
-  derived_{static_cast<T&>(*this)}, loggingSubsystem_{subsystem}, log_{os_log_create(subsystem.c_str(), "Kernel")},
-  buffers_{}, facets_{}
-  {}
+  EventProcessor() noexcept : derived_{static_cast<T&>(*this)}, buffers_{}, facets_{} {}
 
   /**
    Set the bypass mode.
 
    @param bypass if true disable filter processing and just copy samples from input to output
    */
-  void setBypass(bool bypass) noexcept {
-    os_log_info(log_, "setBypass: %d", bypass);
-    bypassed_ = bypass;
-  }
+  void setBypass(bool bypass) noexcept { bypassed_ = bypass; }
 
   /**
    Get current bypass mode
@@ -62,17 +54,16 @@ public:
    @param maxFramesToRender the maximum number of frames to expect on input
    */
   void setRenderingFormat(NSInteger busCount, AVAudioFormat* format, AUAudioFrameCount maxFramesToRender) noexcept {
-    os_log_info(log_, "setRenderingFormat - busCount: %ld", (long)busCount);
     auto channelCount{[format channelCount]};
 
     // We want an internal buffer for each bus that we can generate output on.
     while (buffers_.size() < size_t(busCount)) {
-      buffers_.emplace_back(loggingSubsystem_);
-      facets_.emplace_back(loggingSubsystem_);
+      buffers_.emplace_back();
+      facets_.emplace_back();
     }
 
     // Extra facet to use for input buffer used by a `pullInputBlock`
-    facets_.emplace_back(loggingSubsystem_);
+    facets_.emplace_back();
 
     // Setup facets to have the right channel count so we do not allocate while rendering
     for (auto& entry : facets_) {
@@ -94,8 +85,6 @@ public:
    Rendering has stopped. Free up any resources it used.
    */
   void renderingStopped() noexcept {
-    os_log_info(log_, "renderingStopped");
-
     for (auto& entry : facets_) {
       if (entry.isLinked()) entry.unlink();
     }
@@ -120,8 +109,6 @@ public:
                                      AudioBufferList* output, const AURenderEvent* realtimeEventListHead,
                                      AURenderPullInputBlock pullInputBlock) noexcept
   {
-    os_log_info(log_, "processAndRender - frameCount: %d bus: %ld size: %lu", frameCount, (long)outputBusNumber,
-                buffers_.size());
     size_t outputBusIndex = size_t(outputBusNumber);
     assert(outputBusIndex < buffers_.size());
 
@@ -129,23 +116,18 @@ public:
     // use it for an output buffer if necessary.
     auto& buffer{buffers_[outputBusIndex]};
     if (frameCount > buffer.capacity()) {
-      os_log_error(log_, "processAndRender - too many frames - frameCount: %d capacity: %d", frameCount,
-                   buffer.capacity());
       return kAudioUnitErr_TooManyFramesToProcess;
     }
 
     // This only applies for effects -- instruments do not have anything to pull.
     BufferFacet& input{inputFacet()};
     if (pullInputBlock) {
-      os_log_info(log_, "processAndRender - pulling input");
-
       input.setBufferList(output, buffer.mutableAudioBufferList());
       input.setFrameCount(frameCount);
 
       AudioUnitRenderActionFlags actionFlags = 0;
       auto status = buffer.pullInput(&actionFlags, timestamp, frameCount, outputBusNumber, pullInputBlock);
       if (status != noErr) {
-        os_log_error(log_, "processAndRender - pullInput failed - %d", status);
         return status;
       }
     }
@@ -163,17 +145,10 @@ public:
     }
 
     render(outputBusNumber, timestamp, frameCount, realtimeEventListHead);
-
-    os_log_debug(log_, "processAndRender - output: %p", static_cast<void*>(output));
-    os_log_debug(log_, "processAndRender - output[0].mDataByteByteSize: %d (%p)", output->mBuffers[0].mDataByteSize,
-                 output->mBuffers[0].mData);
-    os_log_debug(log_, "processAndRender - output[1].mDataByteByteSize: %d (%p)", output->mBuffers[1].mDataByteSize,
-                 output->mBuffers[1].mData);
     return noErr;
   }
 
 protected:
-  os_log_t log_;
 
   /**
    Obtain a `busBuffer` for the given bus.
@@ -267,7 +242,6 @@ private:
   }
 
   T& derived_;
-  std::string loggingSubsystem_;
   std::vector<SampleBuffer> buffers_;
   std::vector<BufferFacet> facets_;
   bool bypassed_ = false;

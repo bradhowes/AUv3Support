@@ -55,26 +55,22 @@ public class PresetsMenuManager: NSObject {
    */
   public func build() {
     guard let buttonMenu = button.menu else { fatalError() }
-    os_log(.debug, log: log, "build BEGIN")
     populateUserPresetsMenu(appMenu.items[0].submenu!)
     populateFactoryPresetsMenu(appMenu.items[1].submenu!)
     populateUserPresetsMenu(buttonMenu.items[1].submenu!)
     populateFactoryPresetsMenu(buttonMenu.items[2].submenu!)
     selectActive()
-    os_log(.debug, log: log, "build END")
   }
 
   /**
    Update the menus to show the active preset.
    */
   public func selectActive() {
-    os_log(.debug, log: log, "selectActive BEGIN")
     let activeNumber = userPresetsManager.audioUnit.currentPreset?.number ?? noCurrentPreset
     refreshUserPresetsMenu(appMenu.items[0].submenu, activeNumber: activeNumber)
     refreshFactoryPresetsMenu(appMenu.items[1].submenu, activeNumber: activeNumber)
     refreshUserPresetsMenu(button.menu?.items[1].submenu, activeNumber: activeNumber)
     refreshFactoryPresetsMenu(button.menu?.items[2].submenu, activeNumber: activeNumber)
-    os_log(.debug, log: log, "selectActive END")
   }
 }
 
@@ -97,20 +93,15 @@ extension PresetsMenuManager {
    - parameter sender: the 'New' menu item
    */
   @IBAction func createPreset(_ sender: NSMenuItem) {
-    os_log(.debug, log: log, "createPreset BEGIN")
     askForName(title: "New Preset", placeholder: "Preset \(-userPresetsManager.nextNumber)",
                activity: "Create") { newName in
       if let existing = self.userPresetsManager.find(name: newName) {
-        os_log(.debug, log: self.log, "createPreset - name exists")
         self.confirmAction(title: "Update \"\(newName)\"?",
                            message: "Do you wish to update the existing preset with current settings?") {
-          os_log(.debug, log: self.log, "createPreset - updating existing")
           try? self.userPresetsManager.update(preset: existing)
-          os_log(.debug, log: self.log, "createPreset END")
         }
       } else {
         try? self.userPresetsManager.create(name: newName)
-        os_log(.debug, log: self.log, "createPreset END")
       }
     }
   }
@@ -121,10 +112,8 @@ extension PresetsMenuManager {
    - parameter sender: the 'Update' menu item
    */
   @IBAction func updatePreset(_ sender: NSMenuItem) {
-    os_log(.debug, log: log, "updatePreset BEGIN")
     guard let activePreset = userPresetsManager.currentPreset, activePreset.number < 0 else { fatalError() }
     try? userPresetsManager.update(preset: activePreset)
-    os_log(.debug, log: log, "updatePreset END")
   }
 
   /**
@@ -133,11 +122,9 @@ extension PresetsMenuManager {
    - parameter sender: the 'Rename' menu item
    */
   @IBAction func renamePreset(_ sender: NSMenuItem) {
-    os_log(.debug, log: log, "renamePreset BEGIN")
     guard let activePreset = userPresetsManager.currentPreset else { fatalError() }
     askForName(title: "Rename Preset", placeholder: activePreset.name, activity: "Rename") { newName in
       try? self.userPresetsManager.renameCurrent(to: newName)
-      os_log(.debug, log: self.log, "renamePreset END")
     }
   }
 
@@ -147,15 +134,12 @@ extension PresetsMenuManager {
    - parameter sender: the 'Delete' menu item
    */
   @IBAction func deletePreset(_ sender: NSMenuItem) {
-    os_log(.debug, log: log, "deletePreset BEGIN")
     guard let activePreset = userPresetsManager.currentPreset else { fatalError() }
     confirmAction(
       title: "Delete \"\(activePreset.name)\" Preset",
       message: "Do you wish to delete the preset? This cannot be undone.") {
         try? self.userPresetsManager.deleteCurrent()
-        os_log(.debug, log: self.log, "deletePreset END")
       }
-    os_log(.debug, log: log, "deletePreset END")
   }
 }
 

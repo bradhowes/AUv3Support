@@ -140,8 +140,6 @@ private:
   int sampleCounter_{0};
   std::array<AllPassFilter, BandCount> filters_{};
   std::array<T, BandCount + 1> gammas_{1.0};
-  
-  os_log_t log_ = os_log_create("AUv3Support", "PhaseShifter");
 };
 
 } // end namespace DSPHeaders

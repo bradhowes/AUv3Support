@@ -37,14 +37,10 @@ public final class FilterAudioUnit: AUAudioUnit {
   /// The active preset in use. This is the backing value for the `currentPreset` property.
   private var _currentPreset: AUAudioUnitPreset? {
     willSet {
-      os_log(.info, log: log, "_currentPreset willChangeValue(for:.currentPreset) BEGIN")
       willChangeValue(for: \.currentPreset)
-      os_log(.info, log: log, "_currentPreset willChangeValue(for:.currentPreset) END")
     }
     didSet {
-      os_log(.info, log: log, "_currentPreset didChangeValue(for:.currentPreset) BEGIN")
       didChangeValue(for: \.currentPreset)
-      os_log(.info, log: log, "_currentPreset didChangeValue(for:.currentPreset) END")
     }
   }
 
@@ -82,25 +78,16 @@ public final class FilterAudioUnit: AUAudioUnit {
                        options: AudioComponentInstantiationOptions = []) throws {
 
     guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2) else {
-      os_log(.error, log: log, "failed to create AVAudioFormat format")
       throw Failure.unableToInitialize(String(describing: AVAudioFormat.self))
     }
 
-    os_log(.debug, log: log, "format: %{public}s", format.description)
     inputBus = try AUAudioUnitBus(format: format)
     inputBus.maximumChannelCount = maxNumberOfChannels
 
-    os_log(.debug, log: log, "creating output bus")
     outputBus = try AUAudioUnitBus(format: format)
     outputBus.maximumChannelCount = maxNumberOfChannels
 
     try super.init(componentDescription: componentDescription, options: options)
-    
-    os_log(.debug, log: log, "type: %{public}s, subtype: %{public}s, manufacturer: %{public}s flags: %x",
-           componentDescription.componentType.stringValue,
-           componentDescription.componentSubType.stringValue,
-           componentDescription.componentManufacturer.stringValue,
-           componentDescription.componentFlags)
   }
 }
 
@@ -116,8 +103,6 @@ extension FilterAudioUnit {
    - parameter kernel: the rendering kernel to use
    */
   public func configure(parameters: ParameterSource, kernel: AudioRenderer) {
-    os_log(.debug, log: log, "configure BEGIN")
-
     self.kernel = kernel
     parameters.parameterTree.implementorValueProvider = kernel.get(_:)
     parameters.parameterTree.implementorValueObserver = kernel.set(_:value:)
@@ -126,8 +111,6 @@ extension FilterAudioUnit {
     // At start, configure effect to do something interesting. Hosts can and should update the effect state after it is
     // initialized via `fullState` attribute.
     currentPreset = parameters.factoryPresets.first
-
-    os_log(.debug, log: log, "configure END")
   }
 }
 
@@ -158,25 +141,19 @@ extension FilterAudioUnit {
   /// property.
   @objc dynamic override public var currentPreset: AUAudioUnitPreset? {
     get {
-      os_log(.info, log: log, "get currentPreset - %{public}s", _currentPreset.descriptionOrNil)
       return _currentPreset
     }
     set {
-      os_log(.info, log: log, "set currentPreset - %{public}s", newValue.descriptionOrNil)
       guard _currentPreset != newValue else { return }
 
       if let preset = newValue {
         if preset.number >= 0 {
-          os_log(.info, log: log, "factoryPreset %d", preset.number)
           _currentPreset = preset
-          os_log(.info, log: log, "updating parameters")
           parameters.useFactoryPreset(preset)
           return
         }
 
-        os_log(.info, log: log, "userPreset %d", preset.number)
         if let state = try? presetState(for: preset) {
-          os_log(.info, log: log, "state: %{public}s", state.debugDescription)
           fullState = state
           parameters.useUserPreset(from: state)
           return
@@ -198,7 +175,6 @@ extension FilterAudioUnit {
   /// Add current preset name and number to the state that is returned.
   override public var fullState: [String : Any]? {
     get {
-      os_log(.info, log: log, "fullState GET")
 
       // The AUAudioUnit property will return a binary encoding of the parameter tree. It is decodable, but still the
       // format has not been published. For now, we will use it but a better implementation would be to encode/decode
@@ -212,18 +188,14 @@ extension FilterAudioUnit {
         value[kAUPresetNameKey] = preset.name
         value[kAUPresetNumberKey] = preset.number
       }
-      os_log(.info, log: log, "value: %{public}s", value.description)
       return value
     }
     set {
-      os_log(.info, log: log, "fullState SET")
-      os_log(.info, log: log, "value: %{public}s", newValue.descriptionOrNil)
       super.fullState = newValue
 
       if let state = newValue,
          let name = state[kAUPresetNameKey] as? String,
          let number = state[kAUPresetNumberKey] as? NSNumber {
-        os_log(.info, log: log, "name %{public}s number %d", name, number.intValue)
         if _currentPreset?.number != number.intValue {
           _currentPreset = AUAudioUnitPreset(number: number.intValue, name: name)
         }
@@ -243,18 +215,12 @@ extension FilterAudioUnit {
    routine should `setRenderResourcesAllocated(false)`.
    */
   override public func allocateRenderResources() throws {
-    os_log(.info, log: log, "allocateRenderResources BEGIN")
     guard let kernel = kernel else { fatalError("FilterAudioUnit not configured with kernel") }
     guard let parameters = parameters else { fatalError("FilterAudioUnit not configured with parameter source") }
 
     try super.allocateRenderResources()
 
-    os_log(.debug, log: log, "inputBus format: %{public}s", inputBus.format.description)
-    os_log(.debug, log: log, "outputBus format: %{public}s", outputBus.format.description)
-    os_log(.debug, log: log, "maximumFramesToRender: %d", maximumFramesToRender)
-
     if outputBus.format.channelCount != inputBus.format.channelCount {
-      os_log(.error, log: log, "unequal channel count")
       setRenderResourcesAllocated(false)
 
       // NOTE: changing this to something else will cause `auval` to emit the following:
@@ -271,15 +237,12 @@ extension FilterAudioUnit {
     parameters.parameterTree.implementorValueObserver = { param, value in
       scheduleParameter(AUEventSampleTimeImmediate, rampDurationInSamples, param.address, value);
     }
-
-    os_log(.info, log: log, "allocateRenderResources END")
   }
 
   /**
    Rendering has stopped -- tear down stuff that was supporting it.
    */
   override public func deallocateRenderResources() {
-    os_log(.debug, log: log, "deallocateRenderResources BEGIN")
     guard let kernel = kernel else { fatalError("FilterAudioUnit not configured with kernel") }
     guard let parameters = parameters else { fatalError("FilterAudioUnit not configured with parameter source") }
 
@@ -287,12 +250,9 @@ extension FilterAudioUnit {
 
     kernel.renderingStopped()
     parameters.parameterTree.implementorValueObserver = kernel.set(_:value:)
-
-    os_log(.debug, log: log, "deallocateRenderResources END")
   }
   
   override public var internalRenderBlock: AUInternalRenderBlock {
-    os_log(.info, log: log, "internalRenderBlock BEGIN")
     guard let kernel = kernel else { fatalError("nil kernel") }
     return kernel.internalRenderBlock() // (transportStateBlock)
   }

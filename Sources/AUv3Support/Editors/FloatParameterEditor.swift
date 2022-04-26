@@ -111,7 +111,6 @@ extension FloatParameterEditor: AUParameterEditor {
    - parameter source: the source of the value
    */
   public func controlChanged(source: AUParameterValueProvider) {
-    os_log(.info, log: log, "controlChanged BEGIN - address: %d value: %f", parameter.address, source.value)
     precondition(Thread.isMainThread, "controlChanged found running on non-main thread")
 
 #if os(macOS)
@@ -119,7 +118,6 @@ extension FloatParameterEditor: AUParameterEditor {
 #endif
 
     if rangedControl !== source {
-      os_log(.info, log: log, "controlChanged - updating our control value")
       rangedControl.value = source.value
     }
 
@@ -127,10 +125,8 @@ extension FloatParameterEditor: AUParameterEditor {
     showNewValue(value)
 
     if value != parameter.value {
-      os_log(.info, log: log, "controlChanged - setting AUParameter value")
       parameter.setValue(value, originator: parameterObserverToken)
     }
-    os_log(.info, log: log, "controlChanged END")
   }
 
   public func updateControl() {
@@ -145,14 +141,10 @@ extension FloatParameterEditor: AUParameterEditor {
    - parameter value: the new value to use.
    */
   public func setValue(_ value: AUValue) {
-    os_log(.debug, log: log, "setValue BEGIN - value: %f", value)
     precondition(Thread.isMainThread, "setEditedValue found running on non-main thread")
-
     let newValue = value.clamped(to: parameter.minValue...parameter.maxValue)
-    os_log(.debug, log: log, "setEditedValue - using value: %f", newValue)
     parameter.setValue(newValue, originator: parameterObserverToken)
     updateControl()
-    os_log(.debug, log: log, "setEditedValue END")
   }
 }
 
@@ -161,10 +153,8 @@ private extension FloatParameterEditor {
 #if os(macOS)
   func onFocusChanged(hasFocus: Bool) {
     guard let label = self.label else { fatalError("expected non-nil label") }
-    os_log(.debug, log: log, "onFocusChanged - hasFocus: %d", hasFocus)
     if hasFocus {
       hasActiveLabel = true
-      os_log(.debug, log: log, "showing parameter value: %f", parameter.value)
       label.floatValue = parameter.value
       restoreNameTimer?.invalidate()
     }
@@ -198,19 +188,15 @@ private extension FloatParameterEditor {
   }
 
   private func showNewValue(_ value: AUValue) {
-    os_log(.info, log: log, "showNewValue BEGIN - %f", value)
     label?.text = formatter(value)
     restoreName()
-    os_log(.info, log: log, "showNewValue END")
   }
 
   private func restoreName() {
-    os_log(.info, log: log, "restoreName BEGIN")
     restoreNameTimer?.invalidate()
     guard let label = label else { return }
     let displayName = parameter.displayName
     restoreNameTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
-      os_log(.debug, log: self.log, "restoreName: %{public}s", displayName)
 #if os(iOS)
       UIView.transition(with: label, duration: 0.5, options: [.curveLinear, .transitionCrossDissolve]) {
         label.text = displayName
@@ -228,13 +214,10 @@ private extension FloatParameterEditor {
 extension FloatParameterEditor: NSTextFieldDelegate {
 
   public func controlTextDidEndEditing(_ obj: Notification) {
-    os_log(.debug, log: log, "controlTextDidEndEditing BEGIN")
     if let control = obj.object as? FocusAwareTextField {
-      os_log(.debug, log: log, "controlTextDidEndEditing - stop being first responder")
       control.onFocusChange(false)
       control.window?.makeFirstResponder(nil)
     }
-    os_log(.debug, log: log, "controlTextDidEndEditing END")
   }
 
   /**
@@ -246,13 +229,10 @@ extension FloatParameterEditor: NSTextFieldDelegate {
    - returns: true if the command was handled by this routine, false otherwise
    */
   public func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
-    os_log(.debug, log: log, "control:textView:doCommandBy BEGIN")
     if (commandSelector == #selector(NSResponder.insertNewline(_:))) {
-      os_log(.debug, log: log, "control:textView:doCommandBy END - captured ENTER/RETURN")
       control.window?.makeFirstResponder(nil)
       return true
     }
-    os_log(.debug, log: log, "control:textView:doCommandBy END")
     return false
   }
 }

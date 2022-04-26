@@ -19,8 +19,7 @@ namespace DSPHeaders {
  */
 struct SampleBuffer {
 
-  SampleBuffer(std::string loggingSubsystem) noexcept : log_{os_log_create(loggingSubsystem.c_str(), "SampleBuffer")}
-  {}
+  SampleBuffer() noexcept {}
 
   /**
    Set the format of the buffer to use.
@@ -30,7 +29,6 @@ struct SampleBuffer {
    */
   void allocate(AVAudioFormat* format, AUAudioFrameCount maxFrames) noexcept
   {
-    os_log_info(log_, "allocate - maxFrames: %d", maxFrames);
     maxFramesToRender_ = maxFrames;
     buffer_ = [[AVAudioPCMBuffer alloc] initWithPCMFormat: format frameCapacity: maxFrames];
     mutableAudioBufferList_ = buffer_.mutableAudioBufferList;
@@ -41,10 +39,7 @@ struct SampleBuffer {
    */
   void release()
   {
-    os_log_info(log_, "release - %p", buffer_);
-
     if (buffer_ == nullptr) {
-      os_log_error(log_, "buffer_ == nullptr");
       throw std::runtime_error("buffer_ == nullptr");
     }
 
@@ -65,20 +60,16 @@ struct SampleBuffer {
                               AVAudioFrameCount frameCount, NSInteger inputBusNumber,
                               AURenderPullInputBlock pullInputBlock) noexcept
   {
-    os_log_debug(log_, "pullInput - %llu", timestamp->mHostTime);
     if (pullInputBlock == nullptr) {
-      os_log_error(log_, "pullInputBlock == nullptr");
       return kAudioUnitErr_NoConnection;
     }
 
     if (frameCount > maxFramesToRender_) {
-      os_log_error(log_, "frameCount > maxFramesToRender");
       return kAudioUnitErr_TooManyFramesToProcess;
     }
 
     setFrameCount(frameCount);
     auto status = pullInputBlock(actionFlags, timestamp, frameCount, inputBusNumber, mutableAudioBufferList_);
-    os_log_debug(log_, "pullInput done - %d", status);
     return status;
   }
 
@@ -90,7 +81,6 @@ struct SampleBuffer {
    */
   void setFrameCount(AVAudioFrameCount frameCount) noexcept
   {
-    os_log_debug(log_, "setFrameCount - %d", frameCount);
     assert(frameCount <= maxFramesToRender_ && mutableAudioBufferList_ != nullptr);
     UInt32 byteSize = frameCount * sizeof(AUValue);
     for (UInt32 channel = 0; channel < mutableAudioBufferList_->mNumberBuffers; ++channel) {
@@ -110,7 +100,6 @@ struct SampleBuffer {
   }
 
 private:
-  os_log_t log_;
   AUAudioFrameCount maxFramesToRender_;
   AVAudioPCMBuffer* buffer_{nullptr};
   AudioBufferList* mutableAudioBufferList_{nullptr};

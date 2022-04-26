@@ -22,8 +22,6 @@
 
 using namespace Pirkle;
 
-static os_log_t log_{os_log_create("Pirkle", "Coefficients(Old)")};
-
 /**
 \brief returns the storage component S(n) for delay-free loop solutions
 
@@ -845,7 +843,6 @@ bool AudioFilter::calculateFilterCoeffs()
 		double alphaNumerator = tan((kPi*fc) / sampleRate) - 1.0;
 		double alphaDenominator = tan((kPi*fc) / sampleRate) + 1.0;
 		double alpha = alphaNumerator / alphaDenominator;
-            //os_log_with_type(log_, OS_LOG_TYPE_DEBUG, "%f - A0: %f", fc, alpha);
 
 		// --- update coeffs
 		coeffArray[a0] = alpha;

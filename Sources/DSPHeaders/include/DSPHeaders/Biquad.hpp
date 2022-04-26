@@ -217,8 +217,6 @@ struct Coefficients {
   T a2; /// A2 coefficient in numerator
   T b1; /// B1 coefficient in denominator
   T b2; /// B2 coefficient in denominator
-  
-  inline static os_log_t log_{os_log_create("DSP.Biquad", "Coefficients")};
 };
 
 /**
@@ -457,8 +455,6 @@ private:
   StateType state_;
 
   template <typename FilterType> friend class RampingAdapter;
-
-  os_log_t log_{os_log_create("DSP.Biquad", "Filter")};
 };
 
 template <typename T>

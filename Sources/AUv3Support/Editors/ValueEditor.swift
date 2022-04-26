@@ -28,8 +28,6 @@ public class ValueEditor: NSObject {
   public init(containerView: UIView, backgroundView: UIView, parameterName: UILabel, parameterValue: UITextField,
               containerViewTopConstraint: NSLayoutConstraint, backgroundViewBottomConstraint: NSLayoutConstraint,
               controlsView: UIView) {
-    os_log(.info, log: log, "init BEGIN")
-
     self.containerView = containerView
     self.backgroundView = backgroundView
     self.parameterName = parameterName
@@ -55,7 +53,6 @@ public class ValueEditor: NSObject {
 
     let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
     containerView.addGestureRecognizer(gestureRecognizer)
-    os_log(.info, log: log, "init END - %{public}s", self.pointer)
   }
 }
 
@@ -67,15 +64,11 @@ extension ValueEditor {
    - parameter editor: the parameter editor that manages the AUParameter value.
    */
   public func beginEditing(editor: AUParameterEditor) {
-    os_log(.info, log: log, "beginEditing - %d", editor.parameter.address)
-
     editing = editor
-
     parameterName.text = editor.parameter.displayName
     parameterValueEditor.text = "\(editor.parameter.value)"
     parameterValueEditor.becomeFirstResponder()
     parameterValueEditor.delegate = self
-
     containerView.alpha = 1.0
     containerView.isHidden = false
   }
@@ -87,8 +80,6 @@ extension ValueEditor {
    */
   public func endEditing(accept: Bool = true) {
     guard let editor = editing else { fatalError() }
-    os_log(.info, log: log, "endEditing BEGIN - address: %d", editor.parameter.address)
-
     if accept,
        let stringValue = parameterValueEditor.text,
        let value = AUValue(stringValue),
@@ -98,8 +89,6 @@ extension ValueEditor {
 
     editing = nil
     parameterValueEditor.resignFirstResponder()
-
-    os_log(.info, log: log, "endEditing END")
   }
 }
 
@@ -108,10 +97,7 @@ extension ValueEditor {
 private extension ValueEditor {
 
   @objc func handleKeyboardAppearing(_ notification: Notification) {
-    os_log(.info, log: log, "handleKeyboardAppearing BEGIN")
     let keyboardInfo = KeyboardInfo(notification)
-    os_log(.info, log: log, "handleKeyboardAppearing - info: %{public}s", keyboardInfo.description)
-
     let height = keyboardInfo.frameEnd.height
     backgroundViewBottomConstraint.constant = -backgroundView.frame.height
     parent.layoutIfNeeded()
@@ -119,7 +105,6 @@ private extension ValueEditor {
     keyboardIsVisible = height >= 100
     let goal = keyboardIsVisible ? height + 20 : parent.frame.midY
 
-    os_log(.info, log: log, "handleKeyboardAppearing END - goal: %f keyboardIsVisible: %d", goal, keyboardIsVisible)
     animateWithKeyboard(keyboardInfo) { _ in
       self.backgroundViewBottomConstraint.constant = goal
       self.parent.layoutIfNeeded()
@@ -127,17 +112,10 @@ private extension ValueEditor {
     }
   }
 
-  @objc private func handleKeyboardChanged(_ notification: Notification) {
-    os_log(.info, log: log, "handleKeyboardChanged BEGIN")
-    let keyboardInfo = KeyboardInfo(notification)
-    os_log(.info, log: log, "handleKeyboardChanged - info: %{public}s", keyboardInfo.description)
-  }
+  @objc private func handleKeyboardChanged(_ notification: Notification) {}
 
   @objc private func handleKeyboardDisappearing(_ notification: Notification) {
-    os_log(.info, log: log, "handleKeyboardDisappearing BEGIN - editing: %d", editing != nil ? 1 : 0)
     let keyboardInfo = KeyboardInfo(notification)
-    os_log(.info, log: log, "handleKeyboardDisappearing - info: %{public}s", keyboardInfo.description)
-
     parent.layoutIfNeeded()
     keyboardIsVisible = false
 
@@ -170,7 +148,6 @@ private extension ValueEditor {
       animator.addCompletion(completion)
     }
 
-    os_log(.info, log: log, "animateWithKeyboard - starting")
     animator.startAnimation()
   }
 }
@@ -184,9 +161,7 @@ extension ValueEditor: UITextFieldDelegate {
    - returns: always false
    */
   public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-    os_log(.info, log: log, "textFieldShouldReturn BEGIN")
     endEditing()
-    os_log(.info, log: log, "textFieldShouldReturn END")
     return false
   }
 
@@ -198,11 +173,9 @@ extension ValueEditor: UITextFieldDelegate {
    - parameter textField: the text field current being edited (ignored)
    */
   public func textFieldDidEndEditing(_ textField: UITextField) {
-    os_log(.info, log: log, "textFieldDidEndEditing BEGIN")
     if textField.isFirstResponder {
       endEditing(accept: false)
     }
-    os_log(.info, log: log, "textFieldDidEndEditing END")
   }
 }
 

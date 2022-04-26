@@ -47,24 +47,19 @@ open class AppDelegate: UIResponder, UIApplicationDelegate {
   }
 
   public func applicationWillResignActive(_ application: UIApplication) {
-    os_log(.info, log: log, "applicationWillResignActive")
     resigningActiveBlock?()
   }
 
   public func applicationDidEnterBackground(_ application: UIApplication) {
-    os_log(.info, log: log, "applicationDidEnterBackground")
   }
 
   public func applicationWillEnterForeground(_ application: UIApplication) {
-    os_log(.info, log: log, "applicationWillEnterForeground")
   }
 
   public func applicationDidBecomeActive(_ application: UIApplication) {
-    os_log(.info, log: log, "applicationDidBecomeActive")
   }
 
   public func applicationWillTerminate(_ application: UIApplication) {
-    os_log(.info, log: log, "applicationWillTerminate")
     resigningActiveBlock?()
   }
 }

@@ -111,18 +111,12 @@ public final class AudioUnitLoader: NSObject {
    updates and try again.
    */
   private func locate() {
-    os_log(.debug, log: log, "locate BEGIN - %{public}s", searchCriteria.description)
     let components = AVAudioUnitComponentManager.shared().components(matching: searchCriteria)
 
-    os_log(.debug, log: self.log, "locate: found %d", components.count)
-    for (index, each) in components.enumerated() {
-      os_log(.debug, log: self.log, "[%d] %{public}s", index, each.audioComponentDescription.description)
-
+    for (_, each) in components.enumerated() {
       if each.audioComponentDescription.componentManufacturer == self.componentDescription.componentManufacturer,
          each.audioComponentDescription.componentType == self.componentDescription.componentType,
          each.audioComponentDescription.componentSubType == self.componentDescription.componentSubType {
-        os_log(.debug, log: self.log, "found match")
-
         DispatchQueue.main.async {
           self.createAudioUnit(each.audioComponentDescription)
         }
@@ -131,14 +125,11 @@ public final class AudioUnitLoader: NSObject {
     }
 
     scheduleCheck()
-    
-    os_log(.debug, log: log, "locate END")
   }
 
   private func scheduleCheck() {
     remainingLocateAttempts -= 1
     if remainingLocateAttempts <= 0 {
-      os_log(.error, log: self.log, "locate END - failed to locate component")
       creationError = .componentNotFound
       return
     }
@@ -157,7 +148,6 @@ public final class AudioUnitLoader: NSObject {
    Create the desired component using the AUv3 API
    */
   private func createAudioUnit(_ componentDescription: AudioComponentDescription) {
-    os_log(.debug, log: log, "createAudioUnit")
     guard avAudioUnit == nil else { return }
 
 #if os(macOS)
@@ -169,13 +159,11 @@ public final class AudioUnitLoader: NSObject {
     AVAudioUnit.instantiate(with: componentDescription, options: options) { [weak self] avAudioUnit, error in
       guard let self = self else { return }
       if let error = error {
-        os_log(.error, log: self.log, "createAudioUnit: error - %{public}s", error.localizedDescription)
         self.creationError = .framework(error: error)
         return
       }
 
       guard let avAudioUnit = avAudioUnit else {
-        os_log(.error, log: self.log, "createAudioUnit: nil avAudioUnit")
         self.creationError = AudioUnitLoaderError.nilAudioUnit
         return
       }
@@ -192,15 +180,12 @@ public final class AudioUnitLoader: NSObject {
    - parameter avAudioUnit: the AVAudioUnit that was instantiated
    */
   private func createViewController(_ avAudioUnit: AVAudioUnit) {
-    os_log(.debug, log: log, "createViewController")
-
     avAudioUnit.auAudioUnit.requestViewController { [weak self] controller in
       guard let self = self else { return }
       guard let controller = controller else {
         self.creationError = AudioUnitLoaderError.nilViewController
         return
       }
-      os_log(.debug, log: self.log, "view controller type - %{public}s", String(describing: type(of: controller)))
       self.wireAudioUnit(avAudioUnit, controller)
     }
   }
@@ -218,19 +203,15 @@ public final class AudioUnitLoader: NSObject {
     playEngine.connectEffect(audioUnit: avAudioUnit)
 
     let maximumFramesToRender = playEngine.maximumFramesToRender
-    os_log(.debug, log: log, "setting maximumFramesToRender: %d", maximumFramesToRender)
     avAudioUnit.auAudioUnit.maximumFramesToRender = maximumFramesToRender
 
     notifyDelegate()
   }
 
   private func notifyDelegate() {
-    os_log(.debug, log: log, "notifyDelegate")
     if let creationError = creationError {
-      os_log(.debug, log: log, "error: %{public}s", creationError.localizedDescription)
       DispatchQueue.main.async { self.delegate?.failed(error: creationError) }
     } else if let avAudioUnit = avAudioUnit, let viewController = viewController {
-      os_log(.debug, log: log, "success")
       DispatchQueue.main.async { self.delegate?.connected(audioUnit: avAudioUnit, viewController: viewController) }
     }
   }
@@ -244,16 +225,11 @@ public extension AudioUnitLoader {
    */
   func save() {
     guard let audioUnit = auAudioUnit else { return }
-    os_log(.debug, log: log, "save BEGIN - %{public}s", audioUnit.currentPreset.descriptionOrNil)
-
     if let lastState = audioUnit.fullState {
-      os_log(.debug, log: log, "save - lastState: %{public}s", lastState.description)
       UserDefaults.standard.set(lastState, forKey: Self.lastStateKey)
     } else {
       UserDefaults.standard.removeObject(forKey: Self.lastStateKey)
     }
-
-    os_log(.debug, log: log, "save END")
   }
 
   /**
@@ -261,12 +237,9 @@ public extension AudioUnitLoader {
    */
   func restore() {
     guard let audioUnit = auAudioUnit else { return }
-    os_log(.debug, log: log, "restore BEGIN")
     if let lastState = lastState {
-      os_log(.debug, log: log, "restore - lastState: %{public}s", lastState.description)
       audioUnit.fullState = lastState
     }
-    os_log(.debug, log: log, "restore END")
   }
 }
 

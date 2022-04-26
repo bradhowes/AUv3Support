@@ -10,7 +10,7 @@ using namespace DSPHeaders;
 
 struct MockEffect : public EventProcessor<MockEffect>
 {
-  MockEffect() : EventProcessor<MockEffect>("Foo") {}
+  MockEffect() : EventProcessor<MockEffect>() {}
   void setParameterFromEvent(const AUParameterEvent&) {}
   void doMIDIEvent(AUMIDIEvent) {}
   void doRendering(NSInteger outputBusNumber, BusBuffers, BusBuffers, AUAudioFrameCount) {}

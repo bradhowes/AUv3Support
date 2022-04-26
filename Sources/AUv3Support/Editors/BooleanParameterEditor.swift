@@ -37,7 +37,6 @@ extension BooleanParameterEditor: AUParameterEditor {
    - parameter source: the control that caused the change
    */
   public func controlChanged(source: AUParameterValueProvider) {
-    os_log(.info, log: log, "controlChanged - new: %f state: %d", source.value, booleanControl.booleanState)
     precondition(Thread.isMainThread, "controlChanged found running on non-main thread")
 
     let value = source.value
@@ -60,23 +59,18 @@ extension BooleanParameterEditor: AUParameterEditor {
    - parameter value: the new value to use
    */
   public func setValue(_ value: AUValue) {
-    os_log(.info, log: log, "setValue BEGIN - %f", value)
     precondition(Thread.isMainThread, "setEditedValue found running on non-main thread")
     setState(value)
     parameter.setValue(value, originator: parameterObserverToken)
-    os_log(.info, log: log, "setValue END")
   }
 }
 
 private extension BooleanParameterEditor {
 
   func setState(_ value: AUValue) {
-    os_log(.info, log: log, "setState BEGIN - value: %f current: %d", value, booleanControl.booleanState)
     let newState = value >= 0.5 ? true : false
     if newState != booleanControl.booleanState {
-      os_log(.info, log: log, "setState - setting to %d", newState)
       booleanControl.booleanState = newState
     }
-    os_log(.info, log: log, "setState END")
   }
 }

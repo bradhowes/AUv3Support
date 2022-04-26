@@ -61,7 +61,6 @@ public class UserPresetsManager {
    - parameter audioUnit: AUv3 component
    */
   public init(for audioUnit: AUAudioUnitPresetsFacade) {
-    os_log(.debug, log: log, "init")
     self.audioUnit = audioUnit
   }
 
@@ -72,10 +71,7 @@ public class UserPresetsManager {
    - returns: the preset that was found or nil
    */
   public func find(name: String) -> AUAudioUnitPreset? {
-    os_log(.debug, log: log, "find BEGIN - %{public}s", name)
-    let found = presets.first(where: { $0.name == name })
-    os_log(.debug, log: log, "find END - %{public}s", found.descriptionOrNil)
-    return found
+    presets.first(where: { $0.name == name })
   }
 
   /**
@@ -85,10 +81,7 @@ public class UserPresetsManager {
    - returns: the preset that was found or nil
    */
   public func find(number: Int) -> AUAudioUnitPreset? {
-    os_log(.debug, log: log, "find BEGIN - %d", number)
-    let found = presets.first(where: { $0.number == number })
-    os_log(.debug, log: log, "find END - %{public}s", found.descriptionOrNil)
-    return found
+    presets.first(where: { $0.number == number })
   }
 
   /// Clear the `currentPreset` attribute of the component.
@@ -102,9 +95,7 @@ public class UserPresetsManager {
    - parameter name: the name to look for
    */
   public func makeCurrentPreset(name: String) {
-    os_log(.debug, log: log, "makeCurrentPreset BEGIN - %{public}s", name)
     audioUnit.currentPreset = find(name: name)
-    os_log(.debug, log: log, "makeCurrentPreset END - %{public}s", currentPreset.descriptionOrNil)
   }
 
   /**
@@ -114,13 +105,11 @@ public class UserPresetsManager {
    - parameter number: the number to look for
    */
   public func makeCurrentPreset(number: Int) {
-    os_log(.debug, log: log, "makeCurrentPreset BEGIN - %d", number)
     if number >= 0 {
       audioUnit.currentPreset = audioUnit.factoryPresetsNonNil[validating: number]
     } else {
       audioUnit.currentPreset = find(number: number)
     }
-    os_log(.debug, log: log, "makeCurrentPreset END - %{public}s", currentPreset.descriptionOrNil)
  }
 
   /**
@@ -131,11 +120,9 @@ public class UserPresetsManager {
    - throws exception from AUAudioUnit
    */
   public func create(name: String) throws {
-    os_log(.debug, log: log, "create BEGIN - %{public}s", name)
     let preset = AUAudioUnitPreset(number: nextNumber, name: name)
     try audioUnit.saveUserPreset(preset)
     audioUnit.currentPreset = preset
-    os_log(.debug, log: log, "create END - %{public}s", currentPreset.descriptionOrNil)
   }
 
   /**
@@ -145,12 +132,10 @@ public class UserPresetsManager {
    - throws exception from AUAudioUnit
    */
   public func update(preset: AUAudioUnitPreset) throws {
-    os_log(.debug, log: log, "update BEGIN - %d", preset.number)
     guard preset.number < 0 else { return }
     let preset = AUAudioUnitPreset(number: preset.number, name: preset.name)
     try audioUnit.saveUserPreset(preset)
     audioUnit.currentPreset = preset
-    os_log(.debug, log: log, "update END - %{public}s", currentPreset.descriptionOrNil)
   }
 
   /**
@@ -160,13 +145,11 @@ public class UserPresetsManager {
    - throws exception from AUAudioUnit
    */
   public func renameCurrent(to name: String) throws {
-    os_log(.debug, log: log, "rename BEGIN - to: %{public}s", name)
     guard let old = audioUnit.currentPreset, old.number < 0 else { return }
     let new = AUAudioUnitPreset(number: old.number, name: name)
     try audioUnit.deleteUserPreset(old)
     try audioUnit.saveUserPreset(new)
     audioUnit.currentPreset = new
-    os_log(.debug, log: log, "rename END - %{public}s", currentPreset.descriptionOrNil)
   }
 
   /**
@@ -175,11 +158,9 @@ public class UserPresetsManager {
    - throws exception from AUAudioUnit
    */
   public func deleteCurrent() throws {
-    os_log(.debug, log: log, "deleteCurrent BEGIN - to: %{public}s", currentPreset.descriptionOrNil)
     guard let preset = audioUnit.currentPreset, preset.number < 0 else { return }
     audioUnit.currentPreset = nil
     try audioUnit.deleteUserPreset(AUAudioUnitPreset(number: preset.number, name: preset.name))
-    os_log(.debug, log: log, "deleteCurrent END - %{public}s", currentPreset.descriptionOrNil)
   }
 
   /// Obtain the smallest user preset number that is not being used by any other preset.

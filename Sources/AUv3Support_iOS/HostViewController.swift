@@ -86,7 +86,6 @@ extension HostViewController {
   }
 
   override public func viewDidLoad() {
-    os_log(.debug, log: log, "viewDidLoad BEGIN")
     super.viewDidLoad()
     guard let config = self.config else { fatalError() }
 
@@ -135,26 +134,19 @@ applications.
       self.saveState()
       self.stopPlaying()
     }
-    
-    os_log(.debug, log: log, "viewDidLoad END")
   }
 
   override public func viewWillAppear(_ animated: Bool) {
-    os_log(.debug, log: log, "viewWillAppear BEGIN")
     super.viewWillAppear(animated)
     playButton.setImage(UIImage(named: "stop"), for: [.highlighted, .selected])
     bypassButton.setImage(UIImage(named: "bypassed"), for: [.highlighted, .selected])
-    os_log(.debug, log: log, "viewWillAppear END")
   }
 
   public func saveState() {
-    os_log(.debug, log: log, "saveState BEGIN")
     audioUnitLoader?.save()
-    os_log(.debug, log: log, "saveState BEGIN")
   }
 
   public func stopPlaying() {
-    os_log(.debug, log: log, "stopPlaying BEGIN")
     playButton.isSelected = false
     playButton.isEnabled = auAudioUnit != nil
     bypassButton.isSelected = false
@@ -163,8 +155,6 @@ applications.
 
     audioUnitLoader?.save()
     audioUnitLoader?.cleanup()
-
-    os_log(.debug, log: log, "stopPlaying END")
   }
 }
 
@@ -173,7 +163,6 @@ applications.
 extension HostViewController {
 
   @IBAction public func togglePlay(_ sender: UIButton) {
-    os_log(.debug, log: log, "togglePlay BEGIN")
     let isPlaying = audioUnitLoader?.togglePlayback() ?? false
     bypassButton.isEnabled = isPlaying
     playButton.isSelected = isPlaying
@@ -182,34 +171,26 @@ extension HostViewController {
     if !isPlaying {
       bypassButton.isSelected = false
     }
-
-    os_log(.debug, log: log, "togglePlay END")
   }
 
   @IBAction public func toggleBypass(_ sender: UIButton) {
-    os_log(.debug, log: log, "toggleBypass BEGIN")
     let wasBypassed = auAudioUnit?.shouldBypassEffect ?? false
     let isBypassed = !wasBypassed
     auAudioUnit?.shouldBypassEffect = isBypassed
     sender.isSelected = isBypassed
-    os_log(.debug, log: log, "toggleBypass END")
   }
 
   @IBAction public func visitAppStore(_ sender: UIButton) {
-    os_log(.debug, log: log, "visitAppStore BEGIN")
     guard let config = self.config else { return }
     guard let url = URL(string: "https://itunes.apple.com/app/id\(config.appStoreId)") else {
       fatalError("Expected a valid URL")
     }
 
     config.appStoreVisitor(url)
-    os_log(.debug, log: log, "visitAppStore END")
   }
 
   @IBAction public func useFactoryPreset(_ sender: UISegmentedControl? = nil) {
-    os_log(.debug, log: log, "useFactoryPreset BEGIN - %d", presetSelection.selectedSegmentIndex)
     userPresetsManager?.makeCurrentPreset(number: presetSelection.selectedSegmentIndex)
-    os_log(.debug, log: log, "useFactoryPreset END")
   }
 
   @IBAction public func dismissInstructions(_ sender: Any) {
@@ -223,23 +204,17 @@ extension HostViewController {
 extension HostViewController: AudioUnitLoaderDelegate {
 
   public func connected(audioUnit: AVAudioUnit, viewController: UIViewController) {
-    os_log(.debug, log: log, "connected BEGIN")
     userPresetsManager = .init(for: audioUnit.auAudioUnit)
     avAudioUnit = audioUnit
     audioUnitViewController = viewController
     connectFilterView(audioUnit, viewController)
     connectParametersToControls(audioUnit.auAudioUnit)
-
     updateView()
-
-    os_log(.debug, log: log, "connected END")
   }
 
   public func failed(error: AudioUnitLoaderError) {
-    os_log(.error, log: log, "failed BEGIN - error: %{public}s", error.description)
     let message = "Unable to load the AUv3 component. \(error.description)"
     notify(title: "AUv3 Failure", message: message)
-    os_log(.debug, log: log, "failed END")
   }
 }
 
@@ -306,7 +281,6 @@ private extension HostViewController {
   }
 
   func connectFilterView(_ audioUnit: AVAudioUnit, _ viewController: UIViewController) {
-    os_log(.debug, log: log, "connectFilterView BEGIN")
     containerView.addSubview(viewController.view)
     viewController.view.pinToSuperviewEdges()
 
@@ -319,8 +293,6 @@ private extension HostViewController {
     userPresetsMenuButton.isEnabled = true
 
     setPresetSelectionControlSegmentSize(audioUnit.auAudioUnit.factoryPresetsNonNil.count)
-
-    os_log(.debug, log: log, "connectFilterView END")
   }
 
   func setPresetSelectionControlSegmentSize(_ presetCount: Int) {
@@ -334,35 +306,23 @@ private extension HostViewController {
   }
 
   func connectParametersToControls(_ audioUnit: AUAudioUnit) {
-    os_log(.debug, log: log, "connectParametersToControls BEGIN")
-
     currentPresetObserverToken = audioUnit.observe(\.currentPreset) { _, _ in
-      os_log(.info, log: self.log, "currentPreset changed")
       DispatchQueue.main.async { self.updateView() }
     }
 
     userPresetsObserverToken = audioUnit.observe(\.userPresets) { _, _ in
-      os_log(.info, log: self.log, "userPresets changed")
       DispatchQueue.main.async { self.updatePresetMenu() }
     }
-
-    os_log(.debug, log: log, "connectParametersToControls END")
   }
 
   func usePreset(number: Int) {
-    os_log(.debug, log: log, "usePreset BEGIN")
     guard let userPresetManager = userPresetsManager else { return }
     userPresetManager.makeCurrentPreset(number: number)
     updatePresetMenu()
-    os_log(.debug, log: log, "usePreset BEGIN")
   }
 
   func updatePresetMenu() {
-    os_log(.debug, log: log, "updatePresetMenu BEGIN")
-    guard let userPresetsManager = userPresetsManager else {
-      os_log(.debug, log: log, "updatePresetMenu END - nil userPresetsManager")
-      return
-    }
+    guard let userPresetsManager = userPresetsManager else { return }
 
     let active = userPresetsManager.audioUnit.currentPreset?.number ?? Int.max
 
@@ -372,16 +332,12 @@ private extension HostViewController {
       return action
     }
 
-    os_log(.debug, log: log, "updatePresetMenu - adding %d factory presets", factoryPresets.count)
     let factoryPresetsMenu = UIMenu(title: "Factory", options: .displayInline, children: factoryPresets)
-
     let userPresets = userPresetsManager.presetsOrderedByName.map { (preset: AUAudioUnitPreset) -> UIAction in
       let action = UIAction(title: preset.name, handler: { _ in self.usePreset(number: preset.number) })
       action.state = active == preset.number ? .on : .off
       return action
     }
-
-    os_log(.debug, log: log, "updatePresetMenu - adding %d user presets", userPresets.count)
 
     let userPresetsMenu = UIMenu(title: "User", options: .displayInline, children: userPresets)
 
@@ -399,12 +355,9 @@ private extension HostViewController {
       userPresetsMenuButton.menu = menu
       userPresetsMenuButton.showsMenuAsPrimaryAction = true
     }
-
-    os_log(.debug, log: log, "updatePresetMenu END")
   }
 
   func updateView() {
-    os_log(.debug, log: log, "updateView BEGIN")
     guard let audioUnitLoader = audioUnitLoader,
           let auAudioUnit = auAudioUnit else {
       return
@@ -419,25 +372,17 @@ private extension HostViewController {
     } else {
       audioUnitLoader.save()
     }
-
-    os_log(.debug, log: log, "updateView END")
   }
 
   func updatePresetSelection(_ auAudioUnit: AUAudioUnit) {
-    os_log(.debug, log: log, "updatePresetSelection BEGIN")
-
     guard let preset = auAudioUnit.currentPreset else {
       presetName.text = ""
       presetSelection.selectedSegmentIndex = -1
-      os_log(.info, log: log, "updatePresetSelection END - nil preset")
       return
     }
 
-    os_log(.info, log: log, "updatePresetSelection: %d", preset.number)
     presetSelection.selectedSegmentIndex = preset.number >= 0 ? preset.number : -1
     presetName.text = preset.name
-
-    os_log(.debug, log: log, "updatePresetSelection END")
   }
 
   func makeCreatePresetAction(presetsManager: UserPresetsManager) -> UIAction {

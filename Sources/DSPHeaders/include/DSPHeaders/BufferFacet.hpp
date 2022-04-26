@@ -20,10 +20,8 @@ struct BufferFacet {
 
   /**
    Construct a new instance.
-
-   @param loggingSubsystem the string constant to use for the log subsystem parameter for `os_log_create` call.
    */
-  BufferFacet(std::string loggingSubsystem) noexcept : log_{os_log_create(loggingSubsystem.c_str(), "BufferFacet")} {}
+  BufferFacet() noexcept {}
 
   /**
    Set the expected number of channels to support during rendering. The goal is to not encounter any memory
@@ -33,7 +31,6 @@ struct BufferFacet {
    */
   void setChannelCount(AUAudioChannelCount channelCount) noexcept
   {
-    os_log_debug(log_, "setChannelCount - %d", channelCount);
     pointers_.reserve(channelCount);
     pointers_.resize(channelCount);
   }
@@ -52,12 +49,9 @@ struct BufferFacet {
    @param inPlaceSource if not nullptr, use their mData elements for storage
    */
   void setBufferList(AudioBufferList* bufferList, AudioBufferList* inPlaceSource = nullptr) {
-    os_log_debug(log_, "setBufferList - bufferList: %p inPlaceSource: %p", bufferList, inPlaceSource);
     bufferList_ = bufferList;
     if (bufferList->mBuffers[0].mData == nullptr) {
-      os_log_debug(log_, "using inPlaceSource");
       if (inPlaceSource == nullptr) {
-        os_log_error(log_, "inPlaceSource == nullptr");
         throw std::runtime_error("inPlaceSource == nullptr");
       }
       assert(inPlaceSource != nullptr);
@@ -68,7 +62,6 @@ struct BufferFacet {
 
     size_t numBuffers = bufferList_->mNumberBuffers;
     if (numBuffers != pointers_.size()) {
-      os_log_error(log_, "numBuffers != pointers_.size()");
       throw std::runtime_error("numBuffers != pointers_.size()");
     }
 
@@ -82,7 +75,6 @@ struct BufferFacet {
    @param offset number of samples to offset.
    */
   void setOffset(AUAudioFrameCount offset) {
-    os_log_debug(log_, "setOffset - %d", offset);
     validateBufferList();
     for (size_t channel = 0; channel < pointers_.size(); ++channel) {
       pointers_[channel] = static_cast<AUValue*>(bufferList_->mBuffers[channel].mData) + offset;
@@ -96,7 +88,6 @@ struct BufferFacet {
    @param frameCount number of samples in a buffer.
    */
   void setFrameCount(AUAudioFrameCount frameCount) {
-    os_log_debug(log_, "setFrameCount - %d", frameCount);
     validateBufferList();
     UInt32 byteSize = frameCount * sizeof(AUValue);
     for (UInt32 channel = 0; channel < bufferList_->mNumberBuffers; ++channel) {
@@ -111,7 +102,6 @@ struct BufferFacet {
    Release the underlying buffers.
    */
   void unlink() {
-    os_log_debug(log_, "unlink - %lul", pointers_.size());
     validateBufferList();
     bufferList_ = nullptr;
     for (size_t channel = 0; channel < pointers_.size(); ++channel) {
@@ -128,7 +118,6 @@ struct BufferFacet {
    @param frameCount the number of samples to write
    */
   void copyInto(BufferFacet& destination, AUAudioFrameCount offset, AUAudioFrameCount frameCount) const {
-    os_log_debug(log_, "copyInto");
     validateBufferList();
     auto outputs = destination.bufferList_;
     for (UInt32 channel = 0; channel < bufferList_->mNumberBuffers; ++channel) {
@@ -148,7 +137,6 @@ struct BufferFacet {
 
   /// @returns new BusBuffers instance that refers to our collection of AUValue pointers for storing render samples.
   BusBuffers busBuffers() noexcept {
-    os_log_debug(log_, "busBuffers");
     return BusBuffers(pointers_);
   }
 
@@ -156,14 +144,12 @@ private:
 
   void validateBufferList() const {
     if (bufferList_ == nullptr) {
-      os_log_error(log_, "bufferList_ == nullptr");
       throw std::runtime_error("bufferList_ == nullptr");
     }
   }
 
   AudioBufferList* bufferList_{nullptr};
   std::vector<AUValue*> pointers_{};
-  os_log_t log_;
 };
 
 } // end namespace DSPHeaders
