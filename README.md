@@ -42,7 +42,7 @@ In the AUv3-Support product you will find various classes and extensions to make
 components:
 
 - Editors -- a collection of parameter editors that work on iOS and macOS via protocol conformance. They properly
-update themselves when a audio unit loads a preset, and they properly communicate changes made by the user or by
+update themselves when an audio unit loads a preset, and they properly communicate changes made by the user or by
 another control, perhaps external. There is a
 `BooleanParameterEditor` that works with a UISwitch/NSSwitch control, and there is a `FloatParameterEditor` that works
 with anything that can report out a floating-point value as well as the min/max ranges the value may have.
