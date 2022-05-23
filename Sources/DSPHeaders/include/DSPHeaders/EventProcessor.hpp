@@ -139,8 +139,8 @@ public:
     if (!pullInputBlock) {
       UInt32 byteSize = frameCount * sizeof(AUValue);
       for (UInt32 index = 0; index < output->mNumberBuffers; ++index) {
-        AudioBuffer& buffer = output->mBuffers[index];
-        memset(buffer.mData, 0, byteSize);
+        auto& buf{output->mBuffers[index]};
+        memset(buf.mData, 0, byteSize);
       }
     }
 
