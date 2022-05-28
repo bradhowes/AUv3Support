@@ -174,6 +174,34 @@
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AUv3Support-iOS"
+               BuildableName = "AUv3Support-iOS"
+               BlueprintName = "AUv3Support-iOS"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AUv3Support-macOS"
+               BuildableName = "AUv3Support-macOS"
+               BlueprintName = "AUv3Support-macOS"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -220,6 +248,26 @@
                BlueprintIdentifier = "AUv3Support_macOSTests"
                BuildableName = "AUv3Support_macOSTests"
                BlueprintName = "AUv3Support_macOSTests"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AUv3Support-iOSTests"
+               BuildableName = "AUv3Support-iOSTests"
+               BlueprintName = "AUv3Support-iOSTests"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AUv3Support-macOSTests"
+               BuildableName = "AUv3Support-macOSTests"
+               BlueprintName = "AUv3Support-macOSTests"
                ReferencedContainer = "container:">
             </BuildableReference>
          </TestableReference>

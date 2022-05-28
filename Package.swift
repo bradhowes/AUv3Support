@@ -7,8 +7,8 @@ let package = Package(
   platforms: [.iOS(.v13), .macOS(.v10_15)],
   products: [
     .library(name: "AUv3-Support", targets: ["AUv3Support"]),
-    .library(name: "AUv3-Support-iOS", targets: ["AUv3Support_iOS"]),
-    .library(name: "AUv3-Support-macOS", targets: ["AUv3Support_macOS"]),
+    .library(name: "AUv3-Support-iOS", targets: ["AUv3Support-iOS"]),
+    .library(name: "AUv3-Support-macOS", targets: ["AUv3Support-macOS"]),
     .library(name: "AUv3-DSP-Headers", targets: ["DSPHeaders"]),
   ],
   targets: [
@@ -53,26 +53,20 @@ let package = Package(
       dependencies: [],
       exclude: [],
       resources: [.process("Resources")],
-      swiftSettings: [
-        .define("APPLICATION_EXTENSION_API_ONLY")
-      ]
+      swiftSettings: [.define("APPLICATION_EXTENSION_API_ONLY")]
     ),
     .target(
-      name: "AUv3Support_iOS",
+      name: "AUv3Support-iOS",
       dependencies: ["AUv3Support"],
       exclude: ["README.md"],
       resources: [.process("Resources")],
-      swiftSettings: [
-        .define("APPLICATION_EXTENSION_API_ONLY")
-      ]
+      swiftSettings: [.define("APPLICATION_EXTENSION_API_ONLY")]
     ),
     .target(
-      name: "AUv3Support_macOS",
+      name: "AUv3Support-macOS",
       dependencies: ["AUv3Support"],
       exclude: ["README.md"],
-      swiftSettings: [
-        .define("APPLICATION_EXTENSION_API_ONLY")
-      ]
+      swiftSettings: [.define("APPLICATION_EXTENSION_API_ONLY")]
     ),
     .testTarget(
       name: "AUv3SupportTests",
@@ -80,21 +74,18 @@ let package = Package(
       resources: [.copy("Resources")]
     ),
     .testTarget(
-      name: "AUv3Support_iOSTests",
-      dependencies: ["AUv3Support", "AUv3Support_iOS"]
+      name: "AUv3Support-iOSTests",
+      dependencies: ["AUv3Support", "AUv3Support-iOS"]
     ),
     .testTarget(
-      name: "AUv3Support_macOSTests",
-      dependencies: ["AUv3Support", "AUv3Support_macOS"]
+      name: "AUv3Support-macOSTests",
+      dependencies: ["AUv3Support", "AUv3Support-macOS"]
     ),
     .testTarget(
       name: "DSPHeadersTests",
       dependencies: ["DSPHeaders"],
-      exclude: ["Pirkle/README.md",
-                "Pirkle/readme.txt"],
-      linkerSettings: [
-        .linkedFramework("AVFoundation")
-      ]
+      exclude: ["Pirkle/README.md", "Pirkle/readme.txt"],
+      linkerSettings: [.linkedFramework("AVFoundation")]
     )
   ],
   cxxLanguageStandard: .cxx17
