@@ -14,7 +14,8 @@ import os.log
  Similarly, parameters for controlling the filter are provided by an abstract `ParameterSource` entity.
  */
 public final class FilterAudioUnit: AUAudioUnit {
-  private let log = Shared.logger("FilterAudioUnit")
+
+  private let log: OSLog = OSLog(subsystem: "com.braysoftware.AUv3Support", category: "FilterAudioUnit")
 
   public enum Failure: Swift.Error {
     case statusError(OSStatus)
@@ -76,6 +77,7 @@ public final class FilterAudioUnit: AUAudioUnit {
    */
   override public init(componentDescription: AudioComponentDescription,
                        options: AudioComponentInstantiationOptions = []) throws {
+    os_log(.info, log: log, "init - BEGIN")
 
     guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2) else {
       throw Failure.unableToInitialize(String(describing: AVAudioFormat.self))
@@ -88,6 +90,7 @@ public final class FilterAudioUnit: AUAudioUnit {
     outputBus.maximumChannelCount = maxNumberOfChannels
 
     try super.init(componentDescription: componentDescription, options: options)
+    os_log(.info, log: log, "init - END")
   }
 }
 
@@ -215,6 +218,8 @@ extension FilterAudioUnit {
    routine should `setRenderResourcesAllocated(false)`.
    */
   override public func allocateRenderResources() throws {
+    os_log(.info, log: log, "allocateRenderResources - BEGIN")
+
     guard let kernel = kernel else { fatalError("FilterAudioUnit not configured with kernel") }
     guard let parameters = parameters else { fatalError("FilterAudioUnit not configured with parameter source") }
 
@@ -237,6 +242,8 @@ extension FilterAudioUnit {
     parameters.parameterTree.implementorValueObserver = { param, value in
       scheduleParameter(AUEventSampleTimeImmediate, rampDurationInSamples, param.address, value);
     }
+
+    os_log(.info, log: log, "allocateRenderResources - END")
   }
 
   /**
@@ -253,6 +260,7 @@ extension FilterAudioUnit {
   }
   
   override public var internalRenderBlock: AUInternalRenderBlock {
+    os_log(.info, log: log, "internalRenderBlock - BEGIN")
     guard let kernel = kernel else { fatalError("nil kernel") }
     return kernel.internalRenderBlock() // (transportStateBlock)
   }
