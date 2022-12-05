@@ -34,7 +34,7 @@ public:
    @param waveform the waveform to emit
    */
   LFO(T sampleRate, T frequency, LFOWaveform waveform) noexcept
-  : valueGenerator_{WaveformGenerator(waveform)}, sampleRate_{sampleRate}, waveform_{waveform}
+  : valueGenerator_{WaveformGenerator(waveform)}, sampleRate_{sampleRate}
   {
     setFrequency(frequency, 0);
     reset();
@@ -70,10 +70,7 @@ public:
    
    @param waveform the waveform to emit
    */
-  void setWaveform(LFOWaveform waveform) noexcept {
-    waveform_ = waveform;
-    valueGenerator_ = WaveformGenerator(waveform);
-  }
+  void setWaveform(LFOWaveform waveform) noexcept { valueGenerator_ = WaveformGenerator(waveform); }
 
   /**
    Set the frequency of the oscillator.
@@ -112,7 +109,13 @@ public:
   T frequency() const noexcept { return phaseIncrement_.get() * sampleRate_; }
 
   /// @returns the current waveform in effect for the LFO
-  LFOWaveform waveform() const noexcept { return waveform_; }
+  LFOWaveform waveform() const noexcept {
+    if (valueGenerator_ == sineValue) return LFOWaveform::sinusoid;
+    if (valueGenerator_ == sawtoothValue) return LFOWaveform::sawtooth;
+    if (valueGenerator_ == triangleValue) return LFOWaveform::triangle;
+    if (valueGenerator_ == squareValue) return LFOWaveform::square;
+    assert(false);
+  }
 
 private:
   using ValueGenerator = T (*)(T);
@@ -124,6 +127,7 @@ private:
       case LFOWaveform::triangle: return triangleValue;
       case LFOWaveform::square: return squareValue;
     }
+    assert(false);
   }
 
   static T wrappedModuloCounter(T counter, T inc) noexcept {
@@ -146,7 +150,6 @@ private:
   T moduloCounter_ = {0.0};
   T quadPhaseCounter_ = {0.25};
   Parameters::RampingParameter<T> phaseIncrement_;
-  LFOWaveform waveform_;
 };
 
 } // end namespace DSPHeaders

@@ -218,7 +218,6 @@ using namespace DSPHeaders;
 
   Biquad::Coefficients coefficients{Biquad::Coefficients<double>::LPF2(sampleRate, frequency, 0.707)};
   Biquad::Direct<double> filter{coefficients};
-  Biquad::RampingAdapter<Biquad::Direct<double>> ramping{filter, rampCount};
 
   Pirkle::AudioFilterParameters params;
   params.algorithm = Pirkle::filterAlgorithm::kLPF2;
@@ -234,20 +233,20 @@ using namespace DSPHeaders;
     double input = inputGenerator(counter);
     double output1 = filter.transform(input);
     double output2 = pirkle.processAudioSample(input);
-    double output3 = ramping.transform(input);
+    // double output3 = ramping.transform(input);
     SamplesEqual(output1, output2);
-    SamplesEqual(output1, output3);
   }
 
   // Ramp to a new value
   coefficients = Biquad::Coefficients<double>::LPF2(sampleRate, 2000.0, 0.707);
   filter.setCoefficients(coefficients);
-  ramping.setCoefficients(coefficients);
+  Biquad::Direct<double> ramping{coefficients};
+  ramping.setCoefficients(coefficients, rampCount);
 
   // We expect that for rampCount samples the ramped and un-ramped filters would not match. However, even after the
   // ramping is complete, the ramped filter still has memory that must get cycled out before it begins to emit values
   // like the un-ramped version.
-  for (counter = 0; counter < rampCount * 2 + 1; ++counter) {
+  for (counter = 0; counter < (rampCount + 1) * 2; ++counter) {
     double input = inputGenerator(counter);
     XCTAssertNotEqualWithAccuracy(filter.transform(input), ramping.transform(input), _epsilon);
   }

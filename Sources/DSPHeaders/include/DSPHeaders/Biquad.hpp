@@ -182,7 +182,7 @@ struct Coefficients {
   }
 
   /**
-   Obtain a collection of delta coefficient values.
+   Obtain a collection of delta coefficient values that can be used to ramp a change in filter coefficients.
 
    @param goal the goal coefficient collection
    @param sampleCount the number of samples to ramp over
@@ -290,6 +290,8 @@ struct Direct : public Base<T> {
   /**
    Obtain a numeric representation of the internal storage state
    
+   @param state the filter state work with
+   @param coefficients the filter coefficients to use
    @returns state convolved with coefficients
    */
   static T storageComponent(const State<T>& state, const Coefficients<T>& coefficients) noexcept {
@@ -353,6 +355,8 @@ struct DirectTranspose : Base<T> {
   /**
    Obtain a numeric representation of the internal storage state
    
+   @param state the filter state work with
+   @param coefficients the filter coefficients to use
    @returns always 0.0
    */
   static T storageComponent(const State<T>&, const Coefficients<T>&) noexcept { return 0.0; }
@@ -380,6 +384,8 @@ struct CanonicalTranspose : Base<T> {
   /**
    Obtain a numeric representation of the internal storage state
    
+   @param state the filter state work with
+   @param coefficients the filter coefficients to use
    @returns the Z1 state value
    */
   static T storageComponent(const State<T>& state, const Coefficients<T>&) noexcept { return state.x_z1; }
@@ -397,64 +403,175 @@ public:
   using ValueType = T;
   using CoefficientsType = Coefficients<T>;
   using StateType = State<T>;
-  
-  /**
-   Create a new filter using the given biquad coefficients.
-
-   @param coefficients the filter coefficients to use
-   */
-  explicit Filter(const CoefficientsType& coefficients) noexcept : coefficients_{coefficients}, state_{} {}
-
-  /**
-   Create a new filter using the given biquad coefficients.
-
-   @param coefficients the filter coefficients to use
-   */
-  explicit Filter(CoefficientsType&& coefficients) noexcept : coefficients_{coefficients}, state_{} {}
 
   Filter() = default;
-  
+
   /**
-   Use a new set of biquad coefficients.
+   Create a new filter using the given biquad coefficients.
+
+   @param coefficients the filter coefficients to use
    */
-  void setCoefficients(const CoefficientsType& coefficients) noexcept { coefficients_ = coefficients; }
+  explicit Filter(const CoefficientsType& coefficients) noexcept : state_{}, ramper_{coefficients} {}
+
+  /**
+   Create a new filter using the given biquad coefficients.
+
+   @param coefficients the filter coefficients to use
+   */
+  explicit Filter(CoefficientsType&& coefficients) noexcept : state_{}, ramper_{coefficients} {}
 
   /**
    Use a new set of biquad coefficients.
+
+   @param coefficients the new filter coefficients to use
+   @param rampDurationInSamples gradually apply change over this number of samples
    */
-  void setCoefficients(CoefficientsType&& coefficients) noexcept { coefficients_ = coefficients; }
+  void setCoefficients(const CoefficientsType& coefficients, size_t rampDurationInSamples = 0) noexcept
+  {
+    ramper_.start(coefficients, rampDurationInSamples);
+  }
+
+  /**
+   Use a new set of biquad coefficients.
+
+   @param coefficients the new filter coefficients to use
+   @param rampDurationInSamples gradually apply change over this number of samples
+   */
+  void setCoefficients(CoefficientsType&& coefficients, size_t rampDurationInSamples = 0) noexcept
+  {
+    ramper_.start(coefficients, rampDurationInSamples);
+  }
   
   /**
    Reset internal state.
    */
-  void reset() noexcept { state_ = StateType(); }
+  void reset() noexcept
+  {
+    state_ = StateType();
+    ramper_.reset();
+  }
 
   /**
    Apply the filter to a given value.
+
+   @param input the value to filter
+   @returns trasformed value
    */
-  ValueType transform(ValueType input) noexcept { return Transformer::transform(input, state_, coefficients_); }
+  ValueType transform(ValueType input) noexcept
+  {
+    return Transformer::transform(input, state_, ramper_.coefficients());
+  }
   
   /**
    Obtain the `gain` value from the coefficients.
    */
-  ValueType gainValue() const noexcept { return coefficients_.a0; }
+  ValueType gainValue() const noexcept { return ramper_.coefficients().a0; }
   
   /**
    Obtain a calculated state value. This used in some of Pirkle's signal processing algorithms.
    */
-  ValueType storageComponent() const noexcept { return Transformer::storageComponent(state_, coefficients_); }
+  ValueType storageComponent() const noexcept { return Transformer::storageComponent(state_, ramper_.coefficients()); }
 
 private:
 
   /**
+   Adapter for a Biquad filter that changes it over time (samples) rather than abruptly and possibly with audio
+   artifacts.
+   */
+  struct Ramper {
+
+    Ramper() = default;
+
+    Ramper(const CoefficientsType& coefficients) noexcept : coefficients_{coefficients} {}
+
+    Ramper(CoefficientsType&& coefficients) noexcept : coefficients_{std::move(coefficients)} {}
+
+    /**
+     Set new coefficients for the filter, ramping to them over time.
+
+     @param coefficients new coefficients to use
+     */
+    void start(const CoefficientsType& coefficients, size_t rampingDuration) noexcept
+    {
+      if (rampingDuration) {
+        rampRemaining_ = rampingDuration;
+        goal_ = coefficients;
+        change_ = coefficients_.rampFactor(goal_, rampingDuration);
+      } else {
+        coefficients_ = coefficients;
+      }
+    }
+
+    void setupRamp(const CoefficientsType& coefficients, size_t rampingDuration) noexcept {
+      goal_ = coefficients;
+      rampRemaining_ = rampingDuration;
+      change_ = coefficients_.rampFactor(goal_, rampingDuration);
+    }
+
+    /**
+     Set new coefficients for the filter, ramping to them over time.
+
+     @param coefficients new coefficients to use
+     */
+    void start(CoefficientsType&& coefficients, size_t rampingDuration) noexcept
+    {
+      if (rampingDuration) {
+        setupRamp(std::forward(coefficients), rampingDuration);
+      } else {
+        coefficients_ = std::move(coefficients);
+      }
+    }
+
+    void setupRamp(CoefficientsType&& coefficients, size_t rampingDuration) noexcept {
+      goal_ = std::move(coefficients);
+      rampRemaining_ = rampingDuration;
+      change_ = coefficients_.rampFactor(goal_, rampingDuration);
+    }
+
+    void reset() noexcept
+    {
+      if (rampRemaining_) {
+        rampRemaining_ = 0;
+        coefficients_ = goal_;
+      }
+    }
+
+    /**
+     Obtain the filter coefficients to use, updating if ramping is in progress.
+
+     @returns filter coefficients
+     */
+    const CoefficientsType& coefficients() noexcept
+    {
+      switch (rampRemaining_) {
+        case 0:
+          break;
+        case 1:
+          rampRemaining_ = 0;
+          coefficients_ = goal_;
+          break;
+        default:
+          rampRemaining_ -= 1;
+          coefficients_ += change_;
+          break;
+      }
+      return coefficients_;
+    }
+
+  private:
+    size_t rampRemaining_{};
+    CoefficientsType coefficients_{};
+    CoefficientsType change_{};
+    CoefficientsType goal_{};
+  };
+
+  /**
    Obtain writable reference to current coefficients. Only used by RampingAdapter
    */
-  CoefficientsType& coefficients() noexcept { return coefficients_; }
+  CoefficientsType& coefficients() noexcept { return ramper_.coefficients(); }
 
-  CoefficientsType coefficients_;
+  mutable Ramper ramper_;
   StateType state_;
-
-  template <typename FilterType> friend class RampingAdapter;
 };
 
 template <typename T>
@@ -468,103 +585,5 @@ using Canonical = Filter<T, Transform::Canonical<T>>;
 
 template <typename T>
 using CanonicalTranspose = Filter<T, Transform::CanonicalTranspose<T>>;
-
-/**
- Adapter for a Biquad filter that changes it over time (samples) rather than abruptly and possibly with audio artifacts.
- */
-template <typename FilterType>
-class RampingAdapter {
-public:
-  using CoefficientsType = typename FilterType::CoefficientsType;
-  using ValueType = typename CoefficientsType::ValueType;
-
-  /**
-   Create a ramped version of a filter.
-
-   @param filter the filter to ramp
-   @param sampleCount the sample count to ramp over when `setCoefficients` is invoked.
-   */
-  RampingAdapter(const FilterType& filter, size_t sampleCount) noexcept : filter_{filter}, sampleCount_{sampleCount}
-  {
-    assert(sampleCount > 0);
-  }
-
-  /**
-   Create a ramped version of a filter.
-
-   @param filter the filter to ramp
-   @param sampleCount the sample count to ramp over when `setCoefficients` is invoked.
-   */
-  RampingAdapter(FilterType&& filter, size_t sampleCount) noexcept :
-  filter_{std::move(filter)}, sampleCount_{sampleCount}
-  {
-    assert(sampleCount > 0);
-  }
-
-  /**
-   Set new coefficients for the filter, ramping to them over time.
-
-   @param coefficients new coefficients to use
-   */
-  void setCoefficients(const CoefficientsType& coefficients) noexcept
-  {
-    rampRemaining_ = sampleCount_;
-    goal_ = coefficients;
-    change_ = filter_.coefficients_.rampFactor(goal_, sampleCount_);
-  }
-
-  /**
-   Set new coefficients for the filter, ramping to them over time.
-
-   @param coefficients new coefficients to use
-   */
-  void setCoefficients(CoefficientsType&& coefficients) noexcept
-  {
-    rampRemaining_ = sampleCount_;
-    goal_ = std::forward(coefficients);
-    change_ = filter_.coefficients().rampFactor(goal_, sampleCount_);
-  }
-
-  /**
-   Apply the filter to a given value. Accounts for any ramping that is in effect.
-
-   @param input the sample to filter
-   @returns filtered sample
-   */
-  ValueType transform(ValueType input) noexcept
-  {
-    if (rampRemaining_ > 0) {
-      --rampRemaining_;
-      if (rampRemaining_ == 0) {
-        filter_.setCoefficients(goal_);
-      } else {
-        filter_.coefficients_ += change_;
-      }
-    }
-    return filter_.transform(input);
-  }
-
-  /**
-   Reset internal state.
-   */
-  void reset() { filter_.reset(); }
-
-  /**
-   Obtain the `gain` value from the coefficients.
-   */
-  ValueType gainValue() const noexcept { return filter_.gainValue(); }
-
-  /**
-   Obtain a calculated state value. This used in some of Pirkle's signal processing algorithms.
-   */
-  ValueType storageComponent() const noexcept { return filter_.storageComponent(); }
-
-private:
-  FilterType filter_;
-  size_t sampleCount_;
-  size_t rampRemaining_{0};
-  CoefficientsType change_{};
-  CoefficientsType goal_{};
-};
 
 } // namespace DSPHeaders::Biquad

@@ -13,7 +13,8 @@
 namespace DSPHeaders::ConstMath {
 
 // Based on work from https://github.com/lakshayg/compile_time (no specific license)
-// and https://github.com/kthohr/gcem (Apache license). Note that many of the comments below are mind.
+// and https://github.com/kthohr/gcem (Apache license). Note that many of the comments below are mine.
+//
 // Here is the GCEM license in full:
 
 /*################################################################################

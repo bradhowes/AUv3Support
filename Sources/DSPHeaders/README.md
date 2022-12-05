@@ -14,8 +14,9 @@ the class only exists to signal the purpose of the value via its class name.
 * `RampingParameter` -- supports changing an `AUParameter` value over N samples. Both `MillisecondsParameter`
 and `PercentageParameter` are based on this class, and `LFO` uses it to ramp changes to its oscillating frequency.
 
-This is essentially a C++ headers-only package. There is a `DSPHeaders.cc` file but it is empty and its sole reason for
-being is to keep Swift Package Manager happy.
+Originally, this was a C++ headers-only package, but now there is a `DSPHeaders.mm` file that contains various lookup
+table generators that are run at compile time to fill the coefficient lookup tables used by the cubic 4-order 
+interpolation routine (4 value generators for the 4 coefficients).
 
 # Usage
 
