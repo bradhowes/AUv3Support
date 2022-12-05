@@ -77,6 +77,7 @@ public final class FloatParameterEditor: AUParameterEditorBase {
   }
 
   internal override func handleParameterChanged(value: AUValue) {
+    os_log(.debug, log: log, "handleParameterChanged: %f", value)
     precondition(Thread.isMainThread, "handleParameterChanged found running on non-main thread")
     showNewValue(value)
     rangedControl.value = useLogValues ? paramValueToControlLogValue(value) : value
@@ -111,6 +112,7 @@ extension FloatParameterEditor: AUParameterEditor {
    - parameter source: the source of the value
    */
   public func controlChanged(source: AUParameterValueProvider) {
+    os_log(.debug, log: log, "controlChanged - %f", source.value)
     precondition(Thread.isMainThread, "controlChanged found running on non-main thread")
 
 #if os(macOS)
@@ -118,18 +120,22 @@ extension FloatParameterEditor: AUParameterEditor {
 #endif
 
     if rangedControl !== source {
+      os_log(.debug, log: log, "controlChanged - updating rangedControl.value")
       rangedControl.value = source.value
     }
 
     let value = useLogValues ? paramValueFromControlLogValue(source.value) : source.value
+    os_log(.debug, log: log, "controlChanged - showNewValue %f", value)
     showNewValue(value)
 
     if value != parameter.value {
+      os_log(.debug, log: log, "controlChanged - parameter.setValue %f", value)
       parameter.setValue(value, originator: parameterObserverToken)
     }
   }
 
   public func updateControl() {
+    os_log(.debug, log: log, "updateControl - %f", parameter.value)
     showNewValue(parameter.value)
     rangedControl.value = useLogValues ? paramValueToControlLogValue(parameter.value) : parameter.value
   }
@@ -141,6 +147,7 @@ extension FloatParameterEditor: AUParameterEditor {
    - parameter value: the new value to use.
    */
   public func setValue(_ value: AUValue) {
+    os_log(.debug, log: log, "setValue - %f", value)
     precondition(Thread.isMainThread, "setEditedValue found running on non-main thread")
     let newValue = value.clamped(to: parameter.minValue...parameter.maxValue)
     parameter.setValue(newValue, originator: parameterObserverToken)
@@ -152,6 +159,7 @@ private extension FloatParameterEditor {
 
 #if os(macOS)
   func onFocusChanged(hasFocus: Bool) {
+    os_log(.debug, log: log, "onFocusChanged - hasFocus: %d", hasFocus)
     guard let label = self.label else { fatalError("expected non-nil label") }
     if hasFocus {
       hasActiveLabel = true
@@ -188,6 +196,7 @@ private extension FloatParameterEditor {
   }
 
   private func showNewValue(_ value: AUValue) {
+    os_log(.debug, log: log, "showNewValue - %f", value)
     label?.text = formatter(value)
     restoreName()
   }
@@ -214,7 +223,9 @@ private extension FloatParameterEditor {
 extension FloatParameterEditor: NSTextFieldDelegate {
 
   public func controlTextDidEndEditing(_ obj: Notification) {
+    os_log(.debug, log: log, "controlTextDidEndEditing")
     if let control = obj.object as? FocusAwareTextField {
+      os_log(.debug, log: log, "controlTextDidEndEditing - giving up focus")
       control.onFocusChange(false)
       control.window?.makeFirstResponder(nil)
     }
@@ -230,6 +241,7 @@ extension FloatParameterEditor: NSTextFieldDelegate {
    */
   public func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
     if (commandSelector == #selector(NSResponder.insertNewline(_:))) {
+      os_log(.debug, log: log, "controlTextViewDoCommandBy - insertNewLine")
       control.window?.makeFirstResponder(nil)
       return true
     }

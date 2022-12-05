@@ -49,6 +49,7 @@ public class AUParameterEditorBase: NSObject {
   }
 
   private func parameterChanged(address: AUParameterAddress, value: AUValue) {
+    os_log(.debug, log: log, "parameterChanged: %f", value)
     guard address == self.parameter.address else { return }
     DispatchQueue.main.async { self.handleParameterChanged(value: value) }
   }
