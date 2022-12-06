@@ -106,10 +106,16 @@ extension FilterAudioUnit {
    - parameter kernel: the rendering kernel to use
    */
   public func configure(parameters: ParameterSource, kernel: AudioRenderer) {
-    self.kernel = kernel
-    parameters.parameterTree.implementorValueProvider = kernel.get(_:)
-    parameters.parameterTree.implementorValueObserver = kernel.set(_:value:)
     self.parameters = parameters
+    self.kernel = kernel
+
+    parameters.parameterTree.implementorValueProvider = { [weak self] param in
+      self?.kernel.get(param) ?? AUValue(0)
+    }
+
+    parameters.parameterTree.implementorValueObserver = { [weak self] param, value in
+      self?.kernel.set(param, value: value)
+    }
 
     // At start, configure effect to do something interesting. Hosts can and should update the effect state after it is
     // initialized via `fullState` attribute.
@@ -256,7 +262,9 @@ extension FilterAudioUnit {
     super.deallocateRenderResources()
 
     kernel.renderingStopped()
-    parameters.parameterTree.implementorValueObserver = kernel.set(_:value:)
+    parameters.parameterTree.implementorValueObserver = {[weak self] param, value in
+      self?.kernel.set(param, value: value)
+    }
   }
   
   override public var internalRenderBlock: AUInternalRenderBlock {
