@@ -150,7 +150,7 @@ extension FloatParameterEditor: AUParameterEditor {
     os_log(.debug, log: log, "setValue - %f", value)
     precondition(Thread.isMainThread, "setEditedValue found running on non-main thread")
     let newValue = value.clamped(to: parameter.minValue...parameter.maxValue)
-    parameter.setValue(newValue, originator: parameterObserverToken)
+    parameter.setValue(newValue, originator: nil)
     updateControl()
   }
 }
