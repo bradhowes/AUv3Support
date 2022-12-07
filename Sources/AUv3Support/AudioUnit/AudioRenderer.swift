@@ -24,7 +24,7 @@ import AVKit
 
    - returns: the render block to use
    */
-  func internalRenderBlock(transportStateBlock: AUHostTransportStateBlock?,
+  func internalRenderBlock(_ transportStateBlock: AUHostTransportStateBlock?,
                            musicalContextBlock: AUHostMusicalContextBlock?) -> AUInternalRenderBlock
 
   /**
