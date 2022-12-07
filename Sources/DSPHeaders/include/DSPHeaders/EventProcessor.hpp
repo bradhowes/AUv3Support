@@ -25,6 +25,7 @@ namespace DSPHeaders {
  - doParameterEvent
  - doMIDIEvent
  - doRenderFrames
+ - doRenderingStateChanged
 
  */
 template <typename T> class EventProcessor {
@@ -49,7 +50,7 @@ public:
    */
   void setRendering(bool rendering) noexcept {
     rendering_ = rendering;
-    derived_.renderingStateChanged(rendering);
+    derived_.doRenderingStateChanged(rendering);
   }
 
   /**
