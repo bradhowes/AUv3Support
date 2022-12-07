@@ -15,7 +15,7 @@ import AVKit
   func setRenderingFormat(_ busCount: Int, format: AVAudioFormat, maxFramesToRender: AUAudioFrameCount)
 
   /**
-   Stop audio processing.
+   Stopped audio processing due to resources being deallocated.
    */
   func renderingStopped()
 
