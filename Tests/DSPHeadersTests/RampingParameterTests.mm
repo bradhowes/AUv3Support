@@ -64,4 +64,18 @@ using namespace DSPHeaders::Parameters;
   XCTAssertEqual(param.get(), 0.0);
 }
 
+- (void)testStopRamping {
+  auto param = RampingParameter<float>();
+  param.set(1.0, 4);
+  XCTAssertTrue(param.isRamping());
+  XCTAssertEqual(param.get(), 1.0);
+  XCTAssertEqual(param.frameValue(), 0.25);
+  XCTAssertEqual(param.get(), 1.0);
+  XCTAssertTrue(param.isRamping());
+  param.stopRamping();
+  XCTAssertEqual(param.frameValue(), 1.0);
+  XCTAssertFalse(param.isRamping());
+  XCTAssertEqual(param.get(), 1.0);
+}
+
 @end

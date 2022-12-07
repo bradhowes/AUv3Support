@@ -20,6 +20,16 @@ struct RampingParameter {
   bool isRamping() const noexcept { return rampRemaining_ > 0; }
 
   /**
+   Cancel any active ramping.
+   */
+  void stopRamping() noexcept {
+    if (rampRemaining_ > 0) {
+      rampRemaining_ = 0;
+      value_ = rampTarget_;
+    }
+  }
+
+  /**
    Set the new parameter value. If the given duration is not zero, then transition to the new value over that number of
    frames or calls to `frameValue`.
 

@@ -43,6 +43,16 @@ public:
   void setBypass(bool bypass) noexcept { bypassed_ = bypass; }
 
   /**
+   Set the rendering state of the host.
+
+   @param rendering if true the host is "transport" is moving and we are expected to render samples.
+   */
+  void setRendering(bool rendering) noexcept {
+    rendering_ = rendering;
+    derived_.renderingStateChanged(rendering);
+  }
+
+  /**
    Get current bypass mode
    */
   bool isBypassed() const noexcept { return bypassed_; }
@@ -245,6 +255,7 @@ private:
   std::vector<SampleBuffer> buffers_;
   std::vector<BufferFacet> facets_;
   bool bypassed_ = false;
+  bool rendering_ = false;
 };
 
 } // end namespace DSPHeaders
