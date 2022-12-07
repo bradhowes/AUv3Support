@@ -228,11 +228,6 @@ final class FilterAudioUnitTests: XCTestCase {
     XCTAssertEqual(kernel.firstParam, 12.34)
     parameters.parameters[1].setValue(56.78, originator: nil)
     XCTAssertEqual(kernel.secondParam, 56.78)
-
-    // When rendering, parameter changes are scheduled to be delivered to the render thread, not directly to the kernel
-    try audioUnit.allocateRenderResources()
-    parameters.parameters[0].setValue(43.21, originator: nil)
-    XCTAssertEqual(kernel.firstParam, 12.34)
   }
 
   func testInternalRenderBlock() throws {
