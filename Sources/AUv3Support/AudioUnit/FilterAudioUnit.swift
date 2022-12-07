@@ -227,7 +227,7 @@ extension FilterAudioUnit {
     os_log(.info, log: log, "allocateRenderResources - BEGIN")
 
     guard let kernel = kernel else { fatalError("FilterAudioUnit not configured with kernel") }
-    guard let parameters = parameters else { fatalError("FilterAudioUnit not configured with parameter source") }
+//    guard let parameters = parameters else { fatalError("FilterAudioUnit not configured with parameter source") }
 
     try super.allocateRenderResources()
 
@@ -243,11 +243,11 @@ extension FilterAudioUnit {
     kernel.setRenderingFormat(outputBusses.count, format: outputBus.format, maxFramesToRender: maximumFramesToRender)
 
     // Configure parameter value setting to use internal `scheduleParameterBlock` instead of direct updates to kernel.
-    let rampDurationInSamples = AUAudioFrameCount(30)
-    let scheduleParameter = scheduleParameterBlock
-    parameters.parameterTree.implementorValueObserver = { param, value in
-      scheduleParameter(AUEventSampleTimeImmediate, rampDurationInSamples, param.address, value);
-    }
+//    let rampDurationInSamples = AUAudioFrameCount(30)
+//    let scheduleParameter = scheduleParameterBlock
+//    parameters.parameterTree.implementorValueObserver = { param, value in
+//      scheduleParameter(AUEventSampleTimeImmediate, rampDurationInSamples, param.address, value);
+//    }
 
     os_log(.info, log: log, "allocateRenderResources - END")
   }
@@ -257,14 +257,14 @@ extension FilterAudioUnit {
    */
   override public func deallocateRenderResources() {
     guard let kernel = kernel else { fatalError("FilterAudioUnit not configured with kernel") }
-    guard let parameters = parameters else { fatalError("FilterAudioUnit not configured with parameter source") }
+//    guard let parameters = parameters else { fatalError("FilterAudioUnit not configured with parameter source") }
 
     super.deallocateRenderResources()
 
     kernel.renderingStopped()
-    parameters.parameterTree.implementorValueObserver = {[weak self] param, value in
-      self?.kernel.set(param, value: value)
-    }
+//    parameters.parameterTree.implementorValueObserver = {[weak self] param, value in
+//      self?.kernel.set(param, value: value)
+//    }
   }
   
   override public var internalRenderBlock: AUInternalRenderBlock {
