@@ -117,6 +117,11 @@ public:
     assert(false);
   }
 
+  /**
+   Stop any ramping that is active for the LFO frequency.
+   */
+  void stopRamping() noexcept { phaseIncrement_.stopRamping(); }
+
 private:
   using ValueGenerator = T (*)(T);
   
