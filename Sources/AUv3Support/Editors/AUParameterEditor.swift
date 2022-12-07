@@ -43,8 +43,8 @@ public class AUParameterEditorBase: NSObject {
     self.parameter = parameter
     super.init()
 
-    parameterObserverToken = parameter.token(byAddingParameterObserver: { address, value in
-      self.parameterChanged(address: address, value: value)
+    parameterObserverToken = parameter.token(byAddingParameterObserver: { [weak self] address, value in
+      self?.parameterChanged(address: address, value: value)
     })
   }
 
