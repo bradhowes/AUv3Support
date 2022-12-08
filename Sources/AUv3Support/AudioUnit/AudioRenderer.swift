@@ -24,8 +24,7 @@ import AVKit
 
    - returns: the render block to use
    */
-  func internalRenderBlock(_ transportStateBlock: AUHostTransportStateBlock?,
-                           musicalContextBlock: AUHostMusicalContextBlock?) -> AUInternalRenderBlock
+  func internalRenderBlock() -> AUInternalRenderBlock
 
   /**
    Set the bypass attribute. When enabled, audio is passed through unchanged by the filter.
