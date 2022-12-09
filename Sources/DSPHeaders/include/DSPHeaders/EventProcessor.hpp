@@ -53,6 +53,8 @@ public:
     derived_.doRenderingStateChanged(rendering);
   }
 
+  bool isRendering() const noexcept { return rendering_; }
+
   /**
    Get current bypass mode
    */
@@ -90,6 +92,11 @@ public:
     for (size_t busIndex = 0; busIndex < buffers_.size(); ++busIndex) {
       facets_[busIndex].setBufferList(buffers_[busIndex].mutableAudioBufferList());
     }
+
+    if (!rendering_) {
+      rendering_ = true;
+      derived_.doRenderingStateChanged(true);
+    }
   }
 
   /**
@@ -102,6 +109,11 @@ public:
 
     for (auto& entry : buffers_) {
       entry.release();
+    }
+
+    if (rendering_) {
+      rendering_ = false;
+      derived_.doRenderingStateChanged(false);
     }
   }
 

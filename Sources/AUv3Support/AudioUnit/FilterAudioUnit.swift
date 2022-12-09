@@ -255,7 +255,8 @@ extension FilterAudioUnit {
   override public var internalRenderBlock: AUInternalRenderBlock {
     os_log(.info, log: log, "internalRenderBlock - BEGIN")
     guard let kernel = kernel else { fatalError("nil kernel") }
-    return kernel.internalRenderBlock()
+    let transportStateBlock = self.transportStateBlock
+    return kernel.internalRenderBlock(transportStateBlock)
   }
 }
 
