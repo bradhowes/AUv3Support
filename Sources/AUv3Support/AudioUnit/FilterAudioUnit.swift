@@ -62,6 +62,9 @@ public final class FilterAudioUnit: AUAudioUnit {
   /// Sole output bus
   private var outputBus: AUAudioUnitBus
 
+  private lazy var _inputBusses: AUAudioUnitBusArray = .init(audioUnit: self, busType: .input, busses: [inputBus])
+  private lazy var _outputBusses: AUAudioUnitBusArray = .init(audioUnit: self, busType: .output, busses: [outputBus])
+
   /**
    Create a new audio unit asynchronously.
    
@@ -139,15 +142,13 @@ extension FilterAudioUnit {
 // MARK: - AUv3 Properties
 
 extension FilterAudioUnit {
+
   /// The input busses supported by the component. We only support one.
-  override public var inputBusses: AUAudioUnitBusArray {
-    .init(audioUnit: self, busType: .input, busses: [inputBus])
-  }
+  override public var inputBusses: AUAudioUnitBusArray { _inputBusses }
 
   /// The output busses supported by the component. We only support one.
-  override public var outputBusses: AUAudioUnitBusArray {
-    .init(audioUnit: self, busType: .output, busses: [outputBus])
-  }
+  override public var outputBusses: AUAudioUnitBusArray { _outputBusses }
+
   /// Parameter tree containing filter parameters that are exposed for external control. No setting is allowed.
   override public var parameterTree: AUParameterTree? {
     get { parameters.parameterTree }
