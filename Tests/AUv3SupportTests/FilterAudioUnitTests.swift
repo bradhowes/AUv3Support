@@ -5,9 +5,15 @@ import CoreAudioKit
 import XCTest
 @testable import AUv3Support
 
-fileprivate let acd = AudioComponentDescription(componentType: FourCharCode("aufx"), componentSubType: FourCharCode("dely"),
+fileprivate let acd = AudioComponentDescription(componentType: FourCharCode("aufx"),
+                                                componentSubType: FourCharCode("dely"),
                                                 componentManufacturer: FourCharCode("appl"),
                                                 componentFlags: 0, componentFlagsMask: 0)
+
+fileprivate let bad_acd = AudioComponentDescription(componentType: FourCharCode("aufx"),
+                                                    componentSubType: FourCharCode("dely"),
+                                                    componentManufacturer: FourCharCode("blah"),
+                                                    componentFlags: 123, componentFlagsMask: 0)
 
 fileprivate class MockControl: NSObject, RangedControl {
   static let log = Shared.logger("foo", "bar")
@@ -69,11 +75,11 @@ fileprivate class Kernel: AudioRenderer {
     self.maxFramesToRender = maxFramesToRender
   }
 
-  func renderingStopped() {
+  func deallocateRenderingResources() {
     maxFramesToRender = 0
   }
 
-  func internalRenderBlock() -> AUInternalRenderBlock {
+  func internalRenderBlock(_ transportStateBlock: AUHostTransportStateBlock?) -> AUInternalRenderBlock {
     let kernel = self
     return { flags, timestamp, frameCount, outputBus, audioBuffer, eventsList, pullInputBlock in
       kernel.renderCount += 1
@@ -142,6 +148,16 @@ final class FilterAudioUnitTests: XCTestCase {
     wait(for: [created], timeout: 5)
   }
 
+  func testInstantiateThatFails() throws {
+    let failed = expectation(description: "FilterAudioUnit async")
+    FilterAudioUnit.instantiate(with: bad_acd) { audioUnit, error in
+      guard audioUnit == nil, error != nil else { XCTFail("unexpected success"); return }
+      failed.fulfill()
+    }
+
+    wait(for: [failed], timeout: 5)
+  }
+
   func testInitialState() throws {
     XCTAssertFalse(audioUnit.shouldBypassEffect)
     XCTAssertTrue(audioUnit.canProcessInPlace)
@@ -150,6 +166,21 @@ final class FilterAudioUnitTests: XCTestCase {
     XCTAssertEqual(audioUnit.outputBusses.count, 1)
   }
 
+  func testDisappears() throws {
+    let param = parameters.parameterTree.parameter(withAddress: 123)!
+    XCTAssertEqual(param.value, 10.0)
+    param.setValue(15.0, originator: nil)
+    XCTAssertEqual(param.value, 15.0)
+    audioUnit = nil
+    param.setValue(15.0, originator: nil)
+    XCTAssertEqual(param.value, 0.0)
+  }
+
+  func testSetParameterTreeIsIgnored() throws {
+    audioUnit.parameterTree = AUParameterTree()
+    XCTAssertEqual(audioUnit.parameterTree, parameters.parameterTree)
+  }
+  
   func testNames() throws {
     XCTAssertEqual(audioUnit.audioUnitShortName, nil)
     XCTAssertEqual(audioUnit.audioUnitName, "AUDelay")

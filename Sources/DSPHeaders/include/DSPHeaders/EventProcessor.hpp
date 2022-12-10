@@ -49,8 +49,10 @@ public:
    @param rendering if true the host is "transport" is moving and we are expected to render samples.
    */
   void setRendering(bool rendering) noexcept {
-    rendering_ = rendering;
-    derived_.doRenderingStateChanged(rendering);
+    if (rendering_ != rendering) {
+      rendering_ = rendering;
+      derived_.doRenderingStateChanged(rendering);
+    }
   }
 
   bool isRendering() const noexcept { return rendering_; }
@@ -63,13 +65,16 @@ public:
   /**
    Update kernel and buffers to support the given format.
 
+   @param busCount the number of output busses that kernel will be rendering over
    @param format the sample format to expect
    @param maxFramesToRender the maximum number of frames to expect on input
    */
   void setRenderingFormat(NSInteger busCount, AVAudioFormat* format, AUAudioFrameCount maxFramesToRender) noexcept {
     auto channelCount{[format channelCount]};
 
-    // We want an internal buffer for each bus that we can generate output on.
+    // We want an internal buffer for each bus that we can generate output on. This is not strictly required since we
+    // will be rendering one bus at a time, but doing so allows us to process the samples "in-place" and pass the buffer
+    // to the audio unit without having to make a copy for the next element in the signal processing chain.
     while (buffers_.size() < size_t(busCount)) {
       buffers_.emplace_back();
       facets_.emplace_back();
@@ -93,16 +98,16 @@ public:
       facets_[busIndex].setBufferList(buffers_[busIndex].mutableAudioBufferList());
     }
 
-    if (!rendering_) {
-      rendering_ = true;
-      derived_.doRenderingStateChanged(true);
-    }
+    // This is not *strictly* true, but it works as an approximation. A better indicator is based on the
+    // transportStateBlock from the host, but it is not always provided, so we utilize this as a proxy for rendering
+    // starts.
+    if (!isRendering()) setRendering(true);
   }
 
   /**
    Rendering has stopped. Free up any resources it used.
    */
-  void renderingStopped() noexcept {
+  void deallocateRenderingResources() noexcept {
     for (auto& entry : facets_) {
       if (entry.isLinked()) entry.unlink();
     }
@@ -111,10 +116,10 @@ public:
       entry.release();
     }
 
-    if (rendering_) {
-      rendering_ = false;
-      derived_.doRenderingStateChanged(false);
-    }
+    // This is not *strictly* true, but it works as an approximation. A better indicator is based on the
+    // transportStateBlock from the host, but it is not always provided, so we utilize this as a proxy for rendering
+    // stops.
+    if (isRendering()) setRendering(false);
   }
 
   /**

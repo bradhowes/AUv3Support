@@ -47,11 +47,11 @@ fileprivate class Kernel: AudioRenderer {
     self.maxFramesToRender = maxFramesToRender
   }
 
-  func renderingStopped() {
+  func deallocateRenderingResources() {
     maxFramesToRender = 0
   }
 
-  func internalRenderBlock() -> AUInternalRenderBlock {
+  func internalRenderBlock(_ transportStateBlock: AUHostTransportStateBlock?) -> AUInternalRenderBlock {
     let kernel = self
     return { flags, timestamp, frameCount, outputBus, audioBuffer, eventsList, pullInputBlock in
       kernel.renderCount += 1

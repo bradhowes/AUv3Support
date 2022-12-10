@@ -17,6 +17,22 @@ public final class FilterAudioUnit: AUAudioUnit {
 
   private let log: OSLog = OSLog(subsystem: "com.braysoftware.AUv3Support", category: "FilterAudioUnit")
 
+  /// Initial sample rate when initialized
+  static private let defaultSampleRate: Double = 44100.0
+  /// Maximum number of channels to support per audio bus
+  static private let audioBusMaxNumberOfChannels: UInt32 = 8
+  /// Default channel layout to use in each audio bus
+  static private let audioBusChannelLayout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Stereo)!
+  /// Default audio format to use in each audio bus
+  static private let audioBusFormat = AVAudioFormat(standardFormatWithSampleRate: defaultSampleRate,
+                                                    channelLayout: audioBusChannelLayout)
+
+  static func makeAudioBus() throws -> AUAudioUnitBus {
+    let bus = try AUAudioUnitBus(format: audioBusFormat)
+    bus.maximumChannelCount = audioBusMaxNumberOfChannels
+    return bus
+  }
+
   public enum Failure: Swift.Error {
     case statusError(OSStatus)
     case unableToInitialize(String)
@@ -30,11 +46,6 @@ public final class FilterAudioUnit: AUAudioUnit {
   /// The associated view controller for the audio unit that shows the controls
   public weak var viewConfigurationManager: AudioUnitViewConfigurationManager?
 
-  /// Initial sample rate
-  private let sampleRate: Double = 44100.0
-  /// Maximum number of channels to support
-  private let maxNumberOfChannels: UInt32 = 8
-
   /// The active preset in use. This is the backing value for the `currentPreset` property.
   private var _currentPreset: AUAudioUnitPreset? {
     willSet {
@@ -45,11 +56,11 @@ public final class FilterAudioUnit: AUAudioUnit {
     }
   }
 
+  /// Sole input bus
   private var inputBus: AUAudioUnitBus
+
+  /// Sole output bus
   private var outputBus: AUAudioUnitBus
-  
-  private lazy var _inputBusses: AUAudioUnitBusArray = .init(audioUnit: self, busType: .input, busses: [inputBus])
-  private lazy var _outputBusses: AUAudioUnitBusArray = .init(audioUnit: self, busType: .output, busses: [outputBus])
 
   /**
    Create a new audio unit asynchronously.
@@ -79,18 +90,20 @@ public final class FilterAudioUnit: AUAudioUnit {
                        options: AudioComponentInstantiationOptions = []) throws {
     os_log(.info, log: log, "init - BEGIN")
 
-    guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2) else {
+    // Treat non-zero componentFlags as error -- used for testing.
+    guard componentDescription.componentFlags == 0 else {
       throw Failure.unableToInitialize(String(describing: AVAudioFormat.self))
     }
 
-    inputBus = try AUAudioUnitBus(format: format)
-    inputBus.maximumChannelCount = maxNumberOfChannels
-
-    outputBus = try AUAudioUnitBus(format: format)
-    outputBus.maximumChannelCount = maxNumberOfChannels
+    inputBus = try Self.makeAudioBus()
+    outputBus = try Self.makeAudioBus()
 
     try super.init(componentDescription: componentDescription, options: options)
     os_log(.info, log: log, "init - END")
+  }
+
+  deinit {
+    os_log(.info, log: log, "deinit")
   }
 }
 
@@ -127,14 +140,20 @@ extension FilterAudioUnit {
 
 extension FilterAudioUnit {
   /// The input busses supported by the component. We only support one.
-  override public var inputBusses: AUAudioUnitBusArray { _inputBusses }
+  override public var inputBusses: AUAudioUnitBusArray {
+    .init(audioUnit: self, busType: .input, busses: [inputBus])
+  }
+
   /// The output busses supported by the component. We only support one.
-  override public var outputBusses: AUAudioUnitBusArray { _outputBusses }
+  override public var outputBusses: AUAudioUnitBusArray {
+    .init(audioUnit: self, busType: .output, busses: [outputBus])
+  }
   /// Parameter tree containing filter parameters that are exposed for external control. No setting is allowed.
   override public var parameterTree: AUParameterTree? {
     get { parameters.parameterTree }
-    set { fatalError("attempted to set new parameterTree") }
+    set {}
   }
+
   /// Factory presets for the filter
   override public var factoryPresets: [AUAudioUnitPreset]? { parameters.factoryPresets }
   /// Announce support for user presets
@@ -161,8 +180,7 @@ extension FilterAudioUnit {
           parameters.useFactoryPreset(preset)
           return
         }
-
-        if let state = try? presetState(for: preset) {
+        else if let state = try? presetState(for: preset) {
           fullState = state
           parameters.useUserPreset(from: state)
           return
@@ -238,6 +256,8 @@ extension FilterAudioUnit {
       throw NSError(domain: NSOSStatusErrorDomain, code: Int(kAudioUnitErr_FailedInitialization), userInfo: nil)
     }
 
+    // Acquire the sample rate and additional format parameter from the output bus we write output to. The host can
+    // change the format at will before calling allocateRenderResources.
     kernel.setRenderingFormat(outputBusses.count, format: outputBus.format, maxFramesToRender: maximumFramesToRender)
 
     os_log(.info, log: log, "allocateRenderResources - END")
@@ -249,7 +269,7 @@ extension FilterAudioUnit {
   override public func deallocateRenderResources() {
     guard let kernel = kernel else { fatalError("FilterAudioUnit not configured with kernel") }
     super.deallocateRenderResources()
-    kernel.renderingStopped()
+    kernel.deallocateRenderingResources()
   }
   
   override public var internalRenderBlock: AUInternalRenderBlock {

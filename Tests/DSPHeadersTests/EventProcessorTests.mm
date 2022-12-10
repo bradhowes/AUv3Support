@@ -14,6 +14,7 @@ struct MockEffect : public EventProcessor<MockEffect>
   void setParameterFromEvent(const AUParameterEvent&) {}
   void doMIDIEvent(AUMIDIEvent) {}
   void doRendering(NSInteger outputBusNumber, BusBuffers, BusBuffers, AUAudioFrameCount) {}
+  void doRenderingStateChanged(bool rendering) {}
 };
 
 @interface EventProcessorTests : XCTestCase
@@ -33,6 +34,7 @@ struct MockEffect : public EventProcessor<MockEffect>
   auto effect = MockEffect();
   AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
   effect.setRenderingFormat(1, format, 512);
+  XCTAssertTrue(effect.isRendering());
 }
 
 - (void)testBypass {
@@ -45,6 +47,19 @@ struct MockEffect : public EventProcessor<MockEffect>
   XCTAssertTrue(effect.isBypassed());
   effect.setBypass(false);
   XCTAssertFalse(effect.isBypassed());
+}
+
+- (void)testRenderingState {
+  auto effect = MockEffect();
+  AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
+  effect.setRenderingFormat(1, format, 512);
+  XCTAssertTrue(effect.isRendering());
+  effect.setRendering(false);
+  XCTAssertFalse(effect.isRendering());
+  effect.setRendering(true);
+  XCTAssertTrue(effect.isRendering());
+  effect.deallocateRenderingResources();
+  XCTAssertFalse(effect.isRendering());
 }
 
 - (void)testProcessAndRender {

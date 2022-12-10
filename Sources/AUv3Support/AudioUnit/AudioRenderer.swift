@@ -9,6 +9,7 @@ import AVKit
   /**
    Start processing.
 
+   - parameter busCount: the number of output busses the kernel will be processing on
    - parameter format: the audio format for the samples that will be processed
    - parameter maxFramesToRender: the maximum number of frames to render in one shot
    */
@@ -17,7 +18,7 @@ import AVKit
   /**
    Stopped audio processing due to resources being deallocated.
    */
-  func renderingStopped()
+  func deallocateRenderingResources()
 
   /**
    Obtain the internal render block that is used for rendering and processing events.

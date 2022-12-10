@@ -38,6 +38,9 @@ public final class SimplePlayEngine {
 
   /**
    Create new audio processing setup, with an audio file player for a signal source.
+
+   - parameter name: the name to log under
+   - parameter audioFileName: the name of the audio resource to play
    */
   public init(name: String, audioFileName: String) {
     self.log = .init(subsystem: name, category: "SimplePlayEngine")
@@ -52,8 +55,8 @@ extension SimplePlayEngine {
   /**
    Install an effect AudioUnit between an audio source and the main output mixer.
 
-   @param audioUnit the audio unit to install
-   @param completion closure to call when finished
+   - parameter audioUnit: the audio unit to install
+   - parameter completion: closure to call when finished
    */
   public func connectEffect(audioUnit: AVAudioUnit, completion: @escaping (() -> Void) = {}) {
     defer { completion() }
@@ -95,7 +98,7 @@ extension SimplePlayEngine {
   /**
    Toggle the playback of the audio file player.
 
-   @returns state of the player
+   - returns: state of the player
    */
   public func startStop() -> Bool {
     if player.isPlaying { stop() } else { start() }
