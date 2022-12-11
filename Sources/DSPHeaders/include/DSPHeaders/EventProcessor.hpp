@@ -101,7 +101,7 @@ public:
   /**
    Rendering has stopped. Free up any resources it used.
    */
-  void renderingStopped() noexcept {
+  void deallocateRenderResources() noexcept {
     for (auto& entry : facets_) {
       if (entry.isLinked()) entry.unlink();
     }

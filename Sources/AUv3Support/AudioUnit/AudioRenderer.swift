@@ -17,7 +17,7 @@ import AVKit
   /**
    Stopped audio processing due to resources being deallocated.
    */
-  func renderingStopped()
+  func deallocateRenderResources()
 
   /**
    Obtain the internal render block that is used for rendering and processing events.

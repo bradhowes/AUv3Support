@@ -165,8 +165,7 @@ extension FilterAudioUnit {
           parameters.useFactoryPreset(preset)
           return
         }
-
-        if let state = try? presetState(for: preset) {
+        else if let state = try? presetState(for: preset) {
           fullState = state
           parameters.useUserPreset(from: state)
           return
@@ -253,7 +252,7 @@ extension FilterAudioUnit {
   override public func deallocateRenderResources() {
     guard let kernel = kernel else { fatalError("FilterAudioUnit not configured with kernel") }
     super.deallocateRenderResources()
-    kernel.renderingStopped()
+    kernel.deallocateRenderResources()
   }
   
   override public var internalRenderBlock: AUInternalRenderBlock {
