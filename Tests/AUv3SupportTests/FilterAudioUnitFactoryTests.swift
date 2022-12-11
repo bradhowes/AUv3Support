@@ -47,7 +47,7 @@ fileprivate class Kernel: AudioRenderer {
     self.maxFramesToRender = maxFramesToRender
   }
 
-  func deallocateRenderingResources() {
+  func deallocateRenderResources() {
     maxFramesToRender = 0
   }
 

@@ -58,7 +58,7 @@ struct MockEffect : public EventProcessor<MockEffect>
   XCTAssertFalse(effect.isRendering());
   effect.setRendering(true);
   XCTAssertTrue(effect.isRendering());
-  effect.deallocateRenderingResources();
+  effect.deallocateRenderResources();
   XCTAssertFalse(effect.isRendering());
 }
 

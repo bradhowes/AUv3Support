@@ -52,11 +52,7 @@ public:
    @param rendering if true the host is "transport" is moving and we are expected to render samples.
    */
   void setRendering(bool rendering) noexcept {
-<<<<<<< HEAD
-    if (rendering_ != rendering) {
-=======
     if (rendering != rendering_) {
->>>>>>> working
       rendering_ = rendering;
       derived_.doRenderingStateChanged(rendering);
     }
@@ -68,11 +64,7 @@ public:
   /**
    Update kernel and buffers to support the given format.
 
-<<<<<<< HEAD
-   @param busCount the number of output busses that kernel will be rendering over
-=======
    @param busCount the number of busses being used in the audio processing flow
->>>>>>> working
    @param format the sample format to expect
    @param maxFramesToRender the maximum number of frames to expect on input
    */
@@ -105,24 +97,13 @@ public:
       facets_[busIndex].setBufferList(buffers_[busIndex].mutableAudioBufferList());
     }
 
-<<<<<<< HEAD
-    // This is not *strictly* true, but it works as an approximation. A better indicator is based on the
-    // transportStateBlock from the host, but it is not always provided, so we utilize this as a proxy for rendering
-    // starts.
-    if (!isRendering()) setRendering(true);
-=======
     setRendering(true);
->>>>>>> working
   }
 
   /**
    Rendering has stopped. Free up any resources it used.
    */
-<<<<<<< HEAD
-  void deallocateRenderingResources() noexcept {
-=======
   void deallocateRenderResources() noexcept {
->>>>>>> working
     for (auto& entry : facets_) {
       if (entry.isLinked()) entry.unlink();
     }
@@ -131,14 +112,7 @@ public:
       entry.release();
     }
 
-<<<<<<< HEAD
-    // This is not *strictly* true, but it works as an approximation. A better indicator is based on the
-    // transportStateBlock from the host, but it is not always provided, so we utilize this as a proxy for rendering
-    // stops.
-    if (isRendering()) setRendering(false);
-=======
     setRendering(false);
->>>>>>> working
   }
 
   /**
