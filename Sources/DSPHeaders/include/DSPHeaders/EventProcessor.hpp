@@ -49,8 +49,10 @@ public:
    @param rendering if true the host is "transport" is moving and we are expected to render samples.
    */
   void setRendering(bool rendering) noexcept {
-    rendering_ = rendering;
-    derived_.doRenderingStateChanged(rendering);
+    if (rendering != rendering_) {
+      rendering_ = rendering;
+      derived_.doRenderingStateChanged(rendering);
+    }
   }
 
   bool isRendering() const noexcept { return rendering_; }
@@ -93,10 +95,7 @@ public:
       facets_[busIndex].setBufferList(buffers_[busIndex].mutableAudioBufferList());
     }
 
-    if (!rendering_) {
-      rendering_ = true;
-      derived_.doRenderingStateChanged(true);
-    }
+    setRendering(true);
   }
 
   /**
@@ -111,10 +110,7 @@ public:
       entry.release();
     }
 
-    if (rendering_) {
-      rendering_ = false;
-      derived_.doRenderingStateChanged(false);
-    }
+    setRendering(false);
   }
 
   /**
