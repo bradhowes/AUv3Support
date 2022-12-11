@@ -270,7 +270,7 @@ extension FilterAudioUnit {
   override public func deallocateRenderResources() {
     guard let kernel = kernel else { fatalError("FilterAudioUnit not configured with kernel") }
     super.deallocateRenderResources()
-    kernel.deallocateRenderingResources()
+    kernel.deallocateRenderResources()
   }
   
   override public var internalRenderBlock: AUInternalRenderBlock {

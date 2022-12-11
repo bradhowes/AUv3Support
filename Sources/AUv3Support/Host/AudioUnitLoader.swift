@@ -4,7 +4,7 @@ import AVFoundation
 import os.log
 
 /**
- Errors that can come from AudioUnitHost.
+ Errors that can come from AudioUnitLoader.
  */
 public enum AudioUnitLoaderError: Error {
   /// Unexpected nil AUAudioUnit (most likely never can happen)
@@ -27,7 +27,7 @@ public enum AudioUnitLoaderError: Error {
 }
 
 /**
- Delegation protocol for AudioUnitHost class.
+ Delegation protocol for AudioUnitLoader class.
  */
 public protocol AudioUnitLoaderDelegate: AnyObject {
   /**
@@ -44,7 +44,7 @@ public protocol AudioUnitLoaderDelegate: AnyObject {
 }
 
 /**
- Simple hosting container for the FilterAudioUnit when used in an application. Loads the view controller for the
+ Simple loader for the FilterAudioUnit when used in an application. Loads the view controller for the
  AudioUnit and then instantiates the audio unit itself. Finally, it wires the AudioUnit with SimplePlayEngine to
  send audio samples to the AudioUnit. Note that this class has no knowledge of any classes other than what Apple
  provides.
