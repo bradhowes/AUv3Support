@@ -43,6 +43,9 @@ public:
    */
   void setBypass(bool bypass) noexcept { bypassed_ = bypass; }
 
+  /// @returns true if effect is bypassed
+  bool isBypassed() const noexcept { return bypassed_; }
+
   /**
    Set the rendering state of the host.
 
@@ -55,16 +58,13 @@ public:
     }
   }
 
+  /// @returns true if actively rendering samples
   bool isRendering() const noexcept { return rendering_; }
-
-  /**
-   Get current bypass mode
-   */
-  bool isBypassed() const noexcept { return bypassed_; }
 
   /**
    Update kernel and buffers to support the given format.
 
+   @param busCount the number of busses being used in the audio processing flow
    @param format the sample format to expect
    @param maxFramesToRender the maximum number of frames to expect on input
    */
