@@ -13,7 +13,7 @@ fileprivate let acd = AudioComponentDescription(componentType: FourCharCode("auf
 fileprivate let bad_acd = AudioComponentDescription(componentType: FourCharCode("aufx"),
                                                     componentSubType: FourCharCode("dely"),
                                                     componentManufacturer: FourCharCode("blah"),
-                                                    componentFlags: 123, componentFlagsMask: 0)
+                                                    componentFlags: UInt32.max, componentFlagsMask: 0)
 
 fileprivate class MockControl: NSObject, RangedControl {
   static let log = Shared.logger("foo", "bar")
@@ -113,6 +113,28 @@ fileprivate class MockViewConfigurationManager: AudioUnitViewConfigurationManage
 
   func selectViewConfiguration(_ viewConfiguration: AUAudioUnitViewConfiguration) {
     activeViewConfiguration = viewConfiguration
+  }
+}
+
+private var mockUserPresets = [Int : [AUValue]]()
+
+enum RuntimeError: Error {
+  case unknownPreset
+}
+
+public extension FilterAudioUnit {
+  override func saveUserPreset(_ userPreset: AUAudioUnitPreset) throws {
+    mockUserPresets[userPreset.number] = [parameterTree!.parameter(withAddress: 123)!.value,
+                                          parameterTree!.parameter(withAddress: 456)!.value]
+  }
+
+  override func presetState(for userPreset: AUAudioUnitPreset) throws -> [String : Any] {
+    if let parameterValues = mockUserPresets[userPreset.number] {
+      parameterTree!.parameter(withAddress: 123)!.setValue(parameterValues[0], originator: nil)
+      parameterTree!.parameter(withAddress: 456)!.setValue(parameterValues[1], originator: nil)
+      return [:]
+    }
+    throw RuntimeError.unknownPreset
   }
 }
 
@@ -239,6 +261,14 @@ final class FilterAudioUnitTests: XCTestCase {
     XCTAssertEqual(kernel.maxFramesToRender, 0)
   }
 
+  func testAllocateResourcesThrowsOnChannelCountMismatch() throws {
+    let format1 = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 1)!
+    try audioUnit.inputBusses[0].setFormat(format1)
+    let format2 = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)!
+    try audioUnit.outputBusses[0].setFormat(format2)
+    XCTAssertThrowsError(try audioUnit.allocateRenderResources())
+  }
+
   func testUseFactoryPreset() throws {
     control.expectation = expectation(description: "control updated")
     XCTAssertEqual(kernel.firstParam, 10.0)
@@ -248,6 +278,20 @@ final class FilterAudioUnitTests: XCTestCase {
     XCTAssertEqual(kernel.secondParam, 21.0)
     waitForExpectations(timeout: 10.0)
     XCTAssertEqual(control.value, 20.0)
+  }
+
+  func testUseUserPreset() throws {
+    XCTAssertEqual(kernel.firstParam, 10.0)
+    XCTAssertEqual(kernel.secondParam, 11.0)
+    try audioUnit.saveUserPreset(AUAudioUnitPreset(number: -1, name: "Boo"))
+    audioUnit.currentPreset = AUAudioUnitPreset(number: 1, name: "Blah")
+    XCTAssertEqual(kernel.firstParam, 20.0)
+    XCTAssertEqual(kernel.secondParam, 21.0)
+    audioUnit.currentPreset = AUAudioUnitPreset(number: -1, name: "Boo")
+    XCTAssertEqual(kernel.firstParam, 10.0)
+    XCTAssertEqual(kernel.secondParam, 11.0)
+
+    audioUnit.currentPreset = AUAudioUnitPreset(number: -99, name: "Barf")
   }
 
   func testParameterChanges() throws {

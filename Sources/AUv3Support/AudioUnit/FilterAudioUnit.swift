@@ -91,10 +91,11 @@ public final class FilterAudioUnit: AUAudioUnit {
    */
   override public init(componentDescription: AudioComponentDescription,
                        options: AudioComponentInstantiationOptions = []) throws {
-    os_log(.info, log: log, "init - BEGIN")
+    os_log(.info, log: log, "init - BEGIN %ld", componentDescription.componentFlags)
 
-    // Treat non-zero componentFlags as error -- used for testing.
-    guard componentDescription.componentFlags == 0 else {
+    // Treat all 1s componentFlagsMask as error -- used for testing. NOTE: at least on macOS 13.0.1 this can be non-zero
+    // (30) which is counter to what the documentation states.
+    if componentDescription.componentFlags == UInt32.max {
       throw Failure.unableToInitialize(String(describing: AVAudioFormat.self))
     }
 
@@ -275,7 +276,7 @@ extension FilterAudioUnit {
   
   override public var internalRenderBlock: AUInternalRenderBlock {
     os_log(.info, log: log, "internalRenderBlock - BEGIN")
-    guard let kernel = kernel else { fatalError("nil kernel") }
+    guard let kernel = kernel else { fatalError("FilterAudioUnit not configured with kernel") }
     let transportStateBlock = self.transportStateBlock
     return kernel.internalRenderBlock(transportStateBlock)
   }

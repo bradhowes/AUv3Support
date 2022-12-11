@@ -26,10 +26,15 @@ public protocol ParameterSource {
    Add parameter values to the given state dictionary. This is not strictly necessary since the state dict already has
    the values in its `data` key, but that is in a binary format.
 
-   - parameter dict: the dictionary to update
+   - parameter dict: the fullState dictionary to update
    */
   func storeParameters(into dict: inout [String: Any])
 
+  /**
+   Update the parameter tree with values from a user preset.
+
+   - parameter dict: the fullState dictionary to read from
+   */
   func useUserPreset(from dict: [String: Any])
 }
 
