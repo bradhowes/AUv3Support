@@ -8,7 +8,7 @@
 namespace DSPHeaders::Parameters {
 
 /**
- Holds a integer value and handles conversion from/to AUValue representations. Unlike other parameter representations,
+ Holds an integer value and handles conversion from/to AUValue representations. Unlike other parameter representations,
  this one does not support ramping -- the change is instantaneous.
  */
 struct IntegralParameter {
@@ -16,7 +16,7 @@ struct IntegralParameter {
   static int round(AUValue value) { return int(std::round(value)); }
 
   IntegralParameter() = default;
-  
+
   explicit IntegralParameter(AUValue init) noexcept : value_{round(init)} {};
 
   ~IntegralParameter() = default;
