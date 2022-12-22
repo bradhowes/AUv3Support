@@ -22,7 +22,7 @@ namespace DSPHeaders {
 
  Loosely based on code found in "Designing Audio Effect Plugins in C++" by Will C. Pirkle (2019).
  */
-template <typename T>
+template <typename ValueType = AUValue>
 class LFO {
 public:
 
@@ -33,9 +33,8 @@ public:
    @param frequency the frequency of the oscillator
    @param waveform the waveform to emit
    */
-  LFO(T sampleRate, T frequency, LFOWaveform waveform) noexcept
-  : valueGenerator_{WaveformGenerator(waveform)}, sampleRate_{sampleRate}
-  {
+  LFO(ValueType sampleRate, ValueType frequency, LFOWaveform waveform) noexcept
+  : valueGenerator_{WaveformGenerator(waveform)}, sampleRate_{sampleRate} {
     setFrequency(frequency, 0);
     reset();
   }
@@ -46,7 +45,7 @@ public:
    @param sampleRate number of samples per second
    @param frequency the frequency of the oscillator
    */
-  LFO(T sampleRate, T frequency) noexcept : LFO(sampleRate, frequency, LFOWaveform::sinusoid) {}
+  LFO(ValueType sampleRate, ValueType frequency) noexcept : LFO(sampleRate, frequency, LFOWaveform::sinusoid) {}
 
   /// Create a new instance.
   LFO() noexcept : LFO(44100.0, 1.0, LFOWaveform::sinusoid) {}
@@ -56,7 +55,7 @@ public:
    
    @param sampleRate number of samples per second
    */
-  void setSampleRate(T sampleRate) noexcept {
+  void setSampleRate(ValueType sampleRate) noexcept {
 
     // We don't keep around the LFO frequency. It can be recalculated but that depends on existing sampleRate_ value.
     // Save the current frequency value and then reapply it after changing sampleRate_.
@@ -78,7 +77,7 @@ public:
    @param frequency the frequency to operate at
    @param rampingDuration number of samples to ramp over
    */
-  void setFrequency(T frequency, AUAudioFrameCount rampingDuration) noexcept {
+  void setFrequency(ValueType frequency, AUAudioFrameCount rampingDuration) noexcept {
     assert(sampleRate_ != 0.0);
     phaseIncrement_.set(frequency / sampleRate_, rampingDuration);
   }
@@ -87,13 +86,13 @@ public:
   void reset() noexcept { moduloCounter_ = phaseIncrement_.get() > 0 ? 0.0 : 1.0; }
   
   /// @returns current value of the oscillator
-  T value() noexcept { return valueGenerator_(moduloCounter_); }
+  ValueType value() noexcept { return valueGenerator_(moduloCounter_); }
   
   /// @returns current value of the oscillator that is 90° ahead of what `value()` returns
-  T quadPhaseValue() const noexcept { return valueGenerator_(quadPhaseCounter_); }
+  ValueType quadPhaseValue() const noexcept { return valueGenerator_(quadPhaseCounter_); }
 
   /// @returns current value of the oscillator that is 90° behind what `value()` returns
-  T negativeQuadPhaseValue() const noexcept {
+  ValueType negativeQuadPhaseValue() const noexcept {
     return valueGenerator_(wrappedModuloCounter(quadPhaseCounter_ - 5.0, phaseIncrement_));
   }
 
@@ -106,7 +105,7 @@ public:
   }
 
    /// @returns current frequency in Hz
-  T frequency() const noexcept { return phaseIncrement_.get() * sampleRate_; }
+  ValueType frequency() const noexcept { return phaseIncrement_.get() * sampleRate_; }
 
   /// @returns the current waveform in effect for the LFO
   LFOWaveform waveform() const noexcept {
@@ -123,7 +122,7 @@ public:
   void stopRamping() noexcept { phaseIncrement_.stopRamping(); }
 
 private:
-  using ValueGenerator = T (*)(T);
+  using ValueGenerator = ValueType (*)(ValueType);
   
   static ValueGenerator WaveformGenerator(LFOWaveform waveform) noexcept {
     switch (waveform) {
@@ -135,26 +134,28 @@ private:
     assert(false);
   }
 
-  static T wrappedModuloCounter(T counter, T inc) noexcept {
+  static ValueType wrappedModuloCounter(ValueType counter, ValueType inc) noexcept {
     if (inc > 0 && counter >= 1.0) return counter - 1.0;
     if (inc < 0 && counter <= 0.0) return counter + 1.0;
     return counter;
   }
 
-  static T incrementModuloCounter(T counter, T inc) noexcept { return wrappedModuloCounter(counter + inc, inc); }
+  static ValueType incrementModuloCounter(ValueType counter, ValueType inc) noexcept {
+    return wrappedModuloCounter(counter + inc, inc);
+  }
 
-  static T sineValue(T counter) noexcept { return DSP::parabolicSine(M_PI - counter * 2.0 * M_PI); }
-  static T sawtoothValue(T counter) noexcept { return DSP::unipolarToBipolar(counter); }
-  static T triangleValue(T counter) noexcept {
+  static ValueType sineValue(ValueType counter) noexcept { return DSP::parabolicSine(M_PI - counter * 2.0 * M_PI); }
+  static ValueType sawtoothValue(ValueType counter) noexcept { return DSP::unipolarToBipolar(counter); }
+  static ValueType triangleValue(ValueType counter) noexcept {
     return DSP::unipolarToBipolar(std::abs(DSP::unipolarToBipolar(counter)));
   }
-  static T squareValue(T counter) noexcept { return counter >= 0.5 ? 1.0 : -1.0; }
+  static ValueType squareValue(ValueType counter) noexcept { return counter >= 0.5 ? 1.0 : -1.0; }
 
-  T sampleRate_;
+  ValueType sampleRate_;
   ValueGenerator valueGenerator_;
-  T moduloCounter_ = {0.0};
-  T quadPhaseCounter_ = {0.25};
-  Parameters::RampingParameter<T> phaseIncrement_;
+  ValueType moduloCounter_ = {0.0};
+  ValueType quadPhaseCounter_ = {0.25};
+  Parameters::RampingParameter<ValueType> phaseIncrement_;
 };
 
 } // end namespace DSPHeaders

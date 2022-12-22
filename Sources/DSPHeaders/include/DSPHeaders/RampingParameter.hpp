@@ -7,12 +7,13 @@ namespace DSPHeaders::Parameters {
 /**
  Manages a parameter value that can transition from one value to another over some number of frames.
  */
-template <typename T>
-struct RampingParameter {
+template <typename ValueType = AUValue>
+class RampingParameter {
+public:
+
+  explicit RampingParameter(ValueType initialValue) noexcept : value_{initialValue} {}
 
   RampingParameter() = default;
-
-  explicit RampingParameter(T initialValue) noexcept : value_{initialValue} {}
 
   ~RampingParameter() = default;
 
@@ -36,11 +37,11 @@ struct RampingParameter {
    @param target the ultimate value to use for the parameter
    @param duration the number of frames to transition over
    */
-  void set(T target, AUAudioFrameCount duration) noexcept {
+  void set(ValueType target, AUAudioFrameCount duration) noexcept {
     if (duration > 0) {
       rampRemaining_ = duration;
       rampTarget_ = target;
-      rampStep_ = (rampTarget_ - value_) / T(duration);
+      rampStep_ = (rampTarget_ - value_) / AUValue(duration);
     } else {
       value_ = target;
       rampRemaining_ = 0;
@@ -53,7 +54,7 @@ struct RampingParameter {
 
    @return the current parameter value
    */
-  T get() const noexcept { return rampRemaining_ > 0 ? rampTarget_ : value_; }
+  ValueType get() const noexcept { return rampRemaining_ > 0 ? rampTarget_ : value_; }
 
   /**
    Fetch the current value, incrementing the internal value if ramping is in effect. NOTE: unlike `get` this is not an
@@ -62,7 +63,7 @@ struct RampingParameter {
 
    @return the current parameter value
    */
-  T frameValue() noexcept {
+  ValueType frameValue() noexcept {
     if (rampRemaining_ > 0) {
       value_ = (--rampRemaining_ == 0) ? rampTarget_ : (value_ + rampStep_);
     }
@@ -70,9 +71,9 @@ struct RampingParameter {
   }
 
 private:
-  T value_;
-  T rampTarget_;
-  T rampStep_;
+  ValueType value_;
+  ValueType rampTarget_;
+  ValueType rampStep_;
   AUAudioFrameCount rampRemaining_{0};
 };
 

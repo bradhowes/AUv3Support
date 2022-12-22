@@ -27,8 +27,7 @@ struct SampleBuffer {
    @param format the format of the samples
    @param maxFrames the maximum number of frames to be found in the upstream output
    */
-  void allocate(AVAudioFormat* format, AUAudioFrameCount maxFrames) noexcept
-  {
+  void allocate(AVAudioFormat* format, AUAudioFrameCount maxFrames) noexcept {
     maxFramesToRender_ = maxFrames;
     buffer_ = [[AVAudioPCMBuffer alloc] initWithPCMFormat: format frameCapacity: maxFrames];
     mutableAudioBufferList_ = buffer_.mutableAudioBufferList;
@@ -37,8 +36,7 @@ struct SampleBuffer {
   /**
    Forget any allocated buffer.
    */
-  void release()
-  {
+  void release() {
     if (buffer_ == nullptr) {
       throw std::runtime_error("buffer_ == nullptr");
     }
@@ -58,8 +56,7 @@ struct SampleBuffer {
    */
   AUAudioUnitStatus pullInput(AudioUnitRenderActionFlags* actionFlags, AudioTimeStamp const* timestamp,
                               AVAudioFrameCount frameCount, NSInteger inputBusNumber,
-                              AURenderPullInputBlock pullInputBlock) noexcept
-  {
+                              AURenderPullInputBlock pullInputBlock) noexcept {
     if (pullInputBlock == nullptr) {
       return kAudioUnitErr_NoConnection;
     }
@@ -79,8 +76,7 @@ struct SampleBuffer {
    
    @param frameCount the number of frames to expect to place in the buffer
    */
-  void setFrameCount(AVAudioFrameCount frameCount) noexcept
-  {
+  void setFrameCount(AVAudioFrameCount frameCount) noexcept {
     assert(frameCount <= maxFramesToRender_ && mutableAudioBufferList_ != nullptr);
     UInt32 byteSize = frameCount * sizeof(AUValue);
     for (UInt32 channel = 0; channel < mutableAudioBufferList_->mNumberBuffers; ++channel) {

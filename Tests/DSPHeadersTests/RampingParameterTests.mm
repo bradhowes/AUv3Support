@@ -22,17 +22,17 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testInit {
-  auto param = RampingParameter<float>();
+  auto param = RampingParameter();
   XCTAssertFalse(param.isRamping());
   XCTAssertEqual(param.get(), 0.0);
 
-  param = RampingParameter<float>(12.34);
+  param = RampingParameter(AUValue(12.34));
   XCTAssertFalse(param.isRamping());
   XCTAssertEqualWithAccuracy(param.get(), 12.34, 1.0e-6);
 }
 
 - (void)testRamping {
-  auto param = RampingParameter<float>();
+  auto param = RampingParameter();
   param.set(1.0, 4);
   XCTAssertTrue(param.isRamping());
   XCTAssertEqual(param.get(), 1.0);
@@ -49,7 +49,7 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testReRamping {
-  auto param = RampingParameter<float>();
+  auto param = RampingParameter();
   param.set(1.0, 4);
   XCTAssertTrue(param.isRamping());
   XCTAssertEqual(param.frameValue(), 0.25);
@@ -65,7 +65,7 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testStopRamping {
-  auto param = RampingParameter<float>();
+  auto param = RampingParameter();
   param.set(1.0, 4);
   XCTAssertTrue(param.isRamping());
   XCTAssertEqual(param.get(), 1.0);

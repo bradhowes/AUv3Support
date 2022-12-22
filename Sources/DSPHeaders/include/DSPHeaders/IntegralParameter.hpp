@@ -11,13 +11,15 @@ namespace DSPHeaders::Parameters {
  Holds an integer value and handles conversion from/to AUValue representations. Unlike other parameter representations,
  this one does not support ramping -- the change is instantaneous.
  */
-struct IntegralParameter {
-
-  static int round(AUValue value) { return int(std::round(value)); }
+template <typename ValueType = AUValue>
+class IntegralParameter {
+public:
+  
+  static int round(ValueType value) { return int(std::round(value)); }
 
   IntegralParameter() = default;
 
-  explicit IntegralParameter(AUValue init) noexcept : value_{round(init)} {};
+  explicit IntegralParameter(ValueType init) noexcept : value_{round(init)} {};
 
   ~IntegralParameter() = default;
 
@@ -26,10 +28,10 @@ struct IntegralParameter {
 
    @param value the new value to use
    */
-  void set(AUValue value) noexcept { value_ = round(value); }
+  void set(ValueType value) noexcept { value_ = round(value); }
 
   /// @returns current value
-  AUValue get() const noexcept { return value_; }
+  ValueType get() const noexcept { return value_; }
 
 private:
   int value_;

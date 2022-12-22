@@ -16,7 +16,8 @@ namespace DSPHeaders::DSP {
  @param modulator the value to translate
  @returns value in range [-1, +1]
  */
-template <typename T> constexpr auto unipolarToBipolar(T modulator) noexcept { return 2.0 * modulator - 1.0; }
+template <typename ValueType>
+constexpr auto unipolarToBipolar(ValueType modulator) noexcept { return 2.0 * modulator - 1.0; }
 
 /**
  Translate value in range [-1, +1] into one in range [0, +1]
@@ -24,7 +25,8 @@ template <typename T> constexpr auto unipolarToBipolar(T modulator) noexcept { r
  @param modulator the value to translate
  @returns value in range [0, +1]
  */
-template <typename T> constexpr auto bipolarToUnipolar(T modulator) noexcept { return 0.5 * modulator + 0.5; }
+template <typename ValueType>
+constexpr auto bipolarToUnipolar(ValueType modulator) noexcept { return 0.5 * modulator + 0.5; }
 
 /**
  Perform linear translation from a value in range [0.0, 1.0] into one in [minValue, maxValue].
@@ -34,8 +36,9 @@ template <typename T> constexpr auto bipolarToUnipolar(T modulator) noexcept { r
  @param maxValue the highest value to return when modulator is +1
  @returns value in range [minValue, maxValue]
  */
-template <typename T> constexpr auto unipolarModulation(T modulator, T minValue, T maxValue) noexcept {
-  return std::clamp<T>(modulator, 0.0, 1.0) * (maxValue - minValue) + minValue;
+template <typename ValueType>
+constexpr auto unipolarModulation(ValueType modulator, ValueType minValue, ValueType maxValue) noexcept {
+  return std::clamp<>(modulator, 0.0, 1.0) * (maxValue - minValue) + minValue;
 }
 
 /**
@@ -46,9 +49,10 @@ template <typename T> constexpr auto unipolarModulation(T modulator, T minValue,
  @param maxValue the highest value to return when modulator is +1
  @returns value in range [minValue, maxValue]
  */
-template <typename T> constexpr auto bipolarModulation(T modulator, T minValue, T maxValue) noexcept {
+template <typename ValueType>
+constexpr auto bipolarModulation(ValueType modulator, ValueType minValue, ValueType maxValue) noexcept {
   auto mid = (maxValue - minValue) * 0.5;
-  return std::clamp<T>(modulator, -1.0, 1.0) * mid + mid + minValue;
+  return std::clamp<>(modulator, -1.0, 1.0) * mid + mid + minValue;
 }
 
 /**
@@ -60,13 +64,14 @@ template <typename T> constexpr auto bipolarModulation(T modulator, T minValue, 
  @param angle value between -PI and PI
  @returns approximate sin value
  */
-template <typename T> constexpr auto parabolicSine(T angle) noexcept {
-  constexpr T B{ 4.0 / M_PI};
-  constexpr T C{-4.0 / (M_PI * M_PI)};
-  constexpr T P{0.225};
-  const T y{B * angle + C * angle * ConstMath::abs<T>(angle)};
-  const T Py{P * y};
-  return Py * ConstMath::abs<T>(y) - Py + y;
+template <typename ValueType>
+constexpr auto parabolicSine(ValueType angle) noexcept {
+  constexpr ValueType B{ 4.0 / M_PI};
+  constexpr ValueType C{-4.0 / (M_PI * M_PI)};
+  constexpr ValueType P{0.225};
+  const ValueType y{B * angle + C * angle * ConstMath::abs<>(angle)};
+  const ValueType Py{P * y};
+  return Py * ConstMath::abs<>(y) - Py + y;
 }
 
 namespace Interpolation {

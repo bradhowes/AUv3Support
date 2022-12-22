@@ -29,8 +29,7 @@ struct BufferFacet {
 
    @param channelCount the number of channels to expect
    */
-  void setChannelCount(AUAudioChannelCount channelCount) noexcept
-  {
+  void setChannelCount(AUAudioChannelCount channelCount) noexcept {
     pointers_.reserve(channelCount);
     pointers_.resize(channelCount);
   }

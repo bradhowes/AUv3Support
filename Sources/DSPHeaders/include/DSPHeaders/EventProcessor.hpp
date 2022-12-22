@@ -28,13 +28,14 @@ namespace DSPHeaders {
  - doRenderingStateChanged
 
  */
-template <typename T> class EventProcessor {
+template <typename ValueType>
+class EventProcessor {
 public:
 
   /**
    Construct new instance.
    */
-  EventProcessor() noexcept : derived_{static_cast<T&>(*this)}, buffers_{}, facets_{} {}
+  EventProcessor() noexcept : derived_{static_cast<ValueType&>(*this)}, buffers_{}, facets_{} {}
 
   /**
    Set the bypass mode.
@@ -128,8 +129,7 @@ public:
    */
   AUAudioUnitStatus processAndRender(const AudioTimeStamp* timestamp, UInt32 frameCount, NSInteger outputBusNumber,
                                      AudioBufferList* output, const AURenderEvent* realtimeEventListHead,
-                                     AURenderPullInputBlock pullInputBlock) noexcept
-  {
+                                     AURenderPullInputBlock pullInputBlock) noexcept {
     size_t outputBusIndex = size_t(outputBusNumber);
     assert(outputBusIndex < buffers_.size());
 
@@ -184,8 +184,7 @@ private:
   BufferFacet& inputFacet() noexcept { assert(!facets_.empty()); return facets_.back(); }
 
   void render(NSInteger outputBusNumber, AudioTimeStamp const* timestamp, AUAudioFrameCount frameCount,
-              AURenderEvent const* events) noexcept
-  {
+              AURenderEvent const* events) noexcept {
     auto zero = AUEventSampleTime(0);
     auto now = AUEventSampleTime(timestamp->mSampleTime);
     auto framesRemaining = frameCount;
@@ -211,15 +210,13 @@ private:
     }
   }
 
-  void unlinkBuffers() noexcept
-  {
+  void unlinkBuffers() noexcept {
     for (auto& entry : facets_) {
       if (entry.isLinked()) entry.unlink();
     }
   }
 
-  AURenderEvent const* processEventsUntil(AUEventSampleTime now, AURenderEvent const* event) noexcept
-  {
+  AURenderEvent const* processEventsUntil(AUEventSampleTime now, AURenderEvent const* event) noexcept {
     // See http://devnotes.kymatica.com/auv3_parameters.html for some nice details and advice about parameter event
     // processing.
     while (event != nullptr && event->head.eventSampleTime <= now) {
@@ -236,8 +233,7 @@ private:
     return event;
   }
 
-  void renderFrames(NSInteger outputBusNumber, AUAudioFrameCount frameCount, AUAudioFrameCount processedFrameCount)
-  {
+  void renderFrames(NSInteger outputBusNumber, AUAudioFrameCount frameCount, AUAudioFrameCount processedFrameCount) {
     size_t outputBusIndex = size_t(outputBusNumber);
 
     // This method can be called multiple times during one `processAndRender` call due to interleaved audio events
@@ -262,7 +258,7 @@ private:
     derived_.doRendering(outputBusNumber, input.busBuffers(), output.busBuffers(), frameCount);
   }
 
-  T& derived_;
+  ValueType& derived_;
   std::vector<SampleBuffer> buffers_;
   std::vector<BufferFacet> facets_;
   bool bypassed_ = false;

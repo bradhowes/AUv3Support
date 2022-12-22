@@ -15,8 +15,7 @@ namespace DSPHeaders {
  two (stereo) channels of audio. There are methods specific to mono and stereo as well as general-purpose methods for
  treating them all the same or as alternating variations like stereo but as even (0/L) and odd (1/R) pairs.
  */
-class BusBuffers
-{
+class BusBuffers {
 public:
 
   /**
@@ -41,8 +40,7 @@ public:
    @param frame the frame to update
    @param monoSample the sample to update with
    */
-  void addMono(AUAudioFrameCount frame, AUValue monoSample) noexcept
-  {
+  void addMono(AUAudioFrameCount frame, AUValue monoSample) noexcept {
     assert(isMono());
     buffers_[0][frame] += monoSample;
   }
@@ -54,8 +52,7 @@ public:
    @param leftSample the sample to update the left channel with
    @param rightSample the sample to update the right channel with
    */
-  void addStereo(AUAudioFrameCount frame, AUValue leftSample, AUValue rightSample) noexcept
-  {
+  void addStereo(AUAudioFrameCount frame, AUValue leftSample, AUValue rightSample) noexcept {
     assert(isStereo());
     buffers_[0][frame] += leftSample;
     buffers_[1][frame] += rightSample;
@@ -67,8 +64,7 @@ public:
    @param frame the frame to update
    @param sample the value to update with
    */
-  void addAll(AUAudioFrameCount frame, AUValue sample) noexcept
-  {
+  void addAll(AUAudioFrameCount frame, AUValue sample) noexcept {
     for (auto& buffer : buffers_) {
       buffer[frame] += sample;
     }
@@ -82,8 +78,7 @@ public:
    @param evenSample the sample to update even (0 (L), 2, 4...) channels with
    @param oddSample the sample to update odd (1 (R), 3, 5....) channels with
    */
-  void addAlternating(AUAudioFrameCount frame, AUValue evenSample, AUValue oddSample) noexcept
-  {
+  void addAlternating(AUAudioFrameCount frame, AUValue evenSample, AUValue oddSample) noexcept {
     size_t size{buffers_.size()};
     for (size_t index = 0; index < size; ++index) {
       buffers_[index][frame] += (index % 2) ? oddSample : evenSample;
@@ -113,8 +108,7 @@ public:
 
    @param frames the amount to shift
    */
-  void shiftOver(AUAudioFrameCount frames) noexcept
-  {
+  void shiftOver(AUAudioFrameCount frames) noexcept {
     for (auto& buffer : buffers_ ) {
       buffer += frames;
     }

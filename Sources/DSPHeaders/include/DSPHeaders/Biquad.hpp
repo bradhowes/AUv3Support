@@ -6,7 +6,7 @@
 #include <cmath>
 #include <limits>
 
-#include <os/log.h>
+#include <AVFoundation/AVFoundation.h>
 
 namespace DSPHeaders::Biquad {
 
@@ -28,9 +28,8 @@ namespace DSPHeaders::Biquad {
  Note that in Pirkle there are 'c0' and 'd0' values that the book uses for mixing wet (c0) and dry (d0)
  values which are not found here.
  */
-template <typename T>
+template <typename ValueType = AUValue>
 struct Coefficients {
-  using ValueType = T;
 
   /**
    Constructor to set all coefficients at once
@@ -41,7 +40,8 @@ struct Coefficients {
    @param _b1 B1 coefficient
    @param _b2 B2 coefficient
    */
-  Coefficients(T _a0, T _a1, T _a2, T _b1, T _b2) noexcept : a0{_a0}, a1{_a1}, a2{_a2}, b1{_b1}, b2{_b2} {}
+  Coefficients(ValueType _a0, ValueType _a1, ValueType _a2, ValueType _b1, ValueType _b2) noexcept
+  : a0{_a0}, a1{_a1}, a2{_a2}, b1{_b1}, b2{_b2} {}
 
   Coefficients() = default;
 
@@ -59,35 +59,35 @@ struct Coefficients {
    @param VV the value to use
    @returns updated Coefficients collection
    */
-  Coefficients A0(T VV) noexcept { return Coefficients(VV, a1, a2, b1, b2); }
+  Coefficients A0(ValueType VV) noexcept { return Coefficients(VV, a1, a2, b1, b2); }
   /**
    Set the A1 coefficient, the second coefficient in the numerator
    
    @param VV the value to use
    @returns updated Coefficients collection
    */
-  Coefficients A1(T VV) noexcept { return Coefficients(a0, VV, a2, b1, b2); }
+  Coefficients A1(ValueType VV) noexcept { return Coefficients(a0, VV, a2, b1, b2); }
   /**
    Set the A2 coefficient, the third coefficient in the numerator
    
    @param VV the value to use
    @returns updated Coefficients collection
    */
-  Coefficients A2(T VV) noexcept { return Coefficients(a0, a1, VV, b1, b2); }
+  Coefficients A2(ValueType VV) noexcept { return Coefficients(a0, a1, VV, b1, b2); }
   /**
    Set the B1 coefficient, the second coefficient in the denominator
    
    @param VV the value to use
    @returns updated Coefficients collection
    */
-  Coefficients B1(T VV) noexcept { return Coefficients(a0, a1, a2, VV, b2); }
+  Coefficients B1(ValueType VV) noexcept { return Coefficients(a0, a1, a2, VV, b2); }
   /**
    Set the B2 coefficient, the third coefficient in the denominator
    
    @param VV the value to use
    @returns updated Coefficients collection
    */
-  Coefficients B2(T VV) noexcept { return Coefficients(a0, a1, a2, b1, VV); }
+  Coefficients B2(ValueType VV) noexcept { return Coefficients(a0, a1, a2, b1, VV); }
   
   /**
    A 1-pole low-pass filter coefficients generator.
@@ -96,7 +96,7 @@ struct Coefficients {
    @param frequency the cutoff frequency of the filter
    @returns Coefficients collection
    */
-  static Coefficients<T> LPF1(T sampleRate, T frequency) noexcept {
+  static Coefficients LPF1(ValueType sampleRate, ValueType frequency) noexcept {
     double theta = 2.0 * M_PI * frequency / sampleRate;
     double gamma = std::cos(theta) / (1.0 + std::sin(theta));
     return Coefficients((1.0 - gamma) / 2.0, (1.0 - gamma) / 2.0, 0.0, -gamma, 0.0);
@@ -109,7 +109,7 @@ struct Coefficients {
    @param frequency the cutoff frequency of the filter
    @returns Coefficients collection
    */
-  static Coefficients<T> HPF1(T sampleRate, T frequency) noexcept {
+  static Coefficients HPF1(ValueType sampleRate, ValueType frequency) noexcept {
     double theta = 2.0 * M_PI * frequency / sampleRate;
     double gamma = std::cos(theta) / (1.0 + std::sin(theta));
     return Coefficients((1.0 + gamma) / 2.0, (1.0 + gamma) / -2.0, 0.0, -gamma, 0.0);
@@ -123,7 +123,7 @@ struct Coefficients {
    @param resonance the filter resonance parameter (Q)
    @returns Coefficients collection
    */
-  static Coefficients<T> LPF2(T sampleRate, T frequency, T resonance) noexcept {
+  static Coefficients LPF2(ValueType sampleRate, ValueType frequency, ValueType resonance) noexcept {
     double theta = 2.0 * M_PI * frequency / sampleRate;
     double d = 1.0 / resonance / 2.0;
     double sinTheta = d * std::sin(theta);
@@ -141,7 +141,7 @@ struct Coefficients {
    @param resonance the filter resonance parameter (Q)
    @returns Coefficients collection
    */
-  static Coefficients<T> HPF2(T sampleRate, T frequency, T resonance) noexcept {
+  static Coefficients HPF2(ValueType sampleRate, ValueType frequency, ValueType resonance) noexcept {
     double theta = 2.0 * M_PI * frequency / sampleRate;
     double d = 1.0 / resonance;
     double beta = 0.5 * (1 - d / 2.0 * std::sin(theta)) / (1 + d / 2.0 * std::sin(theta));
@@ -157,7 +157,7 @@ struct Coefficients {
    @param frequency the cutoff frequency of the filter
    @returns Coefficients collection
    */
-  static Coefficients<T> APF1(T sampleRate, T frequency) noexcept {
+  static Coefficients APF1(ValueType sampleRate, ValueType frequency) noexcept {
     double tangent = std::tan(M_PI * frequency / sampleRate);
     double alpha = (tangent - 1.0) / (tangent + 1.0);
     return Coefficients(alpha, 1.0, 0.0, alpha, 0.0);
@@ -171,7 +171,7 @@ struct Coefficients {
    @param resonance the filter resonance parameter (Q)
    @returns Coefficients collection
    */
-  static Coefficients<T> APF2(T sampleRate, T frequency, T resonance) noexcept {
+  static Coefficients APF2(ValueType sampleRate, ValueType frequency, ValueType resonance) noexcept {
     double bandwidth = frequency / resonance;
     double argTan = M_PI * bandwidth / sampleRate;
     if (argTan >= 0.95 * M_PI / 2.0) argTan = 0.95 * M_PI / 2.0;
@@ -212,24 +212,22 @@ struct Coefficients {
     b2 += change.b2;
   }
 
-  T a0; /// A0 coefficient in numerator
-  T a1; /// A1 coefficient in numerator
-  T a2; /// A2 coefficient in numerator
-  T b1; /// B1 coefficient in denominator
-  T b2; /// B2 coefficient in denominator
+  ValueType a0; /// A0 coefficient in numerator
+  ValueType a1; /// A1 coefficient in numerator
+  ValueType a2; /// A2 coefficient in numerator
+  ValueType b1; /// B1 coefficient in denominator
+  ValueType b2; /// B2 coefficient in denominator
 };
 
 /**
  Mutable filter state.
  */
-template <typename T>
+template <typename ValueType = AUValue>
 struct State {
-  using ValueType = T;
-
-  T x_z1;
-  T x_z2;
-  T y_z1;
-  T y_z2;
+  ValueType x_z1;
+  ValueType x_z2;
+  ValueType y_z1;
+  ValueType y_z2;
 };
 
 /// Namespace for the various transforms that can be used to calculate values from a biquad graph. The differences and
@@ -241,9 +239,8 @@ namespace Transform {
 /**
  Base class for all Transform classes.
  */
-template <typename T>
+template <typename ValueType = AUValue>
 struct Base {
-  using ValueType = T;
 
   /**
    If value is smaller than a noise floor value, force it to be zero. 16-bit audio provides ~96dB dynamic range where
@@ -265,8 +262,8 @@ struct Base {
 /**
  Transform for the 'direct' biquad structure.
  */
-template <typename T>
-struct Direct : public Base<T> {
+template <typename ValueType = AUValue>
+struct Direct : public Base<ValueType> {
 
   /**
    Transform a value
@@ -276,10 +273,11 @@ struct Direct : public Base<T> {
    @param coefficients the filter coefficients to use
    @returns transformed value
    */
-  static T transform(T input, State<T>& state, const Coefficients<T>& coefficients) noexcept {
-    T output = coefficients.a0 * input + coefficients.a1 * state.x_z1 + coefficients.a2 * state.x_z2 -
+  static ValueType transform(ValueType input, State<ValueType>& state,
+                             const Coefficients<ValueType>& coefficients) noexcept {
+    ValueType output = coefficients.a0 * input + coefficients.a1 * state.x_z1 + coefficients.a2 * state.x_z2 -
     coefficients.b1 * state.y_z1 - coefficients.b2 * state.y_z2;
-    output = Base<T>::forceMinToZero(output);
+    output = Base<ValueType>::forceMinToZero(output);
     state.x_z2 = state.x_z1;
     state.x_z1 = input;
     state.y_z2 = state.y_z1;
@@ -294,15 +292,16 @@ struct Direct : public Base<T> {
    @param coefficients the filter coefficients to use
    @returns state convolved with coefficients
    */
-  static T storageComponent(const State<T>& state, const Coefficients<T>& coefficients) noexcept {
+  static ValueType storageComponent(const State<ValueType>& state,
+                                    const Coefficients<ValueType>& coefficients) noexcept {
     return coefficients.a1 * state.x_z1 + coefficients.a2 * state.x_z2 - coefficients.b1 * state.y_z1 -
     coefficients.b2 * state.y_z2;
   }
 };
 
 /// Transform for the 'canonical' biquad structure (min state)
-template <typename T>
-struct Canonical : Base<T> {
+template <typename ValueType = AUValue>
+struct Canonical : Base<ValueType> {
   
   /**
    Transform a value
@@ -312,10 +311,11 @@ struct Canonical : Base<T> {
    @param coefficients the filter coefficients to use
    @returns transformed value
    */
-  static T transform(T input, State<T>& state, const Coefficients<T>& coefficients) noexcept {
-    T theta = input - coefficients.b1 * state.x_z1 - coefficients.b2 * state.x_z2;
-    T output = coefficients.a0 * theta + coefficients.a1 * state.x_z1 + coefficients.a2 * state.x_z2;
-    output = Base<T>::forceMinToZero(output);
+  static ValueType transform(ValueType input, State<ValueType>& state,
+                             const Coefficients<ValueType>& coefficients) noexcept {
+    ValueType theta = input - coefficients.b1 * state.x_z1 - coefficients.b2 * state.x_z2;
+    ValueType output = coefficients.a0 * theta + coefficients.a1 * state.x_z1 + coefficients.a2 * state.x_z2;
+    output = Base<ValueType>::forceMinToZero(output);
     state.x_z2 = state.x_z1;
     state.x_z1 = theta;
     return output;
@@ -326,12 +326,12 @@ struct Canonical : Base<T> {
    
    @returns always 0.0
    */
-  static T storageComponent(const State<T>&, const Coefficients<T>&) noexcept { return 0.0; }
+  static ValueType storageComponent(const State<ValueType>&, const Coefficients<ValueType>&) noexcept { return 0.0; }
 };
 
 /// Transform for the transposed 'direct' biquad structure
-template <typename T>
-struct DirectTranspose : Base<T> {
+template <typename ValueType = AUValue>
+struct DirectTranspose : Base<ValueType> {
   
   /**
    Transform a value
@@ -341,10 +341,11 @@ struct DirectTranspose : Base<T> {
    @param coefficients the filter coefficients to use
    @returns transformed value
    */
-  static T transform(T input, State<T>& state, const Coefficients<T>& coefficients) noexcept {
-    T theta = input + state.y_z1;
-    T output = coefficients.a0 * theta + state.x_z1;
-    output = Base<T>::forceMinToZero(output);
+  static ValueType transform(ValueType input, State<ValueType>& state,
+                             const Coefficients<ValueType>& coefficients) noexcept {
+    ValueType theta = input + state.y_z1;
+    ValueType output = coefficients.a0 * theta + state.x_z1;
+    output = Base<ValueType>::forceMinToZero(output);
     state.y_z1 = state.y_z2 - coefficients.b1 * theta;
     state.y_z2 = -coefficients.b2 * theta;
     state.x_z1 = state.x_z2 + coefficients.a1 * theta;
@@ -359,12 +360,12 @@ struct DirectTranspose : Base<T> {
    @param coefficients the filter coefficients to use
    @returns always 0.0
    */
-  static T storageComponent(const State<T>&, const Coefficients<T>&) noexcept { return 0.0; }
+  static ValueType storageComponent(const State<ValueType>&, const Coefficients<ValueType>&) noexcept { return 0.0; }
 };
 
 /// Transform for the transposed 'canonical' biquad structure (min state)
-template <typename T>
-struct CanonicalTranspose : Base<T> {
+template <typename ValueType = AUValue>
+struct CanonicalTranspose : Base<ValueType> {
   
   /**
    Transform a value
@@ -374,8 +375,9 @@ struct CanonicalTranspose : Base<T> {
    @param coefficients the filter coefficients to use
    @returns transformed value
    */
-  static T transform(T input, State<T>& state, const Coefficients<T>& coefficients) noexcept {
-    T output = Base<T>::forceMinToZero(coefficients.a0 * input + state.x_z1);
+  static ValueType transform(ValueType input, State<ValueType>& state,
+                             const Coefficients<ValueType>& coefficients) noexcept {
+    ValueType output = Base<ValueType>::forceMinToZero(coefficients.a0 * input + state.x_z1);
     state.x_z1 = coefficients.a1 * input - coefficients.b1 * output + state.x_z2;
     state.x_z2 = coefficients.a2 * input - coefficients.b2 * output;
     return output;
@@ -388,7 +390,9 @@ struct CanonicalTranspose : Base<T> {
    @param coefficients the filter coefficients to use
    @returns the Z1 state value
    */
-  static T storageComponent(const State<T>& state, const Coefficients<T>&) noexcept { return state.x_z1; }
+  static ValueType storageComponent(const State<ValueType>& state, const Coefficients<ValueType>&) noexcept {
+    return state.x_z1;
+  }
 };
 
 } // namespace Transform
@@ -397,12 +401,11 @@ struct CanonicalTranspose : Base<T> {
  Generic biquad filter setup. Only knows how to reset its internal state and to transform (filter)
  values.
  */
-template <typename T, typename Transformer>
+template <typename Transformer, typename ValueType = AUValue>
 class Filter {
 public:
-  using ValueType = T;
-  using CoefficientsType = Coefficients<T>;
-  using StateType = State<T>;
+  using CoefficientsType = Coefficients<ValueType>;
+  using StateType = State<ValueType>;
 
   Filter() = default;
 
@@ -574,16 +577,16 @@ private:
   StateType state_;
 };
 
-template <typename T>
-using Direct = Filter<T, Transform::Direct<T>>;
+template <typename ValueType = AUValue>
+using Direct = Filter<Transform::Direct<ValueType>, ValueType>;
 
-template <typename T>
-using DirectTranspose = Filter<T, Transform::DirectTranspose<T>>;
+template <typename ValueType = AUValue>
+using DirectTranspose = Filter<Transform::DirectTranspose<ValueType>, ValueType>;
 
-template <typename T>
-using Canonical = Filter<T, Transform::Canonical<T>>;
+template <typename ValueType = AUValue>
+using Canonical = Filter<Transform::Canonical<ValueType>, ValueType>;
 
-template <typename T>
-using CanonicalTranspose = Filter<T, Transform::CanonicalTranspose<T>>;
+template <typename ValueType = AUValue>
+using CanonicalTranspose = Filter<Transform::CanonicalTranspose<ValueType>, ValueType>;
 
 } // namespace DSPHeaders::Biquad

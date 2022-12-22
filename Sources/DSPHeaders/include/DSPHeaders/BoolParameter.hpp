@@ -10,10 +10,16 @@ namespace DSPHeaders::Parameters {
  Holds a boolean value and handles conversion from/to AUValue representations. Unlike other parameter representations,
  this one does not support ramping -- the change is instantaneous.
  */
-struct BoolParameter {
+template <typename ValueType = AUValue>
+class BoolParameter {
+public:
+  
+  explicit BoolParameter(bool init) noexcept : value_{init} {};
+
+  explicit BoolParameter(ValueType init) noexcept : value_{init != 0.0 ? true : false} {};
 
   BoolParameter() = default;
-  explicit BoolParameter(bool init) noexcept : value_{init} {};
+
   ~BoolParameter() = default;
 
   /**
@@ -21,10 +27,10 @@ struct BoolParameter {
 
    @param value the new value to use
    */
-  void set(AUValue value) noexcept { value_ = value != 0.0; }
+  void set(ValueType value) noexcept { value_ = value != 0.0; }
 
   /// @returns 1.0 if `true` and 0.0 if `false`
-  AUValue get() const noexcept { return value_ ? 1.0 : 0.0; }
+  ValueType get() const noexcept { return value_ ? 1.0 : 0.0; }
 
   /// @returns the boolean state of the parameter
   operator bool() const noexcept { return value_; }
