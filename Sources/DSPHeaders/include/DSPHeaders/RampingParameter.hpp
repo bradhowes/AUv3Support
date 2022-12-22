@@ -59,12 +59,14 @@ public:
   /**
    Fetch the current value, incrementing the internal value if ramping is in effect. NOTE: unlike `get` this is not an
    idempotent operation if ramping is in effect. Thus, during rendering, one must cache this value if multiple channels
-   will be processed for the same frame.
+   will be processed for the same frame or make sure to call with `false` value to keep from advancing to the next
+   value.
 
+   @param advance if true (default), update the underlying value when ramping; otherwise, keep as-is.
    @return the current parameter value
    */
-  ValueType frameValue() noexcept {
-    if (rampRemaining_ > 0) {
+  ValueType frameValue(bool advance = true) noexcept {
+    if (advance && rampRemaining_ > 0) {
       value_ = (--rampRemaining_ == 0) ? rampTarget_ : (value_ + rampStep_);
     }
     return value_;

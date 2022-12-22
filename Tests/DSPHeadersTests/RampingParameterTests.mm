@@ -78,4 +78,16 @@ using namespace DSPHeaders::Parameters;
   XCTAssertEqual(param.get(), 1.0);
 }
 
+- (void)testAdvanceControl {
+  auto param = RampingParameter();
+  param.set(1.0, 4);
+  XCTAssertTrue(param.isRamping());
+  XCTAssertEqual(param.frameValue(), 0.25);
+  XCTAssertEqual(param.frameValue(false), 0.25);
+  XCTAssertEqual(param.frameValue(), 0.50);
+  XCTAssertEqual(param.frameValue(false), 0.50);
+  XCTAssertEqual(param.frameValue(false), 0.50);
+  XCTAssertEqual(param.frameValue(true), 0.75);
+}
+
 @end
