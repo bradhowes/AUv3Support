@@ -18,84 +18,143 @@ struct MockEffect : public EventProcessor<MockEffect>
 };
 
 @interface EventProcessorTests : XCTestCase
+@property MockEffect* effect;
 @end
 
 @implementation EventProcessorTests
 
 - (void)setUp {
-  // Put setup code here. This method is called before the invocation of each test method in the class.
+  self.effect = new MockEffect();
+  AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
+  AUAudioFrameCount maxFrames = 512;
+  self.effect->setRenderingFormat(1, format, maxFrames);
 }
 
 - (void)tearDown {
-  // Put teardown code here. This method is called after the invocation of each test method in the class.
+  delete self.effect;
 }
 
 - (void)testInit {
-  auto effect = MockEffect();
-  AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
-  effect.setRenderingFormat(1, format, 512);
-  XCTAssertTrue(effect.isRendering());
+  XCTAssertTrue(self.effect->isRendering());
 }
 
 - (void)testBypass {
-  auto effect = MockEffect();
-  AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
-  effect.setRenderingFormat(1, format, 512);
-
-  XCTAssertFalse(effect.isBypassed());
-  effect.setBypass(true);
-  XCTAssertTrue(effect.isBypassed());
-  effect.setBypass(false);
-  XCTAssertFalse(effect.isBypassed());
+  XCTAssertFalse(self.effect->isBypassed());
+  self.effect->setBypass(true);
+  XCTAssertTrue(self.effect->isBypassed());
+  self.effect->setBypass(false);
+  XCTAssertFalse(self.effect->isBypassed());
 }
 
 - (void)testRenderingState {
-  auto effect = MockEffect();
-  AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
-  effect.setRenderingFormat(1, format, 512);
-  XCTAssertTrue(effect.isRendering());
-  effect.setRendering(false);
-  XCTAssertFalse(effect.isRendering());
-  effect.setRendering(true);
-  XCTAssertTrue(effect.isRendering());
-  effect.deallocateRenderResources();
-  XCTAssertFalse(effect.isRendering());
+  XCTAssertTrue(self.effect->isRendering());
+  self.effect->setRendering(false);
+  XCTAssertFalse(self.effect->isRendering());
+  self.effect->setRendering(true);
+  XCTAssertTrue(self.effect->isRendering());
+  self.effect->deallocateRenderResources();
+  XCTAssertFalse(self.effect->isRendering());
 }
 
-- (void)testProcessAndRender {
-  auto effect = MockEffect();
+AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags, const AudioTimeStamp *timestamp,
+                                         AUAudioFrameCount frameCount, NSInteger inputBusNumber,
+                                         AudioBufferList* inputData) {
+  auto bufferCount = inputData->mNumberBuffers;
+  XCTAssertEqual(bufferCount, 2);
+  for (int bufferIndex = 0; bufferIndex < bufferCount; ++bufferIndex) {
+    auto& buffer = inputData->mBuffers[bufferIndex];
+    auto numberOfChannels = buffer.mNumberChannels;
+    XCTAssertEqual(numberOfChannels, 1);
+    auto bufferSize = buffer.mDataByteSize;
+    XCTAssertEqual(sizeof(AUValue) * frameCount, bufferSize);
+    auto ptr = static_cast<AUValue*>(buffer.mData);
+    for (int frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
+      ptr[frameIndex] = frameIndex;
+    }
+  }
+
+  return 0;
+};
+
+- (void)testProcessAndRenderNoPullInput {
+  self.effect->setBypass(true);
   AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
   AUAudioFrameCount maxFrames = 512;
-  effect.setRenderingFormat(2, format, maxFrames);
 
-  AVAudioPCMBuffer* buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:format frameCapacity:maxFrames];
   AudioTimeStamp timestamp = AudioTimeStamp();
-  AudioUnitRenderActionFlags flags = 0;
 
-  AUAudioUnitStatus (^mockPullInput)(AudioUnitRenderActionFlags *actionFlags, const AudioTimeStamp *timestamp,
-                                     AUAudioFrameCount frameCount, NSInteger inputBusNumber,
-                                     AudioBufferList *inputData);
-  mockPullInput = ^(AudioUnitRenderActionFlags *actionFlags, const AudioTimeStamp *timestamp,
-                    AUAudioFrameCount frameCount, NSInteger inputBusNumber, AudioBufferList *inputData) {
-    auto bufferCount = inputData->mNumberBuffers;
-    for (int index = 0; index < bufferCount; ++index) {
-      auto& buffer = inputData->mBuffers[index];
-      auto numberOfChannels = buffer.mNumberChannels;
-      auto bufferSize = buffer.mDataByteSize;
-      assert(sizeof(AUValue) * frameCount == bufferSize);
-      auto ptr = reinterpret_cast<AUValue*>(buffer.mData);
-      for (int pos = 0; pos < bufferSize; ++pos) {
-        ptr[pos] = pos;
-      }
-    }
-
-    return 0;
-  };
-
-  AUAudioFrameCount frames = 4;
-  NSInteger bus = 0;
-  auto status = effect.processAndRender(&timestamp, frames, bus, [buffer mutableAudioBufferList], nil, mockPullInput);
+  // Test without a pullInput routine
+  AUAudioFrameCount frames = maxFrames;
+  AVAudioPCMBuffer* buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:format frameCapacity:maxFrames];
+  AudioBufferList *outputData = [buffer mutableAudioBufferList];
+  auto status = self.effect->processAndRender(&timestamp, frames, 0, outputData, nil, nil);
   XCTAssertEqual(status, 0);
+
+  AudioBuffer& left = outputData->mBuffers[0];
+  XCTAssertEqual(left.mNumberChannels, 1);
+  XCTAssertEqual(left.mDataByteSize, maxFrames * sizeof(AUValue));
+
+  AudioBuffer& right = outputData->mBuffers[1];
+  XCTAssertEqual(right.mNumberChannels, 1);
+  XCTAssertEqual(right.mDataByteSize, maxFrames * sizeof(AUValue));
+}
+
+- (void)testProcessAndRenderWithPullInput {
+  self.effect->setBypass(true);
+  AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
+  AUAudioFrameCount maxFrames = 512;
+
+  AudioTimeStamp timestamp = AudioTimeStamp();
+
+  // Test without a pullInput routine
+  AUAudioFrameCount frames = maxFrames;
+  AVAudioPCMBuffer* buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:format frameCapacity:maxFrames];
+  AudioBufferList *outputData = [buffer mutableAudioBufferList];
+  auto status = self.effect->processAndRender(&timestamp, frames, 0, outputData, nil, mockPullInput);
+  XCTAssertEqual(status, 0);
+
+  AudioBuffer& left = outputData->mBuffers[0];
+  XCTAssertEqual(left.mNumberChannels, 1);
+  XCTAssertEqual(left.mDataByteSize, maxFrames * sizeof(AUValue));
+  auto ptr = static_cast<AUValue*>(left.mData);
+  XCTAssertEqual(ptr[maxFrames - 1], 511.0);
+
+  AudioBuffer& right = outputData->mBuffers[1];
+  XCTAssertEqual(right.mNumberChannels, 1);
+  XCTAssertEqual(right.mDataByteSize, maxFrames * sizeof(AUValue));
+  ptr = static_cast<AUValue*>(right.mData);
+  XCTAssertEqual(ptr[maxFrames - 1], 511.0);
+}
+
+- (void)testProcessAndRenderingInPlace {
+  self.effect->setBypass(true);
+  AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
+  AUAudioFrameCount maxFrames = 512;
+
+  AudioTimeStamp timestamp = AudioTimeStamp();
+
+  // Test without a pullInput routine
+  AUAudioFrameCount frames = maxFrames;
+  AVAudioPCMBuffer* buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:format frameCapacity:maxFrames];
+  AudioBufferList *outputData = [buffer mutableAudioBufferList];
+
+  outputData->mBuffers[0].mData = nil;
+  outputData->mBuffers[1].mData = nil;
+
+  auto status = self.effect->processAndRender(&timestamp, frames, 0, outputData, nil, mockPullInput);
+  XCTAssertEqual(status, 0);
+
+  AudioBuffer& left = outputData->mBuffers[0];
+  XCTAssertEqual(left.mNumberChannels, 1);
+  XCTAssertEqual(left.mDataByteSize, maxFrames * sizeof(AUValue));
+  auto ptr = static_cast<AUValue*>(left.mData);
+  XCTAssertEqual(ptr[maxFrames - 1], 511.0);
+
+  AudioBuffer& right = outputData->mBuffers[1];
+  XCTAssertEqual(right.mNumberChannels, 1);
+  XCTAssertEqual(right.mDataByteSize, maxFrames * sizeof(AUValue));
+  ptr = static_cast<AUValue*>(right.mData);
+  XCTAssertEqual(ptr[maxFrames - 1], 511.0);
 }
 
 @end

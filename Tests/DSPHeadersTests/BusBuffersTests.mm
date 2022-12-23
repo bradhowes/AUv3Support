@@ -31,7 +31,7 @@ static AUAudioFrameCount maxFrames = 100;
   buffer.allocate(monoFormat, maxFrames);
   BufferFacet facet;
   facet.setChannelCount(1);
-  facet.setBufferList(buffer.mutableAudioBufferList());
+  facet.assignBufferList(buffer.mutableAudioBufferList());
   XCTAssertEqual(1, facet.channelCount());
   BusBuffers bb{facet.busBuffers()};
   XCTAssertTrue(bb.isMono());
@@ -42,7 +42,7 @@ static AUAudioFrameCount maxFrames = 100;
   buffer.allocate(stereoFormat, maxFrames);
   BufferFacet facet;
   facet.setChannelCount(2);
-  facet.setBufferList(buffer.mutableAudioBufferList());
+  facet.assignBufferList(buffer.mutableAudioBufferList());
   XCTAssertEqual(2, facet.channelCount());
   BusBuffers bb{facet.busBuffers()};
   XCTAssertTrue(bb.isStereo());
@@ -56,13 +56,13 @@ static AUAudioFrameCount maxFrames = 100;
 
   BufferFacet facet;
   facet.setChannelCount(1);
-  XCTAssertNoThrow(facet.setBufferList(monoBuffer.mutableAudioBufferList()));
+  XCTAssertNoThrow(facet.assignBufferList(monoBuffer.mutableAudioBufferList()));
 
   facet.setChannelCount(2);
-  XCTAssertNoThrow(facet.setBufferList(stereoBuffer.mutableAudioBufferList()));
+  XCTAssertNoThrow(facet.assignBufferList(stereoBuffer.mutableAudioBufferList()));
 
   facet.setChannelCount(1);
-  XCTAssertThrows(facet.setBufferList(stereoBuffer.mutableAudioBufferList()));
+  XCTAssertThrows(facet.assignBufferList(stereoBuffer.mutableAudioBufferList()));
 }
 
 - (void)testFrameCount {
@@ -73,12 +73,12 @@ static AUAudioFrameCount maxFrames = 100;
 
   BufferFacet facet;
   facet.setChannelCount(1);
-  facet.setBufferList(monoBuffer.mutableAudioBufferList());
+  facet.assignBufferList(monoBuffer.mutableAudioBufferList());
   facet.setFrameCount(10);
   XCTAssertEqual(10 * sizeof(float), monoBuffer.mutableAudioBufferList()->mBuffers[0].mDataByteSize);
 
   facet.setChannelCount(2);
-  facet.setBufferList(stereoBuffer.mutableAudioBufferList());
+  facet.assignBufferList(stereoBuffer.mutableAudioBufferList());
   facet.setFrameCount(13);
   XCTAssertEqual(13 * sizeof(float), stereoBuffer.mutableAudioBufferList()->mBuffers[0].mDataByteSize);
   XCTAssertEqual(13 * sizeof(float), stereoBuffer.mutableAudioBufferList()->mBuffers[1].mDataByteSize);
@@ -90,7 +90,7 @@ static AUAudioFrameCount maxFrames = 100;
 
   BufferFacet facet;
   facet.setChannelCount(2);
-  facet.setBufferList(stereoBuffer.mutableAudioBufferList());
+  facet.assignBufferList(stereoBuffer.mutableAudioBufferList());
   BusBuffers bb1{facet.busBuffers()};
   XCTAssertTrue(bb1.isValid());
   XCTAssertTrue(bb1.isStereo());
@@ -122,7 +122,7 @@ static AUAudioFrameCount maxFrames = 100;
   stereoBuffer.allocate(stereoFormat, maxFrames);
   BufferFacet facet;
   facet.setChannelCount(2);
-  facet.setBufferList(stereoBuffer.mutableAudioBufferList());
+  facet.assignBufferList(stereoBuffer.mutableAudioBufferList());
   facet.unlink();
   XCTAssertFalse(facet.isLinked());
   XCTAssertThrows(facet.unlink());

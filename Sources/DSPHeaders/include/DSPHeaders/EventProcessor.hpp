@@ -95,7 +95,7 @@ public:
 
     // Link the output buffers with their corresponding facets. This only needs to be done once.
     for (size_t busIndex = 0; busIndex < buffers_.size(); ++busIndex) {
-      facets_[busIndex].setBufferList(buffers_[busIndex].mutableAudioBufferList());
+      facets_[busIndex].assignBufferList(buffers_[busIndex].mutableAudioBufferList());
     }
 
     setRendering(true);
@@ -135,29 +135,30 @@ public:
 
     // Get a buffer to use to read into if there is a `pullInputBlock`. We will also modify it in-place if necessary
     // use it for an output buffer if necessary.
-    auto& buffer{buffers_[outputBusIndex]};
-    if (frameCount > buffer.capacity()) {
+    auto& outputBusBuffer{buffers_[outputBusIndex]};
+    if (frameCount > outputBusBuffer.capacity()) {
       return kAudioUnitErr_TooManyFramesToProcess;
     }
 
-    // This only applies for effects -- instruments do not have anything to pull.
-    BufferFacet& input{inputFacet()};
+    // Setup the rendering destination to properly use the internal buffer or the buffer attached to `output`.
+    facets_[outputBusIndex].assignBufferList(output, outputBusBuffer.mutableAudioBufferList());
+    facets_[outputBusIndex].setFrameCount(frameCount);
+
     if (pullInputBlock) {
-      input.setBufferList(output, buffer.mutableAudioBufferList());
+
+      // Pull input samples from upstream. Use same output buffer to perform in-place rendering.
+      BufferFacet& input{inputFacet()};
+      input.assignBufferList(output, outputBusBuffer.mutableAudioBufferList());
       input.setFrameCount(frameCount);
 
       AudioUnitRenderActionFlags actionFlags = 0;
-      auto status = buffer.pullInput(&actionFlags, timestamp, frameCount, outputBusNumber, pullInputBlock);
+      auto status = input.pullInput(&actionFlags, timestamp, frameCount, outputBusNumber, pullInputBlock);
       if (status != noErr) {
         return status;
       }
-    }
+    } else {
 
-    facets_[outputBusIndex].setBufferList(output, buffer.mutableAudioBufferList());
-    facets_[outputBusIndex].setFrameCount(frameCount);
-
-    // Clear the output buffer before use when there is no input data.
-    if (!pullInputBlock) {
+      // Clear the output buffer before use when there is no input data. Important if we are in bypass mode.
       UInt32 byteSize = frameCount * sizeof(AUValue);
       for (UInt32 index = 0; index < output->mNumberBuffers; ++index) {
         auto& buf{output->mBuffers[index]};
@@ -245,11 +246,13 @@ private:
       facet.setOffset(processedFrameCount);
     }
 
-    // If we have input samples from an upstream node *and* we are in bypass mode, either use the sample buffers
-    // directly or copy samples over to the output buffer and be done.
     auto& input{inputFacet()};
-    if (input.isLinked() && isBypassed()) {
-      input.copyInto(facets_[outputBusIndex], processedFrameCount, frameCount);
+    if (isBypassed()) {
+      // If we have input samples from an upstream node, either use the sample buffers directly or copy samples over
+      // to the output buffer. Otherwise, we have already zero'd out the output buffer, so we are done.
+      if (input.isLinked()) {
+        input.copyInto(facets_[outputBusIndex], processedFrameCount, frameCount);
+      }
       return;
     }
 

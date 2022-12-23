@@ -46,31 +46,6 @@ struct SampleBuffer {
   }
   
   /**
-   Obtain samples from an upstream node. Output is stored in internal buffer.
-   
-   @param actionFlags render flags from the host
-   @param timestamp the current transport time of the samples
-   @param frameCount the number of frames to process
-   @param inputBusNumber the bus to pull from
-   @param pullInputBlock the function to call to do the pulling
-   */
-  AUAudioUnitStatus pullInput(AudioUnitRenderActionFlags* actionFlags, AudioTimeStamp const* timestamp,
-                              AVAudioFrameCount frameCount, NSInteger inputBusNumber,
-                              AURenderPullInputBlock pullInputBlock) noexcept {
-    if (pullInputBlock == nullptr) {
-      return kAudioUnitErr_NoConnection;
-    }
-
-    if (frameCount > maxFramesToRender_) {
-      return kAudioUnitErr_TooManyFramesToProcess;
-    }
-
-    setFrameCount(frameCount);
-    auto status = pullInputBlock(actionFlags, timestamp, frameCount, inputBusNumber, mutableAudioBufferList_);
-    return status;
-  }
-
-  /**
    Update the buffer to reflect that has or will hold frameCount frames. NOTE: this value must be <= max value given in
    the `allocate` method.
    

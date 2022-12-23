@@ -38,7 +38,7 @@ struct BufferFacet {
    Set the underlying buffers to use to hold and report out data. This is to be run within a render thread and will not
    allocate any memory. There are two options:
 
-   - bufferList has non-nullptr mData values -- use it as the source
+   - bufferList has non-nullptr mData values -- use it as-is
    - bufferList has nullptr mData values && inPlaceSource != nullptr -- use the inPlaceSource mData elements
 
    Note that this method will throw an exception if the channel count of either `bufferList` does not match the expected
@@ -47,13 +47,14 @@ struct BufferFacet {
    @param bufferList the collection of buffers to use
    @param inPlaceSource if not nullptr, use their mData elements for storage
    */
-  void setBufferList(AudioBufferList* bufferList, AudioBufferList* inPlaceSource = nullptr) {
+  void assignBufferList(AudioBufferList* bufferList, AudioBufferList* inPlaceSource = nullptr) {
     bufferList_ = bufferList;
     if (bufferList->mBuffers[0].mData == nullptr) {
+
+      // The given bufferList does not have space to use -- attempt to perform in-place rendering.
       if (inPlaceSource == nullptr) {
         throw std::runtime_error("inPlaceSource == nullptr");
       }
-      assert(inPlaceSource != nullptr);
       for (UInt32 channel = 0; channel < bufferList->mNumberBuffers; ++channel) {
         bufferList->mBuffers[channel].mData = inPlaceSource->mBuffers[channel].mData;
       }
@@ -106,6 +107,31 @@ struct BufferFacet {
     for (size_t channel = 0; channel < pointers_.size(); ++channel) {
       pointers_[channel] = nullptr;
     }
+  }
+
+  /**
+   Obtain samples from an upstream node. Output is stored in the AudioBufferList that was installed by `setBufferList`.
+
+   @param actionFlags render flags from the host
+   @param timestamp the current transport time of the samples
+   @param frameCount the number of frames to process
+   @param inputBusNumber the bus to pull from
+   @param pullInputBlock the function to call to do the pulling
+   */
+  AUAudioUnitStatus pullInput(AudioUnitRenderActionFlags* actionFlags, AudioTimeStamp const* timestamp,
+                              AVAudioFrameCount frameCount, NSInteger inputBusNumber,
+                              AURenderPullInputBlock pullInputBlock) noexcept {
+    if (pullInputBlock == nullptr) {
+      return kAudioUnitErr_NoConnection;
+    }
+
+    validateBufferList();
+    if (frameCount * sizeof(AUValue) > bufferList_->mBuffers[0].mDataByteSize) {
+      return kAudioUnitErr_TooManyFramesToProcess;
+    }
+
+    setFrameCount(frameCount);
+    return pullInputBlock(actionFlags, timestamp, frameCount, inputBusNumber, bufferList_);
   }
 
   /**
