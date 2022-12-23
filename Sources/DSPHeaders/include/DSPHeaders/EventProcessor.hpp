@@ -56,6 +56,10 @@ public:
     if (rendering != rendering_) {
       rendering_ = rendering;
       derived_.doRenderingStateChanged(rendering);
+
+      // Stop any ramping when the rendering state changes. Makes no sense to keep ramping after such major audio
+      // changes.
+      rampRemaining_ = 0;
     }
   }
 
