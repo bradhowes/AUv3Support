@@ -180,6 +180,15 @@ protected:
    */
   BusBuffers busBuffers(size_t bus) noexcept { return facets_[bus].busBuffers(); }
 
+  /**
+   Set the duration of a ramped parameter.
+
+   @param duration number of samples a parameter is changing
+   */
+  void setRampingDuration(AUAudioFrameCount duration) noexcept {
+    if (duration > rampRemaining_) rampRemaining_ = duration;
+  }
+
 private:
 
   BufferFacet& inputFacet() noexcept { assert(!facets_.empty()); return facets_.back(); }
@@ -220,11 +229,14 @@ private:
   AURenderEvent const* processEventsUntil(AUEventSampleTime now, AURenderEvent const* event) noexcept {
     // See http://devnotes.kymatica.com/auv3_parameters.html for some nice details and advice about parameter event
     // processing.
+    const AUParameterEvent* parameterEvent;
     while (event != nullptr && event->head.eventSampleTime <= now) {
       switch (event->head.eventType) {
         case AURenderEventParameter:
         case AURenderEventParameterRamp:
-          derived_.setParameterFromEvent(*reinterpret_cast<const AUParameterEvent*>(event));
+          parameterEvent = reinterpret_cast<const AUParameterEvent*>(event);
+          setRampingDuration(parameterEvent->rampDurationSampleFrames);
+          derived_.setParameterFromEvent(*parameterEvent);
           break;
         case AURenderEventMIDI: derived_.doMIDIEvent(event->MIDI); break;
         default: break;
@@ -256,14 +268,28 @@ private:
       return;
     }
 
-    // Pass off to the kernel to render the desired number of samples.
     auto& output{facets_[outputBusIndex]};
-    derived_.doRendering(outputBusNumber, input.busBuffers(), output.busBuffers(), frameCount);
+
+    // If ramping one or more parameters, we must render one frame at a time. Since this is more expensive than the
+    // non-ramp case, we only do it when necessary.
+    auto rampCount = std::min(rampRemaining_, frameCount);
+    if (rampCount > 0) {
+      rampRemaining_ -= rampCount;
+      for (; rampCount > 0; --rampCount, --frameCount) {
+        derived_.doRendering(outputBusNumber, input.busBuffers(), output.busBuffers(), 1);
+      }
+    }
+
+    // Non-ramping case
+    if (frameCount > 0) {
+      derived_.doRendering(outputBusNumber, input.busBuffers(), output.busBuffers(), frameCount);
+    }
   }
 
   ValueType& derived_;
   std::vector<SampleBuffer> buffers_;
   std::vector<BufferFacet> facets_;
+  AUAudioFrameCount rampRemaining_{0};
   bool bypassed_ = false;
   bool rendering_ = false;
 };

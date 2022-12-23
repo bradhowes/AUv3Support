@@ -11,10 +11,18 @@ using namespace DSPHeaders;
 struct MockEffect : public EventProcessor<MockEffect>
 {
   MockEffect() : EventProcessor<MockEffect>() {}
+
   void setParameterFromEvent(const AUParameterEvent&) {}
+
   void doMIDIEvent(AUMIDIEvent) {}
-  void doRendering(NSInteger outputBusNumber, BusBuffers, BusBuffers, AUAudioFrameCount) {}
+
+  void doRendering(NSInteger outputBusNumber, BusBuffers, BusBuffers, AUAudioFrameCount frameCount) {
+    frameCounts_.push_back(frameCount);
+  }
+
   void doRenderingStateChanged(bool rendering) {}
+
+  std::vector<AUAudioFrameCount> frameCounts_{};
 };
 
 @interface EventProcessorTests : XCTestCase
@@ -89,6 +97,7 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
   AudioBufferList *outputData = [buffer mutableAudioBufferList];
   auto status = self.effect->processAndRender(&timestamp, frames, 0, outputData, nil, nil);
   XCTAssertEqual(status, 0);
+  XCTAssertTrue(self.effect->frameCounts_.empty());
 
   AudioBuffer& left = outputData->mBuffers[0];
   XCTAssertEqual(left.mNumberChannels, 1);
@@ -112,6 +121,7 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
   AudioBufferList *outputData = [buffer mutableAudioBufferList];
   auto status = self.effect->processAndRender(&timestamp, frames, 0, outputData, nil, mockPullInput);
   XCTAssertEqual(status, 0);
+  XCTAssertTrue(self.effect->frameCounts_.empty());
 
   AudioBuffer& left = outputData->mBuffers[0];
   XCTAssertEqual(left.mNumberChannels, 1);
@@ -143,6 +153,49 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
 
   auto status = self.effect->processAndRender(&timestamp, frames, 0, outputData, nil, mockPullInput);
   XCTAssertEqual(status, 0);
+  XCTAssertTrue(self.effect->frameCounts_.empty());
+
+  AudioBuffer& left = outputData->mBuffers[0];
+  XCTAssertEqual(left.mNumberChannels, 1);
+  XCTAssertEqual(left.mDataByteSize, maxFrames * sizeof(AUValue));
+  auto ptr = static_cast<AUValue*>(left.mData);
+  XCTAssertEqual(ptr[maxFrames - 1], 511.0);
+
+  AudioBuffer& right = outputData->mBuffers[1];
+  XCTAssertEqual(right.mNumberChannels, 1);
+  XCTAssertEqual(right.mDataByteSize, maxFrames * sizeof(AUValue));
+  ptr = static_cast<AUValue*>(right.mData);
+  XCTAssertEqual(ptr[maxFrames - 1], 511.0);
+}
+
+- (void)testRampingDuration {
+  AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
+  AUAudioFrameCount maxFrames = 512;
+  AudioTimeStamp timestamp = AudioTimeStamp();
+  AUAudioFrameCount frames = maxFrames;
+  AVAudioPCMBuffer* buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:format frameCapacity:maxFrames];
+  AudioBufferList *outputData = [buffer mutableAudioBufferList];
+  outputData->mBuffers[0].mData = nil;
+  outputData->mBuffers[1].mData = nil;
+
+  AUParameterEvent* rampingEvent = new AUParameterEvent();
+  rampingEvent->next = nullptr;
+  rampingEvent->eventSampleTime = -1;
+  rampingEvent->parameterAddress = 1;
+  rampingEvent->rampDurationSampleFrames = 4;
+  rampingEvent->value = 10;
+
+  AURenderEvent* eventList = reinterpret_cast<AURenderEvent*>(rampingEvent);
+  eventList->head.eventType = AURenderEventParameterRamp;
+  
+  auto status = self.effect->processAndRender(&timestamp, frames, 0, outputData, eventList, mockPullInput);
+  XCTAssertEqual(status, 0);
+  XCTAssertEqual(self.effect->frameCounts_.size(), 5);
+  XCTAssertEqual(self.effect->frameCounts_[0], 1);
+  XCTAssertEqual(self.effect->frameCounts_[1], 1);
+  XCTAssertEqual(self.effect->frameCounts_[2], 1);
+  XCTAssertEqual(self.effect->frameCounts_[3], 1);
+  XCTAssertEqual(self.effect->frameCounts_[4], 508);
 
   AudioBuffer& left = outputData->mBuffers[0];
   XCTAssertEqual(left.mNumberChannels, 1);
