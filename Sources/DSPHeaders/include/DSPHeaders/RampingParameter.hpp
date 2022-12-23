@@ -66,10 +66,15 @@ public:
    @return the current parameter value
    */
   ValueType frameValue(bool advance = true) noexcept {
-    if (advance && rampRemaining_ > 0) {
+    if (advance) increment();
+    return value_;
+  }
+
+  /// Adjust the current value if ramping.
+  void increment() noexcept {
+    if (rampRemaining_ > 0) {
       value_ = (--rampRemaining_ == 0) ? rampTarget_ : (value_ + rampStep_);
     }
-    return value_;
   }
 
 private:

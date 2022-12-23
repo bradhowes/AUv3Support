@@ -15,7 +15,7 @@ class MillisecondsParameter : public RampingParameter<ValueType> {
 public:
   using super = RampingParameter<ValueType>;
 
-  explicit MillisecondsParameter(T milliseconds) noexcept : super(milliseconds) {}
+  explicit MillisecondsParameter(ValueType milliseconds) noexcept : super(milliseconds) {}
 
   MillisecondsParameter() = default;
 
