@@ -31,6 +31,8 @@ public final class BooleanParameterEditor: AUParameterEditorBase {
 
 extension BooleanParameterEditor: AUParameterEditor {
 
+  public var differs: Bool { booleanControl.booleanState != (parameter.value > 0.5 ? true : false) }
+
   /**
    Notification that the parameter should change due to a widget control change.
 

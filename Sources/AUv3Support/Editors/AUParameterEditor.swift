@@ -20,6 +20,9 @@ public protocol AUParameterEditor: AnyObject {
   /// The AUParameter being edited by the control
   var parameter: AUParameter { get }
 
+  /// True if the AUParameter value and the control value differ.
+  var differs: Bool { get }
+
   /**
    Notification that the parameter should change due to a widget control change.
 

@@ -106,6 +106,10 @@ extension FloatParameterEditor {
 
 extension FloatParameterEditor: AUParameterEditor {
 
+  public var differs: Bool {
+    rangedControl.value != (useLogValues ? paramValueToControlLogValue(parameter.value) : parameter.value)
+  }
+
   /**
    The user changed something. Make the change to the parameter. This should always run on the main thread.
 
