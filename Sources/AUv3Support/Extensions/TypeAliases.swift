@@ -141,6 +141,12 @@ final public class FocusAwareTextField: NSTextField {
 
   override public func becomeFirstResponder() -> Bool {
     if super.becomeFirstResponder() {
+
+      // Select the contents of the field when it becomes the first responder.
+      if let editor = self.currentEditor() {
+        editor.perform(#selector(selectAll(_:)), with: self, afterDelay: 0)
+      }
+
       onFocusChange(true)
       return true
     }
