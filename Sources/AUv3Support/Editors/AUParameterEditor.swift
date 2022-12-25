@@ -40,31 +40,42 @@ public protocol AUParameterEditor: AnyObject {
 }
 
 /**
- Base class for parameter editors. Installs a parameter observer so that the editor will be updated
+ Base class for parameter editors. Installs a parameter observer so that the editor will be updated when the parameter
+ value changes.
+
  - SeeAlso: `NSObject`
  */
 public class AUParameterEditorBase: NSObject {
   public let log: OSLog
   public let parameter: AUParameter
 
+  // The observer token used to track the parameter value
   public private(set) var parameterObserverToken: AUParameterObserverToken!
 
+  /**
+   Track changes for the given parameter.
+
+   - parameter parameter: the AUParameter to track
+   */
   public init(parameter: AUParameter) {
     self.log = Shared.logger("AUParameterEditor(" + parameter.displayName + ")")
     self.parameter = parameter
     super.init()
   }
 
-  internal func beginObservingParameter(editor: AUParameterEditor) {
-    parameterObserverToken = parameter.token(byAddingParameterObserver: { [weak self] address, value in
-      self?.parameterChanged(address: address, value: value, editor: editor)
-    })
-  }
+  /**
+   Start observing the parameter given in the initializer.
 
-  private func parameterChanged(address: AUParameterAddress, value: AUValue, editor: AUParameterEditor) {
-    os_log(.debug, log: log, "parameterChanged: %f", value)
-    precondition(address == self.parameter.address)
-    DispatchQueue.main.async { editor.setValue(value) }
+   - parameter editor: the editor whose `setValue` is invoked. Note that the expectation is that this is `self`, though
+   it is not enforced. If it is *not* `self` then one must ensure it is properly retained during the lifetime of the
+   observation.
+   */
+  internal func beginObservingParameter(editor: AUParameterEditor) {
+    parameterObserverToken = parameter.token(byAddingParameterObserver: { [weak self, weak editor] address, value in
+      guard let self = self, let editor = editor else { return }
+      precondition(address == self.parameter.address)
+      DispatchQueue.main.async { editor.setValue(value) }
+    })
   }
 
   public func runningOnMainThread() {

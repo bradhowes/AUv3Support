@@ -33,9 +33,13 @@ public final class FloatParameterEditor: AUParameterEditorBase {
   private var restoreNameTimer: Timer?
   private var hasActiveLabel: Bool = false
 
-  #if os(iOS)
+#if os(iOS)
   private var valueEditor: ValueEditor!
-  #endif
+#endif
+
+#if os(macOS)
+  private var valueLabel: Label?
+#endif
 
   /**
    Construct a new instance that links together a RangedControl and a label to an AUParameter value.
@@ -54,13 +58,30 @@ public final class FloatParameterEditor: AUParameterEditorBase {
     super.init(parameter: parameter)
 
     rangedControl.setParameterAddress(parameter.address)
-    label?.setParameterAddress(parameter.address)
-    
-    label?.text = parameter.displayName
+
+    if let label = self.label {
+      label.setParameterAddress(parameter.address)
+      label.text = parameter.displayName
 #if os(macOS)
-    label?.delegate = self
-    label?.onFocusChange = onFocusChanged
+      label.delegate = self
+      label.onFocusChange = onFocusChanged
+
+      let valueLabel = Label(string: "")
+      label.superview?.addSubview(valueLabel)
+      valueLabel.isHidden = true
+      valueLabel.font = label.font
+      valueLabel.textColor = label.textColor
+      valueLabel.alignment = .center
+      valueLabel.isBordered = false
+      valueLabel.drawsBackground = false
+      valueLabel.delegate = self
+      valueLabel.onFocusChange = onFocusChanged
+      valueLabel.refusesFirstResponder = true
+
+      self.valueLabel = valueLabel
+
 #endif
+    }
 
     if useLogValues {
       rangedControl.minimumValue = logSliderMinValue
@@ -104,9 +125,9 @@ extension FloatParameterEditor: AUParameterEditor {
   }
 
   /**
-   The user changed something. Make the change to the parameter. This should always run on the main thread.
+   Notification that the parameter should change due to a widget control change.
 
-   - parameter source: the source of the value
+   - parameter source: the control that caused the change
    */
   public func controlChanged(source: AUParameterValueProvider) {
     os_log(.debug, log: log, "controlChanged - %f", source.value)
@@ -125,10 +146,9 @@ extension FloatParameterEditor: AUParameterEditor {
   }
 
   /**
-   Change the parameter using a value that came entering a text value. This should always run on the main thread since
-   it comes after editing the parameter value.
+   Apply a new value to both the control and the parameter.
 
-   - parameter value: the new value to use.
+   - parameter value: the new value to use
    */
   public func setValue(_ value: AUValue) {
     os_log(.debug, log: log, "setValue - %f", value)
@@ -181,19 +201,32 @@ private extension FloatParameterEditor {
     parameter.minValue
   }
 
-  private func setControlState(_ value: AUValue) {
+  func setControlState(_ value: AUValue) {
     showNewValue(value)
     rangedControl.value = useLogValues ? paramValueToControlLogValue(value) : value
 
   }
 
-  private func showNewValue(_ value: AUValue) {
+  func showNewValue(_ value: AUValue) {
     os_log(.debug, log: log, "showNewValue - %f", value)
-    label?.text = formatter(value)
+    guard let label = self.label else { return }
+#if os(iOS)
+    label.text = formatter(value)
+#else
+    guard let valueLabel = self.valueLabel else { return }
+    label.isHidden = true
+    label.alphaValue = 0.0
+    label.text = parameter.displayName
+
+    valueLabel.alphaValue = 1.0
+    valueLabel.frame = label.frame
+    valueLabel.text = formatter(value)
+    valueLabel.isHidden = false
+#endif
     restoreName()
   }
 
-  private func restoreName() {
+  func restoreName() {
     restoreNameTimer?.invalidate()
     guard let label = label else { return }
     let displayName = parameter.displayName
@@ -205,7 +238,18 @@ private extension FloatParameterEditor {
         label.text = displayName
       }
 #else
-      label.text = displayName
+      guard let valueLabel = self.valueLabel else { return }
+      label.alphaValue = 0.0
+      label.isHidden = false
+      NSAnimationContext.runAnimationGroup({ context in
+        context.duration = 0.5
+        label.animator().alphaValue = 1.0
+        valueLabel.animator().alphaValue = 0.0
+      }) {
+        valueLabel.isHidden = true
+      }
+
+      // label.text = displayName
 #endif
     }
   }
