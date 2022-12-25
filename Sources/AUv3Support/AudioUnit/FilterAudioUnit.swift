@@ -245,7 +245,7 @@ extension FilterAudioUnit {
    */
   override public func allocateRenderResources() throws {
     os_log(.info, log: log, "allocateRenderResources - BEGIN")
-    guard let kernel = kernel else { fatalError("FilterAudioUnit not configured with kernel") }
+    precondition(kernel != nil)
 
     try super.allocateRenderResources()
 
@@ -269,14 +269,14 @@ extension FilterAudioUnit {
    Rendering has stopped -- tear down stuff that was supporting it.
    */
   override public func deallocateRenderResources() {
-    guard let kernel = kernel else { fatalError("FilterAudioUnit not configured with kernel") }
+    precondition(kernel != nil)
     super.deallocateRenderResources()
     kernel.deallocateRenderResources()
   }
   
   override public var internalRenderBlock: AUInternalRenderBlock {
     os_log(.info, log: log, "internalRenderBlock - BEGIN")
-    guard let kernel = kernel else { fatalError("FilterAudioUnit not configured with kernel") }
+    precondition(kernel != nil)
     let transportStateBlock = self.transportStateBlock
     return kernel.internalRenderBlock(transportStateBlock)
   }
