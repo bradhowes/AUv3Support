@@ -19,13 +19,13 @@ public final class BooleanParameterEditor: AUParameterEditorBase {
     self.booleanControl = booleanControl
     super.init(parameter: parameter)
     beginObservingParameter(editor: self)
-    setState(parameter.value)
+    setControlState(parameter.value)
   }
 }
 
 extension BooleanParameterEditor: AUParameterEditor {
 
-  public var differs: Bool { booleanControl.booleanState != (parameter.value > 0.5 ? true : false) }
+  public var differs: Bool { booleanControl.booleanState != stateFromValue(parameter.value) }
 
   /**
    Notification that the parameter should change due to a widget control change.
@@ -34,15 +34,11 @@ extension BooleanParameterEditor: AUParameterEditor {
    */
   public func controlChanged(source: AUParameterValueProvider) {
     runningOnMainThread()
-
     let value = source.value
-    if booleanControl !== source {
-      setState(value)
-    }
-
     if value != parameter.value {
-      parameter.setValue(source.value, originator: parameterObserverToken)
+      parameter.setValue(value, originator: parameterObserverToken)
     }
+    setControlState(value)
   }
 
   /**
@@ -52,17 +48,18 @@ extension BooleanParameterEditor: AUParameterEditor {
    */
   public func setValue(_ value: AUValue) {
     runningOnMainThread()
-    setState(value)
-    parameter.setValue(value, originator: parameterObserverToken)
+    if value != parameter.value {
+      parameter.setValue(value, originator: parameterObserverToken)
+    }
+    setControlState(value)
   }
 }
 
 private extension BooleanParameterEditor {
 
-  func setState(_ value: AUValue) {
-    let newState = value >= 0.5 ? true : false
-    if newState != booleanControl.booleanState {
-      booleanControl.booleanState = newState
-    }
+  func setControlState(_ value: AUValue) {
+    booleanControl.booleanState = stateFromValue(value)
   }
+
+  func stateFromValue(_ value: AUValue) -> Bool { value >= 0.5 }
 }

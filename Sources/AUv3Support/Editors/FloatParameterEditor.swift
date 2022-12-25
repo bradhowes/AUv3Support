@@ -116,19 +116,12 @@ extension FloatParameterEditor: AUParameterEditor {
     NSApp?.keyWindow?.makeFirstResponder(nil)
 #endif
 
-    if rangedControl !== source {
-      os_log(.debug, log: log, "controlChanged - updating rangedControl.value")
-      rangedControl.value = source.value
-    }
-
     let value = useLogValues ? paramValueFromControlLogValue(source.value) : source.value
-    os_log(.debug, log: log, "controlChanged - showNewValue %f", value)
-    showNewValue(value)
-
     if value != parameter.value {
       os_log(.debug, log: log, "controlChanged - parameter.setValue %f", value)
       parameter.setValue(value, originator: parameterObserverToken)
     }
+    setControlState(value)
   }
 
   /**
@@ -141,9 +134,10 @@ extension FloatParameterEditor: AUParameterEditor {
     os_log(.debug, log: log, "setValue - %f", value)
     runningOnMainThread()
     let newValue = value.clamped(to: parameter.minValue...parameter.maxValue)
-    parameter.setValue(newValue, originator: parameterObserverToken)
-    showNewValue(newValue)
-    rangedControl.value = useLogValues ? paramValueToControlLogValue(newValue) : newValue
+    if newValue != parameter.value {
+      parameter.setValue(newValue, originator: parameterObserverToken)
+    }
+    setControlState(newValue)
   }
 }
 
@@ -185,6 +179,12 @@ private extension FloatParameterEditor {
   func paramValueFromControlLogValue(_ knobValue: AUValue) -> AUValue {
     ((pow(2, knobValue) - 1) / logSliderMaxValuePower2Minus1) * (parameter.maxValue - parameter.minValue) +
     parameter.minValue
+  }
+
+  private func setControlState(_ value: AUValue) {
+    showNewValue(value)
+    rangedControl.value = useLogValues ? paramValueToControlLogValue(value) : value
+
   }
 
   private func showNewValue(_ value: AUValue) {
