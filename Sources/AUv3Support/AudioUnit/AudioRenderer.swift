@@ -2,7 +2,7 @@ import CoreAudioKit
 import AVKit
 
 /**
- Protocol for a kernel that can perform audio sample rendering.
+ Protocol for a Swift/Obj-C++ kernel that can perform audio sample rendering.
  */
 @objc public protocol AudioRenderer: AUParameterHandler {
 
@@ -23,6 +23,7 @@ import AVKit
   /**
    Obtain the internal render block that is used for rendering and processing events.
 
+   - parameter transportStateBlock: optional block that can obtain transport state status from the host.
    - returns: the render block to use
    */
   func internalRenderBlock(_ transportStateBlock: AUHostTransportStateBlock?) -> AUInternalRenderBlock
