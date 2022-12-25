@@ -63,10 +63,10 @@ extension ValueEditor {
 
    - parameter editor: the parameter editor that manages the AUParameter value.
    */
-  public func beginEditing(editor: AUParameterEditor) {
+  public func beginEditing(editor: AUParameterEditor, editingValue: String) {
     editing = editor
     parameterName.text = editor.parameter.displayName
-    parameterValueEditor.text = "\(editor.parameter.value)"
+    parameterValueEditor.text = editingValue
     parameterValueEditor.becomeFirstResponder()
     parameterValueEditor.delegate = self
     containerView.alpha = 1.0

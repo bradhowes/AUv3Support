@@ -25,8 +25,7 @@ public final class FloatParameterEditor: AUParameterEditorBase {
   private let logSliderMinValue: Float = 0.0
   private let logSliderMaxValue: Float = 9.0
   private lazy var logSliderMaxValuePower2Minus1 = Float(pow(2, logSliderMaxValue) - 1)
-
-  private let formatter: (AUValue) -> String
+  private let formatting: AUParameterFormatting
   private let rangedControl: RangedControl
   private let label: Label?
   private let useLogValues: Bool
@@ -45,55 +44,22 @@ public final class FloatParameterEditor: AUParameterEditorBase {
    Construct a new instance that links together a RangedControl and a label to an AUParameter value.
 
    - parameter parameter: the parameter to control
-   - parameter formatter: the formatter to use when converting values to strings
+   - parameter formatting: attributes and methods to format AUValue values to strings
    - parameter rangedControl: the Knob instance to change value
    - parameter label: the Label to show the new value
    */
-  public init(parameter: AUParameter, formatter: @escaping (AUValue) -> String, rangedControl: RangedControl,
-              label: Label?) {
-    self.formatter = formatter
+  public init(parameter: AUParameter, formatting: AUParameterFormatting, rangedControl: RangedControl, label: Label?) {
+    self.formatting = formatting
     self.rangedControl = rangedControl
     self.label = label
     self.useLogValues = parameter.flags.contains(.flag_DisplayLogarithmic)
     super.init(parameter: parameter)
 
-    rangedControl.setParameterAddress(parameter.address)
-
     if let label = self.label {
-      label.setParameterAddress(parameter.address)
-      label.text = parameter.displayName
-#if os(macOS)
-      label.delegate = self
-      label.onFocusChange = onFocusChanged
-
-      let valueLabel = Label(string: "")
-      label.superview?.addSubview(valueLabel)
-      valueLabel.isHidden = true
-      valueLabel.font = label.font
-      valueLabel.textColor = label.textColor
-      valueLabel.alignment = .center
-      valueLabel.isBordered = false
-      valueLabel.drawsBackground = false
-      valueLabel.delegate = self
-      valueLabel.onFocusChange = onFocusChanged
-      valueLabel.refusesFirstResponder = true
-
-      self.valueLabel = valueLabel
-
-#endif
+      configureLabel(label)
     }
 
-    if useLogValues {
-      rangedControl.minimumValue = logSliderMinValue
-      rangedControl.maximumValue = logSliderMaxValue
-      rangedControl.value = paramValueToControlLogValue(parameter.value)
-    }
-    else {
-      rangedControl.minimumValue = parameter.minValue
-      rangedControl.maximumValue = parameter.maxValue
-      rangedControl.value = parameter.value
-    }
-
+    configureRangedControl()
     beginObservingParameter(editor: self)
   }
 }
@@ -112,7 +78,7 @@ extension FloatParameterEditor {
   }
 
   @objc private func beginEditing(_ sender: UITapGestureRecognizer) {
-    valueEditor.beginEditing(editor: self)
+    valueEditor.beginEditing(editor: self, editingValue: formatting.editingValueFormatter(parameter.value))
   }
 }
 
@@ -163,18 +129,59 @@ extension FloatParameterEditor: AUParameterEditor {
 
 private extension FloatParameterEditor {
 
+  func configureRangedControl() {
+    rangedControl.setParameterAddress(parameter.address)
+    if useLogValues {
+      rangedControl.minimumValue = logSliderMinValue
+      rangedControl.maximumValue = logSliderMaxValue
+      rangedControl.value = paramValueToControlLogValue(parameter.value)
+    }
+    else {
+      rangedControl.minimumValue = parameter.minValue
+      rangedControl.maximumValue = parameter.maxValue
+      rangedControl.value = parameter.value
+    }
+  }
+
+  func configureLabel(_ label: Label) {
+    label.setParameterAddress(parameter.address)
+    label.text = parameter.displayName
+
 #if os(macOS)
-  func onFocusChanged(hasFocus: Bool) {
+    label.delegate = self
+    label.onFocusChange = onLabelFocusChanged
+
+    let valueLabel = Label(string: "")
+    label.superview?.addSubview(valueLabel)
+    valueLabel.isEditable = false
+    valueLabel.isSelectable = false
+    valueLabel.isHidden = true
+    valueLabel.font = label.font
+    valueLabel.textColor = label.textColor
+    valueLabel.alignment = .center
+    valueLabel.isBordered = false
+    valueLabel.drawsBackground = false
+    valueLabel.refusesFirstResponder = true
+    self.valueLabel = valueLabel
+#endif
+  }
+
+#if os(macOS)
+  func onLabelFocusChanged(hasFocus: Bool) {
     os_log(.debug, log: log, "onFocusChanged - hasFocus: %d", hasFocus)
     guard let label = self.label else { fatalError("expected non-nil label") }
     if hasFocus {
-      hasActiveLabel = true
-      label.floatValue = parameter.value
-      restoreNameTimer?.invalidate()
+      if !hasActiveLabel {
+        hasActiveLabel = true
+        label.text = formatting.editingValueFormatter(parameter.value)
+        restoreNameTimer?.invalidate()
+      }
     }
     else if hasActiveLabel {
-      hasActiveLabel = false
-      setValue(label.floatValue)
+      if hasActiveLabel {
+        hasActiveLabel = false
+        setValue(label.floatValue)
+      }
     }
   }
 #endif
@@ -210,9 +217,12 @@ private extension FloatParameterEditor {
   func showNewValue(_ value: AUValue) {
     os_log(.debug, log: log, "showNewValue - %f", value)
     guard let label = self.label else { return }
+
 #if os(iOS)
-    label.text = formatter(value)
-#else
+    label.text = formatting.displayValueFormatter(value)
+#endif
+
+#if os(macOS)
     guard let valueLabel = self.valueLabel else { return }
     label.isHidden = true
     label.alphaValue = 0.0
@@ -220,38 +230,44 @@ private extension FloatParameterEditor {
 
     valueLabel.alphaValue = 1.0
     valueLabel.frame = label.frame
-    valueLabel.text = formatter(value)
+    valueLabel.text = formatting.displayValueFormatter(value)
     valueLabel.isHidden = false
 #endif
+
     restoreName()
   }
 
   func restoreName() {
     restoreNameTimer?.invalidate()
-    guard let label = label else { return }
-    let displayName = parameter.displayName
     restoreNameTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
-#if os(iOS)
-      UIView.transition(with: label, duration: 0.5, options: [.curveLinear, .transitionCrossDissolve]) {
-        label.text = displayName
-      } completion: { _ in
-        label.text = displayName
-      }
-#else
-      guard let valueLabel = self.valueLabel else { return }
-      label.alphaValue = 0.0
-      label.isHidden = false
-      NSAnimationContext.runAnimationGroup({ context in
-        context.duration = 0.5
-        label.animator().alphaValue = 1.0
-        valueLabel.animator().alphaValue = 0.0
-      }) {
-        valueLabel.isHidden = true
-      }
-
-      // label.text = displayName
-#endif
+      self.transitionToDisplayName()
     }
+  }
+
+  func transitionToDisplayName() {
+    let displayName = parameter.displayName
+    guard let label = label else { return }
+
+#if os(iOS)
+    UIView.transition(with: label, duration: 0.5, options: [.curveLinear, .transitionCrossDissolve]) {
+      label.text = displayName
+    } completion: { _ in
+      label.text = displayName
+    }
+#endif
+
+#if os(macOS)
+    guard let valueLabel = self.valueLabel else { return }
+    label.alphaValue = 0.0
+    label.isHidden = false
+    NSAnimationContext.runAnimationGroup({ context in
+      context.duration = 0.5
+      label.animator().alphaValue = 1.0
+      valueLabel.animator().alphaValue = 0.0
+    }) {
+      valueLabel.isHidden = true
+    }
+#endif
   }
 }
 
