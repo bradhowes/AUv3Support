@@ -15,17 +15,11 @@ public protocol BooleanControl: NSObject {
 public final class BooleanParameterEditor: AUParameterEditorBase {
   private let booleanControl: BooleanControl
 
-  public var control: NSObject { booleanControl }
-
   public init(parameter: AUParameter, booleanControl: BooleanControl) {
     self.booleanControl = booleanControl
     super.init(parameter: parameter)
+    beginObservingParameter(editor: self)
     setState(parameter.value)
-  }
-
-  internal override func handleParameterChanged(value: AUValue) {
-    precondition(Thread.isMainThread, "handleParameterChanged found running on non-main thread")
-    setState(value)
   }
 }
 
@@ -39,7 +33,7 @@ extension BooleanParameterEditor: AUParameterEditor {
    - parameter source: the control that caused the change
    */
   public func controlChanged(source: AUParameterValueProvider) {
-    precondition(Thread.isMainThread, "controlChanged found running on non-main thread")
+    runningOnMainThread()
 
     let value = source.value
     if booleanControl !== source {
@@ -51,17 +45,13 @@ extension BooleanParameterEditor: AUParameterEditor {
     }
   }
 
-  public func updateControl() {
-    setState(parameter.value)
-  }
-
   /**
    Apply a new value to both the control and the parameter.
 
    - parameter value: the new value to use
    */
   public func setValue(_ value: AUValue) {
-    precondition(Thread.isMainThread, "setEditedValue found running on non-main thread")
+    runningOnMainThread()
     setState(value)
     parameter.setValue(value, originator: parameterObserverToken)
   }

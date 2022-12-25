@@ -22,8 +22,6 @@ public protocol RangedControl: ParameterAddressHolder {
  An editor for a float value parameter that relies on a RangedControl to provide a value between a range of values.
  */
 public final class FloatParameterEditor: AUParameterEditorBase {
-  public var control: NSObject { return rangedControl }
-
   private let logSliderMinValue: Float = 0.0
   private let logSliderMaxValue: Float = 9.0
   private lazy var logSliderMaxValuePower2Minus1 = Float(pow(2, logSliderMaxValue) - 1)
@@ -74,13 +72,8 @@ public final class FloatParameterEditor: AUParameterEditorBase {
       rangedControl.maximumValue = parameter.maxValue
       rangedControl.value = parameter.value
     }
-  }
 
-  internal override func handleParameterChanged(value: AUValue) {
-    os_log(.debug, log: log, "handleParameterChanged: %f", value)
-    precondition(Thread.isMainThread, "handleParameterChanged found running on non-main thread")
-    showNewValue(value)
-    rangedControl.value = useLogValues ? paramValueToControlLogValue(value) : value
+    beginObservingParameter(editor: self)
   }
 }
 
@@ -117,7 +110,7 @@ extension FloatParameterEditor: AUParameterEditor {
    */
   public func controlChanged(source: AUParameterValueProvider) {
     os_log(.debug, log: log, "controlChanged - %f", source.value)
-    precondition(Thread.isMainThread, "controlChanged found running on non-main thread")
+    runningOnMainThread()
 
 #if os(macOS)
     NSApp?.keyWindow?.makeFirstResponder(nil)
@@ -138,12 +131,6 @@ extension FloatParameterEditor: AUParameterEditor {
     }
   }
 
-  public func updateControl() {
-    os_log(.debug, log: log, "updateControl - %f", parameter.value)
-    showNewValue(parameter.value)
-    rangedControl.value = useLogValues ? paramValueToControlLogValue(parameter.value) : parameter.value
-  }
-
   /**
    Change the parameter using a value that came entering a text value. This should always run on the main thread since
    it comes after editing the parameter value.
@@ -152,10 +139,11 @@ extension FloatParameterEditor: AUParameterEditor {
    */
   public func setValue(_ value: AUValue) {
     os_log(.debug, log: log, "setValue - %f", value)
-    precondition(Thread.isMainThread, "setEditedValue found running on non-main thread")
+    runningOnMainThread()
     let newValue = value.clamped(to: parameter.minValue...parameter.maxValue)
     parameter.setValue(newValue, originator: parameterObserverToken)
-    updateControl()
+    showNewValue(newValue)
+    rangedControl.value = useLogValues ? paramValueToControlLogValue(newValue) : newValue
   }
 }
 

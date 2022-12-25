@@ -24,17 +24,25 @@ public protocol AUParameterEditor: AnyObject {
   var differs: Bool { get }
 
   /**
-   Notification that the parameter should change due to a widget control change.
+   Notification that the parameter should change due to a widget control change. A parameter can be controlled by more
+   than one UI control or value provider, so this provides a way to keep them in sync.
 
    - parameter source: the control that caused the change
    */
   func controlChanged(source: AUParameterValueProvider)
 
-  func setValue(_ value: AUValue)
+  /**
+   Set the value of the editor and the value of the parameter.
 
-  func updateControl()
+   - parameter value: the value to assign to the parameter
+   */
+  func setValue(_ value: AUValue)
 }
 
+/**
+ Base class for parameter editors. Installs a parameter observer so that the editor will be updated
+ - SeeAlso: `NSObject`
+ */
 public class AUParameterEditorBase: NSObject {
   public let log: OSLog
   public let parameter: AUParameter
@@ -45,17 +53,21 @@ public class AUParameterEditorBase: NSObject {
     self.log = Shared.logger("AUParameterEditor(" + parameter.displayName + ")")
     self.parameter = parameter
     super.init()
+  }
 
+  internal func beginObservingParameter(editor: AUParameterEditor) {
     parameterObserverToken = parameter.token(byAddingParameterObserver: { [weak self] address, value in
-      self?.parameterChanged(address: address, value: value)
+      self?.parameterChanged(address: address, value: value, editor: editor)
     })
   }
 
-  private func parameterChanged(address: AUParameterAddress, value: AUValue) {
+  private func parameterChanged(address: AUParameterAddress, value: AUValue, editor: AUParameterEditor) {
     os_log(.debug, log: log, "parameterChanged: %f", value)
-    guard address == self.parameter.address else { return }
-    DispatchQueue.main.async { self.handleParameterChanged(value: value) }
+    precondition(address == self.parameter.address)
+    DispatchQueue.main.async { editor.setValue(value) }
   }
 
-  @objc internal func handleParameterChanged(value: AUValue) { fatalError("method not overridden by child class")}
+  public func runningOnMainThread() {
+    precondition(Thread.isMainThread)
+  }
 }
