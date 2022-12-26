@@ -37,4 +37,9 @@ extension AUParameterFormatting {
   public var editingValueFormatter: (AUValue) -> String {
     { value in String(format: self.stringFormatForEditingValue, value) }
   }
+
+  public func makeFormattingSuffix(from unit: String?) -> String {
+    guard let unit = unit, unit.count > 0 else { return "" }
+    return unitSeparator + unit
+  }
 }

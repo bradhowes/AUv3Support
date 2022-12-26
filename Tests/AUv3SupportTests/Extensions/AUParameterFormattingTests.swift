@@ -14,9 +14,7 @@ private let paramDef = ParameterDefinition.defPercent("def", localized: "def", a
 private let param = paramDef.parameter
 
 extension AUParameter: AUParameterFormatting {
-  public var suffix: String {
-    " " + (unitName ?? "")
-  }
+  public var suffix: String { makeFormattingSuffix(from: unitName) }
 }
 
 class AUParameterFormattingTests: XCTestCase {
