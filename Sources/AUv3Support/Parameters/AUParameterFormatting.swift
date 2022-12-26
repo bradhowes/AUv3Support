@@ -38,10 +38,3 @@ extension AUParameterFormatting {
     { value in String(format: self.stringFormatForEditingValue, value) }
   }
 }
-
-extension AUParameter: AUParameterFormatting {
-  public var suffix: String {
-    guard let unitName = unitName, !unitName.isEmpty else { return "" }
-    return unitSeparator + unitName
-  }
-}

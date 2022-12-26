@@ -13,22 +13,28 @@ private struct formatter: AUParameterFormatting, ParameterAddressProvider {
 private let paramDef = ParameterDefinition.defPercent("def", localized: "def", address: formatter())
 private let param = paramDef.parameter
 
+extension AUParameter: AUParameterFormatting {
+  public var suffix: String {
+    " " + (unitName ?? "")
+  }
+}
+
 class AUParameterFormattingTests: XCTestCase {
 
   override func setUp() {}
   override func tearDown() {}
 
   func testDisplayValueFormatter() throws {
-    XCTAssertEqual(formatter().displayValueFormatter(1.2345), "1.235 abc")
+    XCTAssertEqual(formatter().displayValueFormatter(1.2345), "1.23 abc")
   }
 
   func testEditingValueFormatter() throws {
-    XCTAssertEqual(formatter().editingValueFormatter(1.2345), "1.23")
+    XCTAssertEqual(formatter().editingValueFormatter(1.2345), "1.235")
   }
 
   func testParamFormatting() throws {
     param.value = 3.14159
-    XCTAssertEqual(param.displayValueFormatter(param.value), "3.142 %")
-    XCTAssertEqual(param.editingValueFormatter(param.value), "3.14")
+    XCTAssertEqual(param.displayValueFormatter(param.value), "3.14 %")
+    XCTAssertEqual(param.editingValueFormatter(param.value), "3.142")
   }
 }
