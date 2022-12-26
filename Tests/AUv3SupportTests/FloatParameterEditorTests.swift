@@ -20,6 +20,12 @@ fileprivate class MockControl: NSObject, RangedControl {
   var expectation: XCTestExpectation?
 }
 
+private struct formatter: AUParameterFormatting {
+  public var unitSeparator: String { " " }
+  public var suffix: String { "blah" }
+  public var stringFormatForDisplayValue: String { "%.3f" }
+}
+
 final class FloatParameterEditorTests: XCTestCase {
 
   private var param1: AUParameter!
@@ -65,8 +71,8 @@ final class FloatParameterEditorTests: XCTestCase {
       }
     }
 
-    editor1 = FloatParameterEditor(parameter: param1, formatter: { "\($0)" }, rangedControl: control, label: nil)
-    editor2 = FloatParameterEditor(parameter: param2, formatter: { "\($0)" }, rangedControl: control, label: nil)
+    editor1 = FloatParameterEditor(parameter: param1, formatting: formatter(), rangedControl: control, label: nil)
+    editor2 = FloatParameterEditor(parameter: param2, formatting: formatter(), rangedControl: control, label: nil)
   }
 
   override func tearDownWithError() throws {

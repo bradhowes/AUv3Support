@@ -22,15 +22,26 @@ public protocol AUParameterFormatting {
 
 extension AUParameterFormatting {
 
+  public var unitSeparator: String { " " }
+
+  public var stringFormatForDisplayValue: String { "%.3f"}
+
   public var stringFormatForEditingValue: String { "%.2f"}
 
   /// Obtain a closure that will format parameter values into a string
   public var displayValueFormatter: (AUValue) -> String {
-    { value in String(format: self.stringFormatForDisplayValue, value) + self.suffix }
+    { value in String(format: self.stringFormatForDisplayValue, value) + self.unitSeparator + self.suffix }
   }
 
   /// Obtain a closure that will format parameter values into a string
   public var editingValueFormatter: (AUValue) -> String {
     { value in String(format: self.stringFormatForEditingValue, value) }
+  }
+}
+
+extension AUParameter: AUParameterFormatting {
+  public var suffix: String {
+    guard let unitName = unitName, !unitName.isEmpty else { return "" }
+    return unitSeparator + unitName
   }
 }

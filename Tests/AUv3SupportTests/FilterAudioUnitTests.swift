@@ -57,6 +57,12 @@ fileprivate class Parameters: ParameterSource {
   }
 }
 
+private struct formatter: AUParameterFormatting {
+  public var unitSeparator: String { " " }
+  public var suffix: String { "blah" }
+  public var stringFormatForDisplayValue: String { "%.3f" }
+}
+
 fileprivate class Kernel: AudioRenderer {
 
   var bypassed: Bool = false
@@ -153,7 +159,7 @@ final class FilterAudioUnitTests: XCTestCase {
     audioUnit.configure(parameters: parameters, kernel: kernel)
     control = MockControl()
     editor = FloatParameterEditor(parameter: parameters.parameters[0],
-                                  formatter: { "\($0)" }, rangedControl: control,
+                                  formatting: formatter(), rangedControl: control,
                                   label: nil)
   }
 

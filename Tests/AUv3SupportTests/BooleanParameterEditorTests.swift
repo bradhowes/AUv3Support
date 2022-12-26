@@ -57,6 +57,7 @@ final class BooleanParameterEditorTests: XCTestCase {
   func testEditorParameterChanged() throws {
     let expectation = self.expectation(description: "control changed state via param change")
     XCTAssertEqual(control.booleanState, false)
+    XCTAssertFalse(editor.differs)
     XCTAssertEqual(control.value, 0.0)
     control.expectation = expectation
     param.setValue(1.0, originator: nil)
@@ -70,6 +71,7 @@ final class BooleanParameterEditorTests: XCTestCase {
     XCTAssertEqual(control.value, 0.0)
     control.expectation = expectation
     editor.setValue(1.0)
+    XCTAssertFalse(editor.differs)
     wait(for: [expectation], timeout: 2.0)
     XCTAssertEqual(control.booleanState, true)
     XCTAssertEqual(control.value, 1.0)
