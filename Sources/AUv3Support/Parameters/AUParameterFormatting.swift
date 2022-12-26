@@ -30,7 +30,7 @@ extension AUParameterFormatting {
 
   /// Obtain a closure that will format parameter values into a string
   public var displayValueFormatter: (AUValue) -> String {
-    { value in String(format: self.stringFormatForDisplayValue, value) + self.unitSeparator + self.suffix }
+    { value in String(format: self.stringFormatForDisplayValue, value) + self.suffix }
   }
 
   /// Obtain a closure that will format parameter values into a string
