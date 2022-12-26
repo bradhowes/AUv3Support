@@ -24,9 +24,9 @@ extension AUParameterFormatting {
 
   public var unitSeparator: String { " " }
 
-  public var stringFormatForDisplayValue: String { "%.3f"}
+  public var stringFormatForDisplayValue: String { "%.2f"}
 
-  public var stringFormatForEditingValue: String { "%.2f"}
+  public var stringFormatForEditingValue: String { "%.3f"}
 
   /// Obtain a closure that will format parameter values into a string
   public var displayValueFormatter: (AUValue) -> String {
