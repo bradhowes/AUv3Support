@@ -22,6 +22,11 @@ class AUParameterFormattingTests: XCTestCase {
   override func setUp() {}
   override func tearDown() {}
 
+  func testMakeFormattingSuffix() {
+    XCTAssertEqual(formatter().makeFormattingSuffix(from: ""), "")
+    XCTAssertEqual(formatter().makeFormattingSuffix(from: "foo"), " foo")
+  }
+
   func testDisplayValueFormatter() throws {
     XCTAssertEqual(formatter().displayValueFormatter(1.2345), "1.23 abc")
   }

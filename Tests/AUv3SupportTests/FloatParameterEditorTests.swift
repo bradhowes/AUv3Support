@@ -34,6 +34,7 @@ final class FloatParameterEditorTests: XCTestCase {
   private var control: MockControl!
   private var editor1: FloatParameterEditor!
   private var editor2: FloatParameterEditor!
+  private var label1: Label!
   private var parameterValue1: AUValue = 0.0
   private var parameterValue2: AUValue = 0.0
 
@@ -50,6 +51,7 @@ final class FloatParameterEditorTests: XCTestCase {
       dependentParameters: nil
     )
 
+    label1 = Label()
     control = MockControl()
     parameterValue1 = 0.0
     parameterValue2 = 0.0
@@ -71,7 +73,7 @@ final class FloatParameterEditorTests: XCTestCase {
       }
     }
 
-    editor1 = FloatParameterEditor(parameter: param1, formatting: formatter(), rangedControl: control, label: nil)
+    editor1 = FloatParameterEditor(parameter: param1, formatting: formatter(), rangedControl: control, label: label1)
     editor2 = FloatParameterEditor(parameter: param2, formatting: formatter(), rangedControl: control, label: nil)
   }
 
@@ -88,7 +90,9 @@ final class FloatParameterEditorTests: XCTestCase {
     let expectation = self.expectation(description: "control changed state via param change")
     XCTAssertEqual(control.value, 0.0)
     control.expectation = expectation
+    XCTAssertFalse(editor1.differs)
     param1.setValue(35.0, originator: nil)
+    XCTAssertTrue(editor1.differs)
     wait(for: [expectation], timeout: 2.0)
     XCTAssertEqual(control.value, 35.0)
     XCTAssertEqual(parameterValue1, 35.0)
@@ -98,7 +102,9 @@ final class FloatParameterEditorTests: XCTestCase {
     let expectation = self.expectation(description: "control changed state via param change")
     XCTAssertEqual(control.value, 0.0)
     control.expectation = expectation
+    XCTAssertFalse(editor2.differs)
     param2.setValue(35.0, originator: nil)
+    XCTAssertTrue(editor2.differs)
     wait(for: [expectation], timeout: 2.0)
     XCTAssertEqual(control.value, 7.49065)
     XCTAssertEqual(parameterValue2, 35.0)
@@ -151,4 +157,13 @@ final class FloatParameterEditorTests: XCTestCase {
     XCTAssertEqual(control.value, 8.647865)
     XCTAssertEqual(parameterValue2, 78.30002)
   }
+
+#if os(macOS)
+  func testLabelIsHiddenWAfterValueChange() throws {
+    XCTAssertEqual(label1.text, "One")
+    XCTAssertFalse(label1.isHidden)
+    editor1.setValue(8.3)
+    XCTAssertTrue(label1.isHidden)
+  }
+#endif
 }

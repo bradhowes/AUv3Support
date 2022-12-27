@@ -8,6 +8,14 @@ import Cocoa
 import AVFAudio
 import os.log
 
+/**
+ Delegation protocol for HostViewManager class.
+ */
+public protocol HostViewManagerDelegate: AnyObject {
+  func connected()
+  func failed(error: AudioUnitLoaderError)
+}
+
 public final class HostViewManager: NSObject {
   private let log = Shared.logger("HostViewManager")
   private let config: HostViewConfig
@@ -19,16 +27,18 @@ public final class HostViewManager: NSObject {
 
   private var avAudioUnit: AVAudioUnit?
   private var auAudioUnit: AUAudioUnit? { avAudioUnit?.auAudioUnit }
-  private var audioUnitViewController: NSViewController?
 
   private var currentPresetObserverToken: NSKeyValueObservation?
   private var userPresetsObserverToken: NSKeyValueObservation?
 
   public static let showedInitialAlertKey = "showedInitialAlert"
+  public static var alwaysShowInstructions: Bool = false
 
   private var showingInitialPrompt = false
 
-  public static var alwaysShowInstructions: Bool = false
+  public weak var delegate: HostViewManagerDelegate? {
+    didSet { notifyDelegate() }
+  }
 
   public static var showInstructions: Bool {
     let firstTime = (UserDefaults.standard.bool(forKey: showedInitialAlertKey) == false) || alwaysShowInstructions
@@ -65,18 +75,25 @@ public final class HostViewManager: NSObject {
 
 extension HostViewManager {
 
-  public func showInitialPrompt() {
-    guard Self.showInstructions else { return }
+  public typealias InstructionPrompter = (NSViewController, String, @escaping () -> Void) -> Void
 
-    disablePlaying()
-    showingInitialPrompt = true
-
-    UserDefaults.standard.set(true, forKey: Self.showedInitialAlertKey)
+  private static let defaultPrompter: InstructionPrompter = {(viewController: NSViewController, prompt: String,
+                                                              closure: @escaping () -> Void) in
     let alert = NSAlert()
     alert.alertStyle = .informational
     alert.messageText = "AUv3 Component Installed"
-    alert.informativeText =
-      """
+    alert.informativeText = prompt
+    alert.addButton(withTitle: "OK")
+    alert.beginSheetModal(for: viewController.view.window!) { _ in closure() }
+  }
+
+  public func showInitialPrompt(prompter: InstructionPrompter? = nil) {
+    guard Self.showInstructions else { return }
+    UserDefaults.standard.set(true, forKey: Self.showedInitialAlertKey)
+    disablePlaying()
+    showingInitialPrompt = true
+
+    let text = """
 The AUv3 component '\(config.componentName)' is now available on your device and can be used in other AUv3 host apps \
 such as GarageBand and Logic.
 
@@ -86,8 +103,7 @@ component in other apps.
 If you delete this app from your device, the AUv3 component will no longer be available for use in other host \
 applications.
 """
-    alert.addButton(withTitle: "OK")
-    alert.beginSheetModal(for: config.viewController.view.window!){ _ in
+    (prompter ?? Self.defaultPrompter)(config.viewController, text) {
       DispatchQueue.main.async {
         self.showingInitialPrompt = false
         self.enablePlaying()
@@ -108,7 +124,6 @@ extension HostViewManager: AudioUnitLoaderDelegate {
     presetsMenuManager.build()
 
     avAudioUnit = audioUnit
-    audioUnitViewController = viewController
     connectFilterView(audioUnit, viewController)
 
     updateView()
@@ -154,6 +169,12 @@ extension HostViewManager: NSWindowDelegate {
 
 extension HostViewManager {
 
+  private func notifyDelegate() {
+    if avAudioUnit != nil {
+      DispatchQueue.main.async { self.delegate?.connected(); }
+    }
+  }
+
   private func enablePlaying() {
     if userPresetsManager != nil && !showingInitialPrompt {
       config.playButton.isEnabled = true
@@ -177,6 +198,8 @@ extension HostViewManager {
     enablePlaying()
 
     connectParametersToControls(audioUnit.auAudioUnit)
+
+    delegate?.connected()
   }
 
   private func connectParametersToControls(_ audioUnit: AUAudioUnit) {

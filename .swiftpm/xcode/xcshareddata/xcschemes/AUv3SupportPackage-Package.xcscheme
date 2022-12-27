@@ -14,37 +14,23 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AUv3SupportPackage_AUv3Support_iOS"
-               BuildableName = "AUv3SupportPackage_AUv3Support_iOS"
-               BlueprintName = "AUv3SupportPackage_AUv3Support_iOS"
-               ReferencedContainer = "container:">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AUv3SupportPackage_AUv3Support"
-               BuildableName = "AUv3SupportPackage_AUv3Support"
-               BlueprintName = "AUv3SupportPackage_AUv3Support"
-               ReferencedContainer = "container:">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "AUv3-Support"
                BuildableName = "AUv3-Support"
                BlueprintName = "AUv3-Support"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AUv3-DSP-Headers"
+               BuildableName = "AUv3-DSP-Headers"
+               BlueprintName = "AUv3-DSP-Headers"
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
@@ -79,20 +65,6 @@
          <BuildActionEntry
             buildForTesting = "YES"
             buildForRunning = "YES"
-            buildForProfiling = "NO"
-            buildForArchiving = "NO"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AUv3SupportTests"
-               BuildableName = "AUv3SupportTests"
-               BlueprintName = "AUv3SupportTests"
-               ReferencedContainer = "container:">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
             buildForProfiling = "YES"
             buildForArchiving = "YES"
             buildForAnalyzing = "YES">
@@ -112,65 +84,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AUv3Support_iOS"
-               BuildableName = "AUv3Support_iOS"
-               BlueprintName = "AUv3Support_iOS"
-               ReferencedContainer = "container:">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AUv3Support_macOS"
-               BuildableName = "AUv3Support_macOS"
-               BlueprintName = "AUv3Support_macOS"
-               ReferencedContainer = "container:">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AUv3-DSP-Headers"
-               BuildableName = "AUv3-DSP-Headers"
-               BlueprintName = "AUv3-DSP-Headers"
-               ReferencedContainer = "container:">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "DSPHeaders"
                BuildableName = "DSPHeaders"
                BlueprintName = "DSPHeaders"
-               ReferencedContainer = "container:">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AUv3SupportPackage_AUv3SupportTests"
-               BuildableName = "AUv3SupportPackage_AUv3SupportTests"
-               BlueprintName = "AUv3SupportPackage_AUv3SupportTests"
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
@@ -202,6 +118,62 @@
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AUv3SupportTests"
+               BuildableName = "AUv3SupportTests"
+               BlueprintName = "AUv3SupportTests"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AUv3SupportPackage_AUv3Support-iOS"
+               BuildableName = "AUv3SupportPackage_AUv3Support-iOS"
+               BlueprintName = "AUv3SupportPackage_AUv3Support-iOS"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AUv3SupportPackage_AUv3Support"
+               BuildableName = "AUv3SupportPackage_AUv3Support"
+               BlueprintName = "AUv3SupportPackage_AUv3Support"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AUv3SupportPackage_AUv3SupportTests"
+               BuildableName = "AUv3SupportPackage_AUv3SupportTests"
+               BlueprintName = "AUv3SupportPackage_AUv3SupportTests"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -228,26 +200,6 @@
                BlueprintIdentifier = "DSPHeadersTests"
                BuildableName = "DSPHeadersTests"
                BlueprintName = "DSPHeadersTests"
-               ReferencedContainer = "container:">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AUv3Support_iOSTests"
-               BuildableName = "AUv3Support_iOSTests"
-               BlueprintName = "AUv3Support_iOSTests"
-               ReferencedContainer = "container:">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AUv3Support_macOSTests"
-               BuildableName = "AUv3Support_macOSTests"
-               BlueprintName = "AUv3Support_macOSTests"
                ReferencedContainer = "container:">
             </BuildableReference>
          </TestableReference>
@@ -293,9 +245,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "AUv3SupportPackage_AUv3Support_iOS"
-            BuildableName = "AUv3SupportPackage_AUv3Support_iOS"
-            BlueprintName = "AUv3SupportPackage_AUv3Support_iOS"
+            BlueprintIdentifier = "AUv3-Support"
+            BuildableName = "AUv3-Support"
+            BlueprintName = "AUv3-Support"
             ReferencedContainer = "container:">
          </BuildableReference>
       </MacroExpansion>

@@ -34,13 +34,66 @@
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AUv3-DSP-Headers"
+               BuildableName = "AUv3-DSP-Headers"
+               BlueprintName = "AUv3-DSP-Headers"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "AUv3Support-macOSTests"
+               BuildableName = "AUv3Support-macOSTests"
+               BlueprintName = "AUv3Support-macOSTests"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES">
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      codeCoverageEnabled = "YES"
+      onlyGenerateCoverageForSpecifiedTargets = "YES">
+      <CodeCoverageTargets>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "AUv3-DSP-Headers"
+            BuildableName = "AUv3-DSP-Headers"
+            BlueprintName = "AUv3-DSP-Headers"
+            ReferencedContainer = "container:">
+         </BuildableReference>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "AUv3-Support"
+            BuildableName = "AUv3-Support"
+            BlueprintName = "AUv3-Support"
+            ReferencedContainer = "container:">
+         </BuildableReference>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "AUv3-Support-macOS"
+            BuildableName = "AUv3-Support-macOS"
+            BlueprintName = "AUv3-Support-macOS"
+            ReferencedContainer = "container:">
+         </BuildableReference>
+      </CodeCoverageTargets>
       <Testables>
          <TestableReference
             skipped = "NO">
@@ -66,9 +119,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "AUv3Support_macOSTests"
-               BuildableName = "AUv3Support_macOSTests"
-               BlueprintName = "AUv3Support_macOSTests"
+               BlueprintIdentifier = "AUv3Support-macOSTests"
+               BuildableName = "AUv3Support-macOSTests"
+               BlueprintName = "AUv3Support-macOSTests"
                ReferencedContainer = "container:">
             </BuildableReference>
          </TestableReference>

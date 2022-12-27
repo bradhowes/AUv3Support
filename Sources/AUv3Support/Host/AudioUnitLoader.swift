@@ -148,7 +148,7 @@ public final class AudioUnitLoader: NSObject {
    Create the desired component using the AUv3 API
    */
   private func createAudioUnit(_ componentDescription: AudioComponentDescription) {
-    guard avAudioUnit == nil else { return }
+    precondition(avAudioUnit == nil)
 
 #if os(macOS)
     let options: AudioComponentInstantiationOptions = .loadInProcess

@@ -14,7 +14,7 @@ private class MockAudioUnit: AUAudioUnitPresetsFacade {
                                           .init(number: -3, name: "Blah User 3")
   ]
 
-  var currentPreset: AUAudioUnitPreset? = nil
+  dynamic var currentPreset: AUAudioUnitPreset? = nil
 
   func saveUserPreset(_ preset: AUAudioUnitPreset) throws {
     if let found = userPresets.firstIndex(where: { $0.number == preset.number }) {

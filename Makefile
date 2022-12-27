@@ -1,29 +1,38 @@
+PLATFORM_IOS = iOS Simulator,name=iPhone 14 Pro
+PLATFORM_MACOS = macOS
 
-default: coverage
+default: percentage
 
-build: clean
-	swift build -v
+test-iOS:
+	rm -rf "$(PWD)/DerivedData-iOS"
+	xcodebuild test \
+		-scheme AUv3-Support-iOS \
+		-derivedDataPath "$(PWD)/DerivedData-iOS" \
+		-destination platform="$(PLATFORM_IOS)"
+		-enableCodeCoverage YES
 
-test: build
-	swift test -v --enable-code-coverage
+coverage-iOS: test-iOS
+	xcrun xccov view --report --only-targets $(PWD)/DerivedData-iOS/Logs/Test/*.xcresult > coverage_iOS.txt
+	cat coverage_iOS.txt
 
-LLVM_COV_ARGS = -instr-profile .build/debug/codecov/default.profdata -ignore-filename-regex='.build/|Tests/'
+test-macOS:
+	rm -rf "$(PWD)/DerivedData-macOS"
+	xcodebuild test \
+		-scheme AUv3-Support-macOS \
+		-derivedDataPath "$(PWD)/DerivedData-macOS" \
+		-destination platform="$(PLATFORM_MACOS)" \
+		-enableCodeCoverage YES
 
-cov.txt: test
-	set -- $$(find . -name '*.xctest'); \
-    xcrun llvm-cov report $$1/Contents/MacOS/*PackageTests $(LLVM_COV_ARGS) > cov.txt
-	@cat cov.txt
+coverage-macOS: test-macOS
+	xcrun xccov view --report --only-targets $(PWD)/DerivedData-macOS/Logs/Test/*.xcresult > coverage_macOS.txt
+	cat coverage_macOS.txt
 
-percentage.txt: cov.txt
-	@awk '{c=$$10} END {print c}' < cov.txt > percentage.txt
-	@echo "$$(< percentage.txt)"
+test: test-iOS test-macOS
 
-coverage: percentage.txt
-	@if [[ -n "$$GITHUB_ENV" ]]; then \
-		echo "PERCENTAGE=$$(< percentage.txt)" >> $$GITHUB_ENV; \
-	fi
+coverage: coverage-iOS coverage-macOS
 
-clean:
-	rm -rf cov.txt percentage.txt .build
+percentage: coverage
+	awk '/ AUv3-Support / { print $$4 }' coverage_macOS.txt > percentage.txt
+	cat percentage.txt
 
-.PHONY: build test coverage clean
+.PHONY: test test-iOS test-macOS coverage-iOS coverage-macOS coverage percentage

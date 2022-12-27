@@ -7,9 +7,9 @@ import AUv3Support
 import AudioToolbox
 import os.log
 
-enum UserMenuItem: Int {
-  case save = 0 // Code expects that the commands start at the top of the menu
-  case update
+public enum UserMenuItem: Int {
+  case new = 0 // Code expects that the commands start at the top of the menu
+  case save
   case rename
   case delete
 }
@@ -35,6 +35,10 @@ public class PresetsMenuManager: NSObject {
   private let button: NSPopUpButton
   private let appMenu: NSMenu
   private let userPresetsManager: UserPresetsManager
+  private let support: PresetsMenuManagerSupport
+  private var userPresetsObserverToken: NSKeyValueObservation?
+  
+  private struct DefaultSupport: PresetsMenuManagerSupport {}
 
   /**
    Construct a new manager.
@@ -43,10 +47,19 @@ public class PresetsMenuManager: NSObject {
    - parameter appMenu: the `NSMenu` from the app's menu bar whose sub menus we will manage
    - parameter userPresetsManager: the manager for the user presets of the audio unit
    */
-  public init(button: NSPopUpButton, appMenu: NSMenu, userPresetsManager: UserPresetsManager) {
+  public init(button: NSPopUpButton, appMenu: NSMenu, userPresetsManager: UserPresetsManager,
+              support: PresetsMenuManagerSupport? = nil) {
+    precondition(appMenu.items.count > 1 &&
+                 appMenu.items[0].submenu != nil &&
+                 appMenu.items[1].submenu != nil &&
+                 button.menu != nil &&
+                 button.menu!.items.count > 2 &&
+                 button.menu!.items[1].submenu != nil &&
+                 button.menu!.items[2].submenu != nil)
     self.button = button
     self.appMenu = appMenu
     self.userPresetsManager = userPresetsManager
+    self.support = support ?? DefaultSupport()
     super.init()
   }
 
@@ -67,10 +80,10 @@ public class PresetsMenuManager: NSObject {
    */
   public func selectActive() {
     let activeNumber = userPresetsManager.audioUnit.currentPreset?.number ?? noCurrentPreset
-    refreshUserPresetsMenu(appMenu.items[0].submenu, activeNumber: activeNumber)
-    refreshFactoryPresetsMenu(appMenu.items[1].submenu, activeNumber: activeNumber)
-    refreshUserPresetsMenu(button.menu?.items[1].submenu, activeNumber: activeNumber)
-    refreshFactoryPresetsMenu(button.menu?.items[2].submenu, activeNumber: activeNumber)
+    refreshUserPresetsMenu(appMenu.items[0].submenu!, activeNumber: activeNumber)
+    refreshFactoryPresetsMenu(appMenu.items[1].submenu!, activeNumber: activeNumber)
+    refreshUserPresetsMenu(button.menu!.items[1].submenu!, activeNumber: activeNumber)
+    refreshFactoryPresetsMenu(button.menu!.items[2].submenu!, activeNumber: activeNumber)
   }
 }
 
@@ -93,11 +106,11 @@ extension PresetsMenuManager {
    - parameter sender: the 'New' menu item
    */
   @IBAction func createPreset(_ sender: NSMenuItem) {
-    askForName(title: "New Preset", placeholder: "Preset \(-userPresetsManager.nextNumber)",
-               activity: "Create") { newName in
+    support.askForName(title: "New Preset", placeholder: "Preset \(-userPresetsManager.nextNumber)",
+                       activity: "Create") { newName in
       if let existing = self.userPresetsManager.find(name: newName) {
-        self.confirmAction(title: "Update \"\(newName)\"?",
-                           message: "Do you wish to update the existing preset with current settings?") {
+        self.support.confirmAction(title: "Update \"\(newName)\"?",
+                                   message: "Do you wish to update the existing preset with current settings?") {
           try? self.userPresetsManager.update(preset: existing)
         }
       } else {
@@ -123,7 +136,7 @@ extension PresetsMenuManager {
    */
   @IBAction func renamePreset(_ sender: NSMenuItem) {
     guard let activePreset = userPresetsManager.currentPreset else { fatalError() }
-    askForName(title: "Rename Preset", placeholder: activePreset.name, activity: "Rename") { newName in
+    support.askForName(title: "Rename Preset", placeholder: activePreset.name, activity: "Rename") { newName in
       try? self.userPresetsManager.renameCurrent(to: newName)
     }
   }
@@ -135,7 +148,7 @@ extension PresetsMenuManager {
    */
   @IBAction func deletePreset(_ sender: NSMenuItem) {
     guard let activePreset = userPresetsManager.currentPreset else { fatalError() }
-    confirmAction(
+    support.confirmAction(
       title: "Delete \"\(activePreset.name)\" Preset",
       message: "Do you wish to delete the preset? This cannot be undone.") {
         try? self.userPresetsManager.deleteCurrent()
@@ -184,25 +197,35 @@ private extension PresetsMenuManager {
     }
   }
 
-  func refreshUserPresetsMenu(_ menu: NSMenu?, activeNumber: Int) {
-    guard let menu = menu else { return }
-
-    menu.items[.save].isEnabled = true
-    menu.items[.update].isEnabled = activeNumber < 0
+  func refreshUserPresetsMenu(_ menu: NSMenu, activeNumber: Int) {
+    menu.items[.new].isEnabled = true
+    menu.items[.save].isEnabled = activeNumber < 0
     menu.items[.rename].isEnabled = activeNumber < 0
     menu.items[.delete].isEnabled = activeNumber < 0
-
     menu.items.forEach { item in
       item.state = item.tag == activeNumber ? .on : .off
     }
   }
 
-  func refreshFactoryPresetsMenu(_ menu: NSMenu?, activeNumber: Int) {
-    guard let menu = menu else { return }
+  func refreshFactoryPresetsMenu(_ menu: NSMenu, activeNumber: Int) {
     menu.items.forEach { item in
       item.state = item.tag == activeNumber ? .on : .off
     }
   }
+}
+
+extension Array where Element == NSMenuItem {
+  public subscript(_ index: UserMenuItem) -> NSMenuItem {
+    self[index.rawValue]
+  }
+}
+
+public protocol PresetsMenuManagerSupport {
+  func askForName(title: String, placeholder: String, activity: String, closure: @escaping (String) -> Void)
+  func confirmAction(title: String, message: String, confirmed: @escaping () -> Void)
+}
+
+extension PresetsMenuManagerSupport {
 
   func askForName(title: String, placeholder: String, activity: String, closure: @escaping (String) -> Void) {
     let prompt = NSAlert()
@@ -246,12 +269,6 @@ private extension PresetsMenuManager {
     if response == .OK {
       confirmed()
     }
-  }
-}
-
-private extension Array where Element == NSMenuItem {
-  subscript(_ index: UserMenuItem) -> NSMenuItem {
-    self[index.rawValue]
   }
 }
 

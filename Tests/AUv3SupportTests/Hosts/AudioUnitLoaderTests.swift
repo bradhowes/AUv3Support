@@ -25,7 +25,8 @@ fileprivate class LoaderDelegate: AudioUnitLoaderDelegate {
 
 fileprivate let acd = AudioComponentDescription(componentType: FourCharCode("aufx"),
                                                 componentSubType: FourCharCode("dely"),
-                                                componentManufacturer: FourCharCode("appl"), componentFlags: 0,
+                                                componentManufacturer: FourCharCode("appl"),
+                                                componentFlags: 0,
                                                 componentFlagsMask: 0)
 
 final class AudioUnitLoaderTests: XCTestCase {
