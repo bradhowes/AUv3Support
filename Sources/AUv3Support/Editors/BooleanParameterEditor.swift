@@ -4,7 +4,7 @@ import CoreAudioKit
 import os
 
 /// Protocol for controls that can provide a boolean (true/false) state.
-public protocol BooleanControl: NSObject {
+public protocol BooleanControl: ParameterAddressHolder {
   /// Current value of the object's boolean state
   var booleanState: Bool { get set }
 }
@@ -18,6 +18,7 @@ public final class BooleanParameterEditor: AUParameterEditorBase {
   public init(parameter: AUParameter, booleanControl: BooleanControl) {
     self.booleanControl = booleanControl
     super.init(parameter: parameter)
+    booleanControl.setParameterAddress(parameter.address)
     beginObservingParameter(editor: self)
     setControlState(parameter.value)
   }
