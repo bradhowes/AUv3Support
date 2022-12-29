@@ -12,6 +12,7 @@ public typealias Slider = UISlider
 public typealias Storyboard = UIStoryboard
 public typealias Switch = UISwitch
 public typealias View = UIView
+public typealias Control = UIControl
 public typealias ViewController = UIViewController
 
 extension UIView: ParameterAddressHolder {
@@ -24,11 +25,14 @@ extension UIView: ParameterAddressHolder {
   }
 }
 
-extension UISwitch: AUParameterValueProvider, BooleanControl {
+extension UISwitch: BooleanControl {
   public var booleanState: Bool {
     get { isOn }
     set { isOn = newValue }
   }
+}
+
+extension UISwitch: AUParameterValueProvider {
   public var value: AUValue { isOn ? 1.0 : 0.0 }
 }
 
@@ -41,6 +45,7 @@ public typealias Slider = NSSlider
 public typealias Storyboard = NSStoryboard
 public typealias Switch = NSSwitch
 public typealias View = NSView
+public typealias Control = NSControl
 public typealias ViewController = NSViewController
 
 public extension NSView {
@@ -83,7 +88,6 @@ public extension NSTextField {
 }
 
 extension NSSwitch: BooleanControl {
-
   public var booleanState: Bool {
     get { state == .on }
     set { state = newValue ? .on : .off }
