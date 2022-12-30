@@ -13,9 +13,25 @@ public protocol AUParameterValueProvider: AnyObject {
 }
 
 /**
+ Delegate protocol for an AUParameterEditor
+ */
+public protocol AUParameterEditorDelegate: AnyObject {
+
+  /**
+   Notification when the editor finishes editing of a value.
+
+   - parameter changed: true if the value changed
+   */
+  func parameterEditorEditingDone(changed: Bool)
+}
+
+/**
  Protocol for controls that represent parameter values and can edit them.
  */
 public protocol AUParameterEditor: AnyObject {
+
+  /// Delegate for an editor which receives notification when editing is finished.
+  var delegate: AUParameterEditorDelegate? { get set }
 
   /// The AUParameter being edited by the control
   var parameter: AUParameter { get }
@@ -46,6 +62,10 @@ public protocol AUParameterEditor: AnyObject {
  - SeeAlso: `NSObject`
  */
 public class AUParameterEditorBase: NSObject {
+
+  /// Delegate for editing notifications
+  public weak var delegate: AUParameterEditorDelegate?
+
   public let log: OSLog
   public let parameter: AUParameter
 

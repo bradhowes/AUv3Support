@@ -178,9 +178,13 @@ private extension FloatParameterEditor {
       }
     }
     else if hasActiveLabel {
-      if hasActiveLabel {
-        hasActiveLabel = false
-        setValue(label.floatValue)
+      hasActiveLabel = false
+      let newValue = label.floatValue
+      if newValue != parameter.value {
+        setValue(newValue)
+        delegate?.parameterEditorEditingDone(changed: true)
+      } else {
+        delegate?.parameterEditorEditingDone(changed: false)
       }
     }
   }
@@ -211,7 +215,6 @@ private extension FloatParameterEditor {
   func setControlState(_ value: AUValue) {
     showNewValue(value)
     rangedControl.value = useLogValues ? paramValueToControlLogValue(value) : value
-
   }
 
   func showNewValue(_ value: AUValue) {
@@ -292,7 +295,7 @@ extension FloatParameterEditor: NSTextFieldDelegate {
    - returns: true if the command was handled by this routine, false otherwise
    */
   public func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
-    if (commandSelector == #selector(NSResponder.insertNewline(_:))) {
+    if commandSelector == #selector(NSResponder.insertNewline(_:)) {
       os_log(.debug, log: log, "controlTextViewDoCommandBy - insertNewLine")
       control.window?.makeFirstResponder(nil)
       return true

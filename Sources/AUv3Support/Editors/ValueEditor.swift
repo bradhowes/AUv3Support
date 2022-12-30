@@ -6,18 +6,12 @@ import UIKit
 import os.log
 import AudioToolbox
 
-public protocol ValueEditorDelegate: AnyObject {
-  func valueEditorDismissed(changed: Bool)
-}
-
 /**
  Manages editing of an AUParameter float value. There is no need to have more than one of these instances since editing
  can only take place on one parameter at a time.
  */
 public class ValueEditor: NSObject {
   private let log = Shared.logger("ValueEditor")
-
-  public weak var delegate: ValueEditorDelegate?
 
   private let containerView: UIView
   private let backgroundView: UIView
@@ -88,10 +82,10 @@ extension ValueEditor {
 
     if let stringValue = parameterValueEditor.text, let value = AUValue(stringValue), value != editor.parameter.value {
       editor.setValue(value)
-      delegate?.valueEditorDismissed(changed: true)
+      editor.delegate?.parameterEditorEditingDone(changed: true)
     }
     else {
-      delegate?.valueEditorDismissed(changed: false)
+      editor.delegate?.parameterEditorEditingDone(changed: false)
     }
 
     editing = nil
