@@ -38,7 +38,7 @@ constexpr auto bipolarToUnipolar(ValueType modulator) noexcept { return 0.5 * mo
  */
 template <typename ValueType>
 constexpr auto unipolarModulation(ValueType modulator, ValueType minValue, ValueType maxValue) noexcept {
-  return std::clamp<>(modulator, 0.0, 1.0) * (maxValue - minValue) + minValue;
+  return std::clamp<ValueType>(modulator, 0.0, 1.0) * (maxValue - minValue) + minValue;
 }
 
 /**
@@ -52,7 +52,7 @@ constexpr auto unipolarModulation(ValueType modulator, ValueType minValue, Value
 template <typename ValueType>
 constexpr auto bipolarModulation(ValueType modulator, ValueType minValue, ValueType maxValue) noexcept {
   auto mid = (maxValue - minValue) * 0.5;
-  return std::clamp<>(modulator, -1.0, 1.0) * mid + mid + minValue;
+  return std::clamp<ValueType>(modulator, -1.0, 1.0) * mid + mid + minValue;
 }
 
 /**
