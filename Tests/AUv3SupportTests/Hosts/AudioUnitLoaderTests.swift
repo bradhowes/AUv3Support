@@ -35,7 +35,8 @@ final class AudioUnitLoaderTests: XCTestCase {
     let acd = AudioComponentDescription(componentType: FourCharCode("aufx"), componentSubType: FourCharCode("zzzz"),
                                         componentManufacturer: FourCharCode("appl"), componentFlags: 0,
                                         componentFlagsMask: 0)
-    let audioUnitLoader = AudioUnitLoader(name: "testing", componentDescription: acd, loop: .sample1)
+    let audioUnitLoader = AudioUnitLoader(name: "testing", componentDescription: acd, loop: .sample1,
+                                          maxLocateAttempts: 2)
     let exp = expectation(description: "failed")
     let delegate = LoaderDelegate(expectation: exp)
     audioUnitLoader.delegate = delegate

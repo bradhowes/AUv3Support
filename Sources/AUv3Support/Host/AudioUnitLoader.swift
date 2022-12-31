@@ -64,8 +64,8 @@ public final class AudioUnitLoader: NSObject {
   private let componentDescription: AudioComponentDescription
   private let searchCriteria: AudioComponentDescription
   private var creationError: AudioUnitLoaderError? { didSet { notifyDelegate() } }
-  private var remainingLocateAttempts = 50
-  private let delayBeforeNextLocateAttempt = 0.2
+  private var remainingLocateAttempts: Int
+  private let delayBeforeNextLocateAttempt: Double
   private var notificationRegistration: NSObjectProtocol?
   private var hasUpdates = false
 
@@ -86,8 +86,11 @@ public final class AudioUnitLoader: NSObject {
    - parameter componentDescription: the definition of the AUAudioUnit to create
    - parameter loop: the loop to play when the engine is playing
    */
-  public init(name: String, componentDescription: AudioComponentDescription, loop: SampleLoop) {
+  public init(name: String, componentDescription: AudioComponentDescription, loop: SampleLoop,
+              delayBeforeNextLocateAttempt: Double = 0.2, maxLocateAttempts: Int = 50) {
     self.log = .init(subsystem: name, category: "AudioUnitLoader")
+    self.delayBeforeNextLocateAttempt = delayBeforeNextLocateAttempt
+    self.remainingLocateAttempts = maxLocateAttempts
     self.playEngine = .init(name: name, audioFileName: loop.rawValue)
     self.componentDescription = componentDescription
     self.searchCriteria = AudioComponentDescription(componentType: componentDescription.componentType,
