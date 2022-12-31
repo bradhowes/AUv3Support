@@ -42,12 +42,13 @@ extension Shared {
 public final class HostViewController: UIViewController {
   private var log: OSLog!
 
-  public static let showedInitialAlertKey = "showedInitialAlert"
+  public static let showedInitialAlertKey = "showedInitialAlertVersion"
 
   public static var alwaysShowInstructions: Bool = false
 
-  public static var showInstructions: Bool {
-    let firstTime = (UserDefaults.standard.bool(forKey: showedInitialAlertKey) == false) || alwaysShowInstructions
+  public var showInstructions: Bool {
+    let lastVersion = UserDefaults.standard.string(forKey: HostViewController.showedInitialAlertKey) ?? ""
+    let firstTime = lastVersion != config!.version || HostViewController.alwaysShowInstructions
     let takingSnapshots = CommandLine.arguments.first { $0 == "snaps" } != nil
     return firstTime && !takingSnapshots
   }
@@ -113,8 +114,8 @@ extension HostViewController {
 
     instructionsLabel.text =
           """
-The AUv3 component '\(config.name)' is now available on your device and can be used in other AUv3 host apps such as \
-GarageBand and AUM.
+The AUv3 component '\(config.name)' (\(config.version)) is now available on your device and can be used in other AUv3 \
+host apps such as GarageBand and AUM.
 
 You can continue to use this app to experiment, but you do not need to have it running in order to access the AUv3 \
 component in other apps.
@@ -129,7 +130,7 @@ applications.
 
     applyTheme()
 
-    instructions.isHidden = !Self.showInstructions
+    instructions.isHidden = !showInstructions
     config.appDelegate.setResigningActiveBlock {
       self.saveState()
       self.stopPlaying()

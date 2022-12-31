@@ -19,11 +19,20 @@ class HostViewConfigTests: XCTestCase {
     let presetsMenu: NSMenu = .init()
     let viewController: NSViewController = .init()
     let containerView: NSView = .init()
-    let config = HostViewConfig(componentName: "componentName", componentDescription: acd, sampleLoop: .sample1,
-                                playButton: play, bypassButton: bypass, presetsButton: presets,
-                                playMenuItem: playMenuItem, bypassMenuItem: bypassMenuItem, presetsMenu: presetsMenu,
-                                viewController: viewController, containerView: containerView)
+    let config = HostViewConfig(componentName: "componentName",
+                                componentVersion: "v1.2.3",
+                                componentDescription: acd,
+                                sampleLoop: .sample1,
+                                playButton: play,
+                                bypassButton: bypass,
+                                presetsButton: presets,
+                                playMenuItem: playMenuItem,
+                                bypassMenuItem: bypassMenuItem,
+                                presetsMenu: presetsMenu,
+                                viewController: viewController,
+                                containerView: containerView)
     XCTAssertEqual("componentName", config.componentName)
+    XCTAssertEqual("v1.2.3", config.componentVersion)
     XCTAssertEqual(acd, config.componentDescription)
     XCTAssertTrue(play === config.playButton)
     XCTAssertTrue(bypass === config.bypassButton)

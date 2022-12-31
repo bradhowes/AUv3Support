@@ -8,6 +8,7 @@ import AppKit
 
 public struct HostViewConfig {
   let componentName: String
+  let componentVersion: String
   let componentDescription: AudioComponentDescription
   let sampleLoop: AudioUnitLoader.SampleLoop
 
@@ -22,10 +23,12 @@ public struct HostViewConfig {
   weak var viewController: NSViewController!
   weak var containerView: NSView!
 
-  public init(componentName: String, componentDescription: AudioComponentDescription, sampleLoop: AudioUnitLoader.SampleLoop,
-       playButton: NSButton, bypassButton: NSButton, presetsButton: NSPopUpButton, playMenuItem: NSMenuItem,
-       bypassMenuItem: NSMenuItem, presetsMenu: NSMenu, viewController: NSViewController, containerView: NSView) {
+  public init(componentName: String, componentVersion: String, componentDescription: AudioComponentDescription,
+              sampleLoop: AudioUnitLoader.SampleLoop, playButton: NSButton, bypassButton: NSButton,
+              presetsButton: NSPopUpButton, playMenuItem: NSMenuItem, bypassMenuItem: NSMenuItem, presetsMenu: NSMenu,
+              viewController: NSViewController, containerView: NSView) {
     self.componentName = componentName
+    self.componentVersion = componentVersion
     self.componentDescription = componentDescription
     self.sampleLoop = sampleLoop
     self.playButton = playButton

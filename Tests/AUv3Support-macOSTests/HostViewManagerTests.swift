@@ -75,7 +75,8 @@ class HostViewManagerTests: XCTestCase {
     appMenu = makeAppMenu()
     presetsButton = .init()
     presetsButton.menu = makeButtonMenu()
-    config = .init(componentName: componentName, componentDescription: componentDescription, sampleLoop: sampleLoop,
+    config = .init(componentName: componentName, componentVersion: "v1.2.3",
+                   componentDescription: componentDescription, sampleLoop: sampleLoop,
                    playButton: playButton, bypassButton: bypassButton, presetsButton: presetsButton,
                    playMenuItem: playMenuItem, bypassMenuItem: bypassMenuItem, presetsMenu: appMenu,
                    viewController: viewController, containerView: containerView)

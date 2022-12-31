@@ -2,11 +2,12 @@
 
 import XCTest
 @testable import AUv3Support_iOS
+import Foundation
 import AVFoundation
 
-class HostViewControllerTests: XCTestCase {
-  
-  func testShowInstructions() {
+class HostViewConfigTests: XCTestCase {
+
+  func testInit() {
     let acd: AudioComponentDescription = .init(componentType: .init("abcd"), componentSubType: .init("efgh"),
                                                componentManufacturer: .init("ijkl"), componentFlags: 0,
                                                componentFlagsMask: 0)
@@ -22,20 +23,12 @@ class HostViewControllerTests: XCTestCase {
                                 sampleLoop: .sample1,
                                 tintColor: tintColor,
                                 appStoreVisitor: appStoreVisitor)
-    let hostViewController = HostViewController()
-    hostViewController.setConfig(config)
-
-    let userDefaults = UserDefaults.standard
-    userDefaults.set("", forKey: HostViewController.showedInitialAlertKey)
-    XCTAssertTrue(hostViewController.showInstructions)
-    userDefaults.set("v1.2.3", forKey: HostViewController.showedInitialAlertKey)
-    XCTAssertFalse(hostViewController.showInstructions)
-
-    HostViewController.alwaysShowInstructions = true
-    userDefaults.set("", forKey: HostViewController.showedInitialAlertKey)
-    XCTAssertTrue(hostViewController.showInstructions)
-    userDefaults.set("v1.2.3", forKey: HostViewController.showedInitialAlertKey)
-    XCTAssertTrue(hostViewController.showInstructions)
+    XCTAssertEqual("componentName", config.name)
+    XCTAssertEqual("v1.2.3", config.version)
+    XCTAssertEqual("abcd", config.appStoreId)
+    XCTAssertEqual(acd, config.componentDescription)
+    XCTAssertEqual(.sample1, config.sampleLoop)
+    XCTAssertEqual(tintColor, config.tintColor)
   }
 }
 
