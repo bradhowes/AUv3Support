@@ -15,9 +15,9 @@ Swift package containing useful code for AUv3 app extensions. There are four pro
 - AUv3-Support-iOS -- classes that provide a simple AUv3 hosting environment for the AUv3 app extension.
   Provides an audio chain that sends a sample loop through the AUv3 audio unit and out to the speaker. Also
   provides for user preset management.
-- AUv3-Support-macOS -- similar to the above but for macOS. Unfortunately, the setup is not as straight-forward on
-  macOS as it is for iOS. So far I have not been able to get a good load from a storyboard held in this package:
-  menu items not connected to delegate slots, toolbar buttons not connected to the window.
+- AUv3-Support-macOS -- similar to the above but for macOS. Unfortunately, the setup is not as straight-forward on macOS as it is for iOS. 
+  So far I have not been able to get a good load from a storyboard held in this package, where menu items are connected to delegate slots, 
+  and toolbar buttons connected to the main window. However, it does work when it everything is wired properly.
 - DSPHeaders -- collection of C++17 headers for classes that are useful when creating AUv3 kernels. These were written
   specifically for use in a audio unit render thread, so there should be no memory allocations done once a render thread
   is started.
