@@ -5,6 +5,7 @@ import XCTest
 fileprivate class MockControl: NSObject, BooleanControl, AUParameterValueProvider {
   static let log = Shared.logger("foo", "bar")
   let log = MockControl.log
+  var parameterAddress: AUParameterAddress = 1001
   var expectation: XCTestExpectation?
   var value: AUValue = 0.0
   var booleanState: Bool = false {
