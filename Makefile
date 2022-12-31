@@ -34,5 +34,8 @@ coverage: coverage-iOS coverage-macOS
 percentage: coverage
 	awk '/ AUv3-Support / { print $$4 }' coverage_macOS.txt > percentage.txt
 	cat percentage.txt
+	@if [[ -n "$$GITHUB_ENV" ]]; then \
+        echo "PERCENTAGE=$$(< percentage.txt)" >> $$GITHUB_ENV; \
+    fi
 
 .PHONY: test test-iOS test-macOS coverage-iOS coverage-macOS coverage percentage
