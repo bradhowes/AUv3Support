@@ -3,7 +3,7 @@
 #if os(macOS)
 
 import CoreAudioKit
-@testable import AUv3Support
+import AUv3Support
 import AppKit
 
 public struct HostViewConfig {
