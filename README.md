@@ -166,7 +166,7 @@ on first-time launch.
 Not great, but not too cumbersome to use now. And it is nice to have abstracted out all of the common functionality my
 audio unit apps share.
 
-# Usage Notes
+# Usage Notes [Deprecated?]
 
 The packages here build just fine, and they work as-is when they direct dependencies to either other Swift packages or
 targets in an Xcode project that are *not* frameworks. When they *are* linked to a framework, there may be issues that
