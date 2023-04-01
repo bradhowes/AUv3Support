@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cmath>
 #include <limits>
+#include <utility>
 
 #include <AVFoundation/AVFoundation.h>
 
@@ -356,8 +357,6 @@ struct DirectTranspose : Base<ValueType> {
   /**
    Obtain a numeric representation of the internal storage state
    
-   @param state the filter state work with
-   @param coefficients the filter coefficients to use
    @returns always 0.0
    */
   static ValueType storageComponent(const State<ValueType>&, const Coefficients<ValueType>&) noexcept { return 0.0; }
@@ -387,7 +386,6 @@ struct CanonicalTranspose : Base<ValueType> {
    Obtain a numeric representation of the internal storage state
    
    @param state the filter state work with
-   @param coefficients the filter coefficients to use
    @returns the Z1 state value
    */
   static ValueType storageComponent(const State<ValueType>& state, const Coefficients<ValueType>&) noexcept {
@@ -493,6 +491,7 @@ private:
      Set new coefficients for the filter, ramping to them over time.
 
      @param coefficients new coefficients to use
+     @param rampingDuration how many samples to take to change from old value to new one
      */
     void start(const CoefficientsType& coefficients, size_t rampingDuration) noexcept
     {
@@ -515,6 +514,7 @@ private:
      Set new coefficients for the filter, ramping to them over time.
 
      @param coefficients new coefficients to use
+     @param rampingDuration how many samples to take to change from old value to new one
      */
     void start(CoefficientsType&& coefficients, size_t rampingDuration) noexcept
     {
