@@ -152,4 +152,48 @@ using namespace DSPHeaders;
   lfos.emplace_back(44100.0, 12.0, LFOWaveform::sinusoid);
 }
 
+- (void)testSetSinePhase {
+  LFO<float> osc(4.0, 1.0, LFOWaveform::sinusoid);
+  SamplesEqual(osc.value(),  0.0);
+  osc.setPhase(0.25);
+  SamplesEqual(osc.value(),  1.0);
+  osc.setPhase(0.50);
+  SamplesEqual(osc.value(),  0.0);
+  osc.setPhase(0.75);
+  SamplesEqual(osc.value(), -1.0);
+}
+
+- (void)testSetSawtoothPhase {
+  LFO<float> osc(4.0, 1.0, LFOWaveform::sawtooth);
+  SamplesEqual(osc.value(), -1.0);
+  osc.setPhase(0.25);
+  SamplesEqual(osc.value(), -0.5);
+  osc.setPhase(0.50);
+  SamplesEqual(osc.value(),  0.0);
+  osc.setPhase(0.75);
+  SamplesEqual(osc.value(),  0.5);
+}
+
+- (void)testSetTrianglePhase {
+  LFO<float> osc(4.0, 1.0, LFOWaveform::triangle);
+  SamplesEqual(osc.value(),  1.0);
+  osc.setPhase(0.25);
+  SamplesEqual(osc.value(),  0.0);
+  osc.setPhase(0.50);
+  SamplesEqual(osc.value(), -1.0);
+  osc.setPhase(0.75);
+  SamplesEqual(osc.value(),  0.0);
+}
+
+- (void)testSetSquarePhase {
+  LFO<float> osc(4.0, 1.0, LFOWaveform::square);
+  SamplesEqual(osc.value(), -1.0);
+  osc.setPhase(0.25);
+  SamplesEqual(osc.value(), -1.0);
+  osc.setPhase(0.50);
+  SamplesEqual(osc.value(),  1.0);
+  osc.setPhase(0.75);
+  SamplesEqual(osc.value(),  1.0);
+}
+
 @end

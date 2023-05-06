@@ -60,6 +60,26 @@ using namespace DSPHeaders;
   }
 }
 
+- (void)testParabolicSineSpeed {
+  [self measureBlock:^{
+    double sum = 0.0;
+    for (int index = 0; index < 3600000.0; ++index) {
+      auto theta = 2.0 * M_PI * index / 3600000.0 - M_PI;
+      sum += DSP::parabolicSine(theta);
+    }
+  }];
+}
+
+- (void)testSinSpeed {
+  [self measureBlock:^{
+    double sum = 0.0;
+    for (int index = 0; index < 3600000.0; ++index) {
+      auto theta = 2.0 * M_PI * index / 3600000.0 - M_PI;
+      sum += std::sin(theta);
+    }
+  }];
+}
+
 - (void)testInterpolationCubic4thOrderInterpolate {
   double epsilon = 1.0e-18;
 

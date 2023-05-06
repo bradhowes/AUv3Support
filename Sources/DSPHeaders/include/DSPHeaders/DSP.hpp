@@ -60,6 +60,9 @@ constexpr auto bipolarModulation(ValueType modulator, ValueType minValue, ValueT
  Derived from code in "Designing Audio Effect Plugins in C++" by Will C. Pirkle (2019)
  As can be seen in the unit test `testParabolicSineAccuracy`, the worst-case deviation from
  std::sin is ~0.0011.
+
+ However, according to unit tests on modern Apple devices, std::sin is much faster than the parabolic calculation below
+ so this is not used.
  
  @param angle value between -PI and PI
  @returns approximate sin value

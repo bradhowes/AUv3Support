@@ -82,6 +82,16 @@ public:
     phaseIncrement_.set(frequency / sampleRate_, rampingDuration);
   }
 
+  /**
+   Set the phase of the oscillator. By default, the oscillator will start at 0.0.
+
+   @param phase the normalized phase to start at (0-1.0)
+   */
+  void setPhase(ValueType phase) noexcept {
+    assert(phase >= 0.0 && phase <= 1.0);
+    moduloCounter_ = phase;
+  }
+
   /// Restart from a known zero state.
   void reset() noexcept { moduloCounter_ = phaseIncrement_.get() > 0 ? 0.0 : 1.0; }
   
@@ -89,11 +99,13 @@ public:
   ValueType value() noexcept { return valueGenerator_(moduloCounter_); }
   
   /// @returns current value of the oscillator that is 90° ahead of what `value()` returns
-  ValueType quadPhaseValue() const noexcept { return valueGenerator_(quadPhaseCounter_); }
+  ValueType quadPhaseValue() const noexcept {
+    return valueGenerator_(wrappedModuloCounter(moduloCounter_ + 0.25, phaseIncrement_.get()));
+  }
 
   /// @returns current value of the oscillator that is 90° behind what `value()` returns
   ValueType negativeQuadPhaseValue() const noexcept {
-    return valueGenerator_(wrappedModuloCounter(quadPhaseCounter_ - 5.0, phaseIncrement_));
+    return valueGenerator_(wrappedModuloCounter(moduloCounter_ - 0.25, phaseIncrement_.get()));
   }
 
   /**
@@ -101,7 +113,6 @@ public:
    */
   void increment() noexcept {
     moduloCounter_ = incrementModuloCounter(moduloCounter_, phaseIncrement_.frameValue());
-    quadPhaseCounter_ = incrementModuloCounter(moduloCounter_, 0.25);
   }
 
    /// @returns current frequency in Hz
@@ -144,7 +155,7 @@ private:
     return wrappedModuloCounter(counter + inc, inc);
   }
 
-  static ValueType sineValue(ValueType counter) noexcept { return DSP::parabolicSine(M_PI - counter * 2.0 * M_PI); }
+  static ValueType sineValue(ValueType counter) noexcept { return std::sin(M_PI - counter * 2.0 * M_PI); }
   static ValueType sawtoothValue(ValueType counter) noexcept { return DSP::unipolarToBipolar(counter); }
   static ValueType triangleValue(ValueType counter) noexcept {
     return DSP::unipolarToBipolar(std::abs(DSP::unipolarToBipolar(counter)));
@@ -154,7 +165,6 @@ private:
   ValueType sampleRate_;
   ValueGenerator valueGenerator_;
   ValueType moduloCounter_ = {0.0};
-  ValueType quadPhaseCounter_ = {0.25};
   Parameters::RampingParameter<ValueType> phaseIncrement_;
 };
 
