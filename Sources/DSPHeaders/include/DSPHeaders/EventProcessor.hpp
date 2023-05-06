@@ -63,6 +63,9 @@ public:
     }
   }
 
+  /// @returns true if actively ramping one or more parameters
+  bool isRamping() const noexcept { return rampRemaining_ > 0; }
+
   /// @returns true if actively rendering samples
   bool isRendering() const noexcept { return rendering_; }
 
@@ -277,10 +280,11 @@ private:
 
     // If ramping one or more parameters, we must render one frame at a time. Since this is more expensive than the
     // non-ramp case, we only do it when necessary.
-    auto rampCount = std::min(rampRemaining_, frameCount);
-    if (rampCount > 0) {
+    if (isRamping()) {
+      auto rampCount = std::min(rampRemaining_, frameCount);
       rampRemaining_ -= rampCount;
-      for (; rampCount > 0; --rampCount, --frameCount) {
+      frameCount -= rampCount;
+      for (; rampCount > 0; --rampCount) {
         derived_.doRendering(outputBusNumber, input.busBuffers(), output.busBuffers(), 1);
       }
     }
