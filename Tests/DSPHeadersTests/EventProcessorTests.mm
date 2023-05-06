@@ -12,7 +12,7 @@ struct MockEffect : public EventProcessor<MockEffect>
 {
   MockEffect() : EventProcessor<MockEffect>() {}
 
-  void setParameterFromEvent(const AUParameterEvent&) {}
+  void doParameterEvent(const AUParameterEvent&) {}
 
   void doMIDIEvent(AUMIDIEvent) {}
 

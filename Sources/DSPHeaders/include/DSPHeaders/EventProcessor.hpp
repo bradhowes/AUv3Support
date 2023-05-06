@@ -237,10 +237,11 @@ private:
     while (event != nullptr && event->head.eventSampleTime <= now) {
       switch (event->head.eventType) {
         case AURenderEventParameter:
+          derived_.doParameterEvent(event->parameter);
+          break;
         case AURenderEventParameterRamp:
-          parameterEvent = reinterpret_cast<const AUParameterEvent*>(event);
-          setRampingDuration(parameterEvent->rampDurationSampleFrames);
-          derived_.setParameterFromEvent(*parameterEvent);
+          setRampingDuration(event->parameter.rampDurationSampleFrames);
+          derived_.doParameterEvent(event->parameter);
           break;
         case AURenderEventMIDI: derived_.doMIDIEvent(event->MIDI); break;
         default: break;
