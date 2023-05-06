@@ -11,14 +11,16 @@ template <typename ValueType = AUValue>
 class RampingParameter {
 public:
 
-  explicit RampingParameter(ValueType initialValue) noexcept : value_{initialValue} {}
+  /**
+   Construct a new parameter.
+
+   @param initialValue the starting value for the parameter
+   */
+  explicit RampingParameter(ValueType initialValue) noexcept : value_{initialValue}, rampedValue_{initialValue} {}
 
   RampingParameter() = default;
 
   ~RampingParameter() = default;
-
-  /// @returns true if ramping is in effect
-  bool isRamping() const noexcept { return rampRemaining_ > 0; }
 
   /**
    Cancel any active ramping.
@@ -26,7 +28,7 @@ public:
   void stopRamping() noexcept {
     if (rampRemaining_ > 0) {
       rampRemaining_ = 0;
-      value_ = rampTarget_;
+      rampedValue_ = value_;
     }
   }
 
@@ -37,24 +39,25 @@ public:
    @param target the ultimate value to use for the parameter
    @param duration the number of frames to transition over
    */
-  void set(ValueType target, AUAudioFrameCount duration) noexcept {
+  void set(ValueType target, AUAudioFrameCount duration = 0) noexcept {
     if (duration > 0) {
       rampRemaining_ = duration;
-      rampTarget_ = target;
-      rampStep_ = (rampTarget_ - value_) / AUValue(duration);
+      rampStep_ = (target - rampedValue_) / AUValue(duration);
+      value_ = target;
     } else {
       value_ = target;
+      rampedValue_ = target;
       rampRemaining_ = 0;
     }
   }
 
   /**
    Obtain the current parameter value. Note that if ramping is in effect, this returns the final value at the end of
-   ramping. One must use `frameValue` to obtain the value during ramping.
+   ramping. One must use `frameValue` to obtain a ramping value.
 
    @return the current parameter value
    */
-  ValueType get() const noexcept { return rampRemaining_ > 0 ? rampTarget_ : value_; }
+  ValueType get() const noexcept { return value_; }
 
   /**
    Fetch the current value, incrementing the internal value if ramping is in effect. NOTE: unlike `get` this is not an
@@ -66,21 +69,20 @@ public:
    @return the current parameter value
    */
   ValueType frameValue(bool advance = true) noexcept {
-    if (advance) increment();
-    return value_;
-  }
-
-  /// Adjust the current value if ramping.
-  void increment() noexcept {
-    if (rampRemaining_ > 0) {
-      value_ = (--rampRemaining_ == 0) ? rampTarget_ : (value_ + rampStep_);
+    if (advance && rampRemaining_ > 0) {
+      rampedValue_ = (--rampRemaining_ == 0) ? value_ : (rampedValue_ + rampStep_);
     }
+    return rampedValue_;
   }
 
 private:
+  /// The value of the parameter, regardless of any ramping that may be taking place
   ValueType value_;
-  ValueType rampTarget_;
-  ValueType rampStep_;
+  /// The "ramped" value which will become `value_` after `rampRemaining_` frames.
+  ValueType rampedValue_;
+  /// The change that takes place in `rampedValue_` after a frame.
+  ValueType rampStep_{0.0};
+  /// The number of frames remaining in a ramp.
   AUAudioFrameCount rampRemaining_{0};
 };
 

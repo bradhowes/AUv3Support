@@ -24,11 +24,9 @@ using namespace DSPHeaders::Parameters;
 
 - (void)testInit {
   auto param = MillisecondsParameter<double>();
-  XCTAssertFalse(param.isRamping());
   XCTAssertEqual(param.get(), 0.0);
 
   param = MillisecondsParameter(123.4);
-  XCTAssertFalse(param.isRamping());
   XCTAssertEqualWithAccuracy(param.get(), 123.4, epsilon);
 }
 

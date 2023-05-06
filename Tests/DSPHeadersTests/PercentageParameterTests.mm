@@ -24,11 +24,9 @@ using namespace DSPHeaders::Parameters;
 
 - (void)testInit {
   auto param = PercentageParameter<float>();
-  XCTAssertFalse(param.isRamping());
   XCTAssertEqual(param.get(), 0.0);
 
   param = PercentageParameter<float>(100.0);
-  XCTAssertFalse(param.isRamping());
   XCTAssertEqualWithAccuracy(param.get(), 100.0, epsilon);
 }
 
