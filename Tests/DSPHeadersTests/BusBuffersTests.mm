@@ -117,15 +117,23 @@ static AUAudioFrameCount maxFrames = 100;
   XCTAssertEqual(4.0, right[3]);
 }
 
-- (void)testUnlink {
+- (void)testAPI {
   SampleBuffer stereoBuffer;
   stereoBuffer.allocate(stereoFormat, maxFrames);
   BufferFacet facet;
   facet.setChannelCount(2);
   facet.assignBufferList(stereoBuffer.mutableAudioBufferList());
-  facet.unlink();
-  XCTAssertFalse(facet.isLinked());
-  XCTAssertThrows(facet.unlink());
+
+  BusBuffers a{facet.busBuffers()};
+  XCTAssertEqual(a.size(), 2);
+  BusBuffers b{a};
+  XCTAssertEqual(a.size(), b.size());
+  BusBuffers c(facet.busBuffers());
+  XCTAssertEqual(a.size(), c.size());
+  BusBuffers d = facet.busBuffers();
+  XCTAssertEqual(a.size(), d.size());
+  BusBuffers e = d;
+  XCTAssertEqual(a.size(), e.size());
 }
 
 @end

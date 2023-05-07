@@ -25,6 +25,16 @@ public:
    */
   explicit BusBuffers(std::vector<AUValue*>& buffers) noexcept : buffers_{buffers} {}
 
+  BusBuffers() = delete;
+
+  BusBuffers(const BusBuffers& other) = default;
+
+  BusBuffers(BusBuffers&& other) = default;
+
+  BusBuffers& operator =(BusBuffers&&) = delete;
+
+  BusBuffers& operator =(const BusBuffers&) = delete;
+
   /// @returns true if the buffer collection is usable
   bool isValid() const noexcept { return !buffers_.empty(); }
 
