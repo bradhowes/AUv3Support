@@ -75,9 +75,9 @@ public struct ParameterDefinition {
    - parameter address: the unique address for the parameter
    - returns: new ParameterDefinition instance
    */
-  public static func defPercent(_ identifier: String, localized: String,
-                                address: ParameterAddressProvider) -> ParameterDefinition {
-    .init(identifier, localized: localized, address: address, range: 0.0...100.0, unit: .percent, unitName: nil,
+  public static func defPercent(_ identifier: String, localized: String, address: ParameterAddressProvider,
+                                minValue: AUValue = 0.0, maxValue: AUValue = 100.0) -> ParameterDefinition {
+    .init(identifier, localized: localized, address: address, range: minValue...maxValue, unit: .percent, unitName: nil,
           ramping: true, logScale: false)
   }
 

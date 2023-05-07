@@ -45,6 +45,19 @@ final class ParameterDefinitionTests: XCTestCase {
     XCTAssertEqual(a.range.upperBound, 100.0)
     XCTAssertTrue(a.ramping)
     XCTAssertFalse(a.logScale)
+
+    let b = ParameterDefinition.defPercent("bar", localized: "La Bar", address: ParameterAddress.two, minValue: 10.0)
+    XCTAssertEqual(b.range.lowerBound, 10.0)
+    XCTAssertEqual(b.range.upperBound, 100.0)
+
+    let c = ParameterDefinition.defPercent("bar", localized: "La Bar", address: ParameterAddress.two, maxValue: 50.0)
+    XCTAssertEqual(c.range.lowerBound, 0.0)
+    XCTAssertEqual(c.range.upperBound, 50.0)
+
+    let d = ParameterDefinition.defPercent("bar", localized: "La Bar", address: ParameterAddress.two, minValue: 23.0,
+                                           maxValue: 92.5)
+    XCTAssertEqual(d.range.lowerBound, 23.0)
+    XCTAssertEqual(d.range.upperBound, 92.5)
   }
 
   func testFloatDef() throws {
