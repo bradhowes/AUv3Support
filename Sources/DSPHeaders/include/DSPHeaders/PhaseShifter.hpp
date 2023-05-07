@@ -21,8 +21,7 @@ namespace DSPHeaders {
 template <typename ValueType = AUValue>
 class PhaseShifter {
 public:
-  using AllPassFilter = Biquad::CanonicalTranspose<ValueType>;
-  
+
   /// Definition of a frequency band with min and max values
   struct Band {
     ValueType frequencyMin;
@@ -65,6 +64,7 @@ public:
   PhaseShifter(const FrequencyBands& bands, ValueType sampleRate, ValueType intensity,
                int samplesPerFilterUpdate = 10) noexcept
   : bands_(bands), sampleRate_{sampleRate}, intensity_{intensity}, samplesPerFilterUpdate_{samplesPerFilterUpdate} {
+    assert(samplesPerFilterUpdate > 0);
     updateCoefficients(0.0);
   }
   
@@ -79,10 +79,11 @@ public:
    Reset the audio processor.
    */
   void reset() noexcept {
-    sampleCounter_ = 0;
+    filterUpdateCounter_ = 0;
     for (auto& filter : filters_) {
       filter.reset();
     }
+    updateCoefficients(0.0);
   }
   
   /**
@@ -97,9 +98,9 @@ public:
     // With samplersPerFilterUpdate_ == 1, this replicates the phaser processing described in
     // "Designing Audio Effect Plugins in C++" by Will C. Pirkle (2019).
     //
-    if (sampleCounter_++ >= samplesPerFilterUpdate_) {
+    if (++filterUpdateCounter_ >= samplesPerFilterUpdate_) {
       updateCoefficients(modulation);
-      sampleCounter_ = 1;
+      filterUpdateCounter_ = 0;
     }
     
     // Calculate gamma values from the individual filters.
@@ -123,10 +124,10 @@ public:
   }
   
 private:
-  
+  using AllPassFilter = Biquad::CanonicalTranspose<ValueType>;
+
   void updateCoefficients(ValueType modulation) noexcept {
-    assert(filters_.size() == bands_.size());
-    for (auto index = 0; index < filters_.size(); ++index) {
+    for (auto index = 0; index < BandCount; ++index) {
       auto const& band = bands_[index];
       double frequency = DSP::bipolarModulation(modulation, band.frequencyMin, band.frequencyMax);
       filters_[index].setCoefficients(Biquad::Coefficients<ValueType>::APF1(sampleRate_, frequency));
@@ -137,7 +138,7 @@ private:
   ValueType sampleRate_;
   ValueType intensity_;
   int samplesPerFilterUpdate_;
-  int sampleCounter_{0};
+  int filterUpdateCounter_{0};
   std::array<AllPassFilter, BandCount> filters_{};
   std::array<ValueType, BandCount + 1> gammas_{1.0};
 };

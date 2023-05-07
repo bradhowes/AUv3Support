@@ -58,4 +58,28 @@ using namespace DSPHeaders;
   }
 }
 
+- (void)testPhaseShifterThroughput {
+  [self measureMetrics: XCTestCase.defaultPerformanceMetrics automaticallyStartMeasuring:false forBlock:^{
+    double sampleRate = 44100.0;
+    double lfoFrequency = 0.2;
+
+    LFO<double> lfo(sampleRate, lfoFrequency, LFOWaveform::triangle);
+    PhaseShifter<double> phaseShifterNew{PhaseShifter<double>::ideal, sampleRate, 1.0, 1};
+
+    // Generate a 440 Hz (A4) note:
+    // - 44100.0 samples/s divided by 440 ~= 100 samples / cycle
+    // - Do for 100 cycles or 10_000 samples or ~ 1/4 second of audio to compare
+    [self startMeasuring];
+    for (int cycle = 0; cycle < 100 * 4; ++cycle) {
+      for (int sample = 0; sample < 100; ++sample) {
+        double input = std::sin(sample / 100.0 * M_PI * 2.0);
+        double modulator = lfo.value();
+        lfo.increment();
+        double output = phaseShifterNew.process(modulator, input);
+      }
+    }
+    [self stopMeasuring];
+  }];
+}
+
 @end
