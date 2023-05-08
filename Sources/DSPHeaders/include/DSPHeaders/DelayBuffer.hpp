@@ -70,7 +70,7 @@ public:
   }
 
   /**
-   Obtain a sample from the buffer.
+   Obtain a sample from the buffer using interpolation method defined at construction.
 
    @param delay distance from the current write position to return
    @return interpolated sample from buffer
@@ -101,7 +101,7 @@ private:
    @returns interpolated sample result
    */
   ValueType linearInterpolate(ssize_t whole, ValueType partial) const noexcept {
-    return DSP::Interpolation::linear(partial, at(whole), at(whole + 1));
+    return (partial == 0.0) ? at(whole) : DSP::Interpolation::linear(partial, at(whole), at(whole + 1));
   }
 
   /**
@@ -112,7 +112,8 @@ private:
    @returns interpolated sample result
    */
   ValueType cubic4thOrderInterpolate(ssize_t whole, ValueType partial) const noexcept {
-    return DSP::Interpolation::cubic4thOrder(partial, at(whole - 1), at(whole), at(whole + 1), at(whole + 2));
+    return (partial == 0.0) ? at(whole) : DSP::Interpolation::cubic4thOrder(partial, at(whole), at(whole + 1),
+                                                                            at(whole + 2), at(whole + 3));
   }
 
   std::vector<ValueType> buffer_;

@@ -101,7 +101,7 @@ struct Cubic4thOrder {
 /**
  Interpolate a value from four values.
 
- @param partial location between the second value and the third. By definition it should always be < 1.0
+ @param partial location between the first value and the second. By definition it should always be < 1.0
  @param x0 first value to use
  @param x1 second value to use
  @param x2 third value to use
