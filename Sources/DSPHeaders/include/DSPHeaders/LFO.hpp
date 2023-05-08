@@ -34,7 +34,7 @@ public:
    @param waveform the waveform to emit
    */
   LFO(ValueType sampleRate, ValueType frequency, LFOWaveform waveform) noexcept
-  : valueGenerator_{WaveformGenerator(waveform)}, sampleRate_{sampleRate} {
+  : valueGenerator_{WaveformGenerator(waveform)}, waveform_{waveform}, sampleRate_{sampleRate} {
     setFrequency(frequency, 0);
     reset();
   }
@@ -69,7 +69,10 @@ public:
    
    @param waveform the waveform to emit
    */
-  void setWaveform(LFOWaveform waveform) noexcept { valueGenerator_ = WaveformGenerator(waveform); }
+  void setWaveform(LFOWaveform waveform) noexcept {
+    waveform_ = waveform;
+    valueGenerator_ = WaveformGenerator(waveform);
+  }
 
   /**
    Set the frequency of the oscillator.
@@ -119,13 +122,7 @@ public:
   ValueType frequency() const noexcept { return phaseIncrement_.get() * sampleRate_; }
 
   /// @returns the current waveform in effect for the LFO
-  LFOWaveform waveform() const noexcept {
-    if (valueGenerator_ == sineValue) return LFOWaveform::sinusoid;
-    if (valueGenerator_ == sawtoothValue) return LFOWaveform::sawtooth;
-    if (valueGenerator_ == triangleValue) return LFOWaveform::triangle;
-    if (valueGenerator_ == squareValue) return LFOWaveform::square;
-    assert(false);
-  }
+  LFOWaveform waveform() const noexcept { return waveform_; }
 
   /**
    Stop any ramping that is active for the LFO frequency.
@@ -163,6 +160,7 @@ private:
   static ValueType squareValue(ValueType counter) noexcept { return counter >= 0.5 ? 1.0 : -1.0; }
 
   ValueType sampleRate_;
+  LFOWaveform waveform_;
   ValueGenerator valueGenerator_;
   ValueType moduloCounter_ = {0.0};
   Parameters::RampingParameter<ValueType> phaseIncrement_;
