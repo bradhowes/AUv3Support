@@ -95,12 +95,14 @@ public:
     moduloCounter_ = phase;
   }
 
+  ValueType phase() const noexcept { return moduloCounter_; }
+
   /// Restart from a known zero state.
   void reset() noexcept { moduloCounter_ = phaseIncrement_.get() > 0 ? 0.0 : 1.0; }
-  
+
   /// @returns current value of the oscillator
   ValueType value() noexcept { return valueGenerator_(moduloCounter_); }
-  
+
   /// @returns current value of the oscillator that is 90° ahead of what `value()` returns
   ValueType quadPhaseValue() const noexcept {
     return valueGenerator_(wrappedModuloCounter(moduloCounter_ + 0.25, phaseIncrement_.get()));

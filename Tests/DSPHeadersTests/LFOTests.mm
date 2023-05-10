@@ -196,4 +196,18 @@ using namespace DSPHeaders;
   SamplesEqual(osc.value(),  1.0);
 }
 
+- (void)testSaveRestorePhase {
+  LFO<float> osc(16.0, 1.0, LFOWaveform::triangle);
+  SamplesEqual(osc.value(),  1.0);
+  osc.increment();
+  SamplesEqual(osc.value(),  0.75);
+  auto saved = osc.phase();
+  osc.increment();
+  SamplesEqual(osc.value(),  0.50);
+  osc.setPhase(saved);
+  SamplesEqual(osc.value(),  0.75);
+  osc.increment();
+  SamplesEqual(osc.value(),  0.50);
+}
+
 @end
