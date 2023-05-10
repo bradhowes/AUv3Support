@@ -91,34 +91,30 @@ public:
    @param phase the normalized phase to start at (0-1.0)
    */
   void setPhase(ValueType phase) noexcept {
-    assert(phase >= 0.0);
     while (phase >= 1.0) phase -= 1.0;
-    moduloCounter_ = phase;
+    phase_ = phase;
   }
 
-  ValueType phase() const noexcept { return moduloCounter_; }
+  /// @returns current internal normalized phase value
+  ValueType phase() const noexcept { return phase_; }
 
   /// Restart from a known zero state.
-  void reset() noexcept { moduloCounter_ = 0.0; }
+  void reset() noexcept { phase_ = 0.0; }
 
   /// @returns current value of the oscillator
-  ValueType value() noexcept { return valueGenerator_(moduloCounter_); }
+  ValueType value() const noexcept { return valueGenerator_(phase_); }
 
   /// @returns current value of the oscillator that is 90° ahead of what `value()` returns
-  ValueType quadPhaseValue() const noexcept {
-    return valueGenerator_(wrappedModuloCounter(moduloCounter_ + 0.25));
-  }
+  ValueType quadPhaseValue() const noexcept { return valueGenerator_(wrappedModuloCounter(phase_ + 0.25)); }
 
   /// @returns current value of the oscillator that is 90° behind what `value()` returns
-  ValueType negativeQuadPhaseValue() const noexcept {
-    return valueGenerator_(wrappedModuloCounter(moduloCounter_ + 0.75));
-  }
+  ValueType negativeQuadPhaseValue() const noexcept { return valueGenerator_(wrappedModuloCounter(phase_ + 0.75)); }
 
   /**
    Increment the oscillator to the next value.
    */
   void increment() noexcept {
-    moduloCounter_ = wrappedModuloCounter(moduloCounter_ + phaseIncrement_.frameValue());
+    phase_ = wrappedModuloCounter(phase_ + phaseIncrement_.frameValue());
   }
 
    /// @returns current frequency in Hz
@@ -159,7 +155,7 @@ private:
   ValueType sampleRate_;
   LFOWaveform waveform_;
   ValueGenerator valueGenerator_;
-  ValueType moduloCounter_ = {0.0};
+  ValueType phase_ = {0.0};
   Parameters::RampingParameter<ValueType> phaseIncrement_;
 };
 
