@@ -91,7 +91,8 @@ public:
    @param phase the normalized phase to start at (0-1.0)
    */
   void setPhase(ValueType phase) noexcept {
-    assert(phase >= 0.0 && phase <= 1.0);
+    assert(phase >= 0.0);
+    while (phase >= 1.0) phase -= 1.0;
     moduloCounter_ = phase;
   }
 

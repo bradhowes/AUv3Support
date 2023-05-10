@@ -208,6 +208,10 @@ using namespace DSPHeaders;
   SamplesEqual(osc.value(),  0.75);
   osc.increment();
   SamplesEqual(osc.value(),  0.50);
+  osc.setPhase(saved + 1.0);
+  SamplesEqual(osc.value(),  0.75);
+  osc.increment();
+  SamplesEqual(osc.value(),  0.50);
 }
 
 @end
