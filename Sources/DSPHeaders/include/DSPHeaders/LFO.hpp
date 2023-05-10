@@ -81,7 +81,7 @@ public:
    @param rampingDuration number of samples to ramp over
    */
   void setFrequency(ValueType frequency, AUAudioFrameCount rampingDuration) noexcept {
-    assert(sampleRate_ != 0.0);
+    assert(sampleRate_ != 0.0 && frequency >= 0.0 && rampingDuration >= 0);
     phaseIncrement_.set(frequency / sampleRate_, rampingDuration);
   }
 
@@ -98,26 +98,26 @@ public:
   ValueType phase() const noexcept { return moduloCounter_; }
 
   /// Restart from a known zero state.
-  void reset() noexcept { moduloCounter_ = phaseIncrement_.get() > 0 ? 0.0 : 1.0; }
+  void reset() noexcept { moduloCounter_ = 0.0; }
 
   /// @returns current value of the oscillator
   ValueType value() noexcept { return valueGenerator_(moduloCounter_); }
 
   /// @returns current value of the oscillator that is 90° ahead of what `value()` returns
   ValueType quadPhaseValue() const noexcept {
-    return valueGenerator_(wrappedModuloCounter(moduloCounter_ + 0.25, phaseIncrement_.get()));
+    return valueGenerator_(wrappedModuloCounter(moduloCounter_ + 0.25));
   }
 
   /// @returns current value of the oscillator that is 90° behind what `value()` returns
   ValueType negativeQuadPhaseValue() const noexcept {
-    return valueGenerator_(wrappedModuloCounter(moduloCounter_ - 0.25, phaseIncrement_.get()));
+    return valueGenerator_(wrappedModuloCounter(moduloCounter_ + 0.75));
   }
 
   /**
    Increment the oscillator to the next value.
    */
   void increment() noexcept {
-    moduloCounter_ = incrementModuloCounter(moduloCounter_, phaseIncrement_.frameValue());
+    moduloCounter_ = wrappedModuloCounter(moduloCounter_ + phaseIncrement_.frameValue());
   }
 
    /// @returns current frequency in Hz
@@ -144,14 +144,8 @@ private:
     assert(false);
   }
 
-  static ValueType wrappedModuloCounter(ValueType counter, ValueType inc) noexcept {
-    if (inc > 0 && counter >= 1.0) return counter - 1.0;
-    if (inc < 0 && counter <= 0.0) return counter + 1.0;
-    return counter;
-  }
-
-  static ValueType incrementModuloCounter(ValueType counter, ValueType inc) noexcept {
-    return wrappedModuloCounter(counter + inc, inc);
+  static ValueType wrappedModuloCounter(ValueType counter) noexcept {
+    return (counter >= 1.0) ? counter - 1.0 : counter;
   }
 
   static ValueType sineValue(ValueType counter) noexcept { return std::sin(M_PI - counter * 2.0 * M_PI); }
