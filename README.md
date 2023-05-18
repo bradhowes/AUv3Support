@@ -22,7 +22,9 @@ Swift package containing useful code for AUv3 app extensions. There are four pro
   specifically for use in a audio unit render thread, so there should be no memory allocations done once a render thread
   is started.
 
-These libraries are now being used by my [SimplyFlange](https://github.com/bradhowes/SimplyFlange),
+These libraries are now being used by my 
+[SoundFonts](https://github.com/bradhowes/SoundFonts),
+[SimplyFlange](https://github.com/bradhowes/SimplyFlange),
 [SimplyPhaser](https://github.com/bradhowes/SimplyPhaser), and
 [AUv3Template](https://github.com/bradhowes/AUv3Template) projects.
 
