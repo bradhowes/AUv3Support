@@ -26,7 +26,7 @@ public final class FilterAudioUnit: AUAudioUnit {
   /// Default audio format to use in each audio bus
   static private let audioBusFormat = AVAudioFormat(standardFormatWithSampleRate: defaultSampleRate,
                                                     channelLayout: audioBusChannelLayout)
-
+  /// Create an AUAudioUnitBus using the default audio format
   static func makeAudioBus() throws -> AUAudioUnitBus {
     let bus = try AUAudioUnitBus(format: audioBusFormat)
     bus.maximumChannelCount = audioBusMaxNumberOfChannels
@@ -48,20 +48,12 @@ public final class FilterAudioUnit: AUAudioUnit {
 
   /// The active preset in use. This is the backing value for the `currentPreset` property.
   private var _currentPreset: AUAudioUnitPreset? {
-    willSet {
-      willChangeValue(for: \.currentPreset)
-    }
-    didSet {
-      didChangeValue(for: \.currentPreset)
-    }
+    willSet { willChangeValue(for: \.currentPreset) }
+    didSet { didChangeValue(for: \.currentPreset) }
   }
 
-  /// Sole input bus
   private var inputBus: AUAudioUnitBus
-
-  /// Sole output bus
   private var outputBus: AUAudioUnitBus
-
   private lazy var _inputBusses: AUAudioUnitBusArray = .init(audioUnit: self, busType: .input, busses: [inputBus])
   private lazy var _outputBusses: AUAudioUnitBusArray = .init(audioUnit: self, busType: .output, busses: [outputBus])
 
@@ -126,10 +118,12 @@ extension FilterAudioUnit {
     self.parameters = parameters
     self.kernel = kernel
 
+    // Install handler that provides a value for an AUParameter in the parameter tree.
     parameters.parameterTree.implementorValueProvider = { [weak self] param in
       self?.kernel.get(param) ?? AUValue(0)
     }
 
+    // Install handler that updates an AUParameter in the parameter tree with a new value.
     parameters.parameterTree.implementorValueObserver = { [weak self] param, value in
       self?.kernel.set(param, value: value)
     }
@@ -273,7 +267,8 @@ extension FilterAudioUnit {
     super.deallocateRenderResources()
     kernel.deallocateRenderResources()
   }
-  
+
+  /// Provide the rendering block that will provide rendered samples.
   override public var internalRenderBlock: AUInternalRenderBlock {
     os_log(.info, log: log, "internalRenderBlock - BEGIN")
     precondition(kernel != nil)
