@@ -24,15 +24,18 @@ public protocol AudioUnitViewConfigurationManager: AnyObject {
 
 public extension AudioUnitViewConfigurationManager {
 
+  /**
+   Indicate what view configurations are supported by the AudioUnit. By default, support everything.
+
+   - parameter available: list of view configurations from the host
+   - returns: set of indices into `available` that are supported
+   */
   func supportedViewConfigurations(_ available: [AUAudioUnitViewConfiguration]) -> IndexSet {
-    var indexSet = IndexSet()
-    for (index, viewConfiguration) in available.enumerated() {
-      if viewConfiguration.width > 0 && viewConfiguration.height > 0 {
-        indexSet.insert(index)
-      }
-    }
-    return indexSet
+    .init(integersIn: 0..<available.count)
   }
 
+  /**
+   Set a view configuration. Default does nothing.
+   */
   func selectViewConfiguration(_ viewConfiguration: AUAudioUnitViewConfiguration) {}
 }

@@ -17,10 +17,6 @@ final class AudioUnitViewConfigurationManagerTests: XCTestCase {
   func testSupportedViewConfigurations() throws {
     let auvcm = AUVCM()
     XCTAssertTrue(auvcm.supportedViewConfigurations([]).isEmpty)
-    XCTAssertTrue(auvcm.supportedViewConfigurations([.init(width: 0, height: 0, hostHasController: false)]).isEmpty)
-    XCTAssertTrue(auvcm.supportedViewConfigurations([.init(width: 0, height: 0, hostHasController: true)]).isEmpty)
-    XCTAssertTrue(auvcm.supportedViewConfigurations([.init(width: 1, height: 0, hostHasController: false)]).isEmpty)
-    XCTAssertTrue(auvcm.supportedViewConfigurations([.init(width: 0, height: 1, hostHasController: false)]).isEmpty)
 
     let indices = auvcm.supportedViewConfigurations([
       .init(width: 0, height: 1, hostHasController: false),
@@ -28,11 +24,17 @@ final class AudioUnitViewConfigurationManagerTests: XCTestCase {
       .init(width: 0, height: 0, hostHasController: false),
       .init(width: 2, height: 2, hostHasController: false),
       .init(width: 1, height: 0, hostHasController: false),
+      .init(width: 0, height: 1, hostHasController: true),
+      .init(width: 1, height: 1, hostHasController: true),
+      .init(width: 0, height: 0, hostHasController: true),
+      .init(width: 2, height: 2, hostHasController: true),
+      .init(width: 1, height: 0, hostHasController: true),
     ])
 
-    XCTAssertEqual(indices.count, 2)
-    XCTAssertTrue(indices.contains(1))
-    XCTAssertTrue(indices.contains(3))
+    XCTAssertEqual(indices.count, 10)
+    for index in 0..<10 {
+      XCTAssertTrue(indices.contains(index))
+    }
   }
 
   func testSelectViewConfiguration() throws {

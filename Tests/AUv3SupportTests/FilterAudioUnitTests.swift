@@ -351,7 +351,7 @@ final class FilterAudioUnitTests: XCTestCase {
 
     let mvcm = MockViewConfigurationManager()
     audioUnit.viewConfigurationManager = mvcm
-    XCTAssertEqual(IndexSet(), audioUnit.supportedViewConfigurations([
+    XCTAssertEqual(IndexSet(integersIn: 0..<2), audioUnit.supportedViewConfigurations([
       .init(width: 0, height: 0, hostHasController: false),
       .init(width: 1, height: 0, hostHasController: false)
     ]))
