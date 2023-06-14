@@ -236,14 +236,12 @@ private:
   AURenderEvent const* processEventsUntil(AUEventSampleTime now, AURenderEvent const* event) noexcept {
     // See http://devnotes.kymatica.com/auv3_parameters.html for some nice details and advice about parameter event
     // processing.
-    const AUParameterEvent* parameterEvent;
     while (event != nullptr && event->head.eventSampleTime <= now) {
       switch (event->head.eventType) {
-        case AURenderEventParameter:
-          derived_.doParameterEvent(event->parameter);
-          break;
         case AURenderEventParameterRamp:
           setRampingDuration(event->parameter.rampDurationSampleFrames);
+          // NOTE: fall-through here on purpose
+        case AURenderEventParameter:
           derived_.doParameterEvent(event->parameter);
           break;
         case AURenderEventMIDI: derived_.doMIDIEvent(event->MIDI); break;
