@@ -7,9 +7,16 @@ import UIKit
 #endif
 
 public extension CALayer {
+
+  /**
+   Initialize a new CALayer with a color and dimensions.
+
+   - parameter color: the color to use
+   - parameter frame: the size and origin to use
+   */
   convenience init(color: Color, frame: CGRect) {
     self.init()
-    backgroundColor = color.cgColor
+    self.backgroundColor = color.cgColor
     self.frame = frame
   }
 }

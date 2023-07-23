@@ -28,6 +28,7 @@ public:
     ValueType frequencyMax;
   };
 
+  /// Number of frequency bands to use in the phase shifter.
   inline static constexpr size_t BandCount = 6;
 
   /// Definition of a collection of frequency bands

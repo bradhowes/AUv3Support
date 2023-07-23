@@ -96,7 +96,7 @@ struct BufferFacet {
   }
 
   /// @returns true if the facet is linked to a buffer
-  bool isLinked() const { return bufferList_ != nullptr; }
+  bool isLinked() const noexcept { return bufferList_ != nullptr; }
 
   /**
    Release the underlying buffers.

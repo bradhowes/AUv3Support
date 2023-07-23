@@ -13,10 +13,18 @@ namespace DSPHeaders::Parameters {
 template <typename ValueType = AUValue>
 class BoolParameter {
 public:
-  
-  explicit BoolParameter(bool init) noexcept : value_{init} {};
+  /**
+   Construct new instance from POD value.
 
-  explicit BoolParameter(ValueType init) noexcept : value_{init != 0.0 ? true : false} {};
+   @param init the value to hold
+   */
+  explicit BoolParameter(bool init) noexcept : value_{init} {}
+  /**
+   Construct new instance from AUValue
+
+   @param init if value == 0.0 then held value is `false` otherwise it is `true`
+   */
+  explicit BoolParameter(ValueType init) noexcept : value_{} { set(init); }
 
   BoolParameter() = default;
 

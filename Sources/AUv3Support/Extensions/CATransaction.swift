@@ -11,7 +11,7 @@ public extension CATransaction {
   /**
    Execute a block within a CATransaction that has animation disabled.
 
-   @param block the closure to run inside of a CATransaction.
+   - parameter block: the closure to run inside of a CATransaction that inhibits animation actions
    */
   class func noAnimation(_ block: () -> Void) {
     defer { CATransaction.commit() }

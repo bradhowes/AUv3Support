@@ -17,9 +17,9 @@ public:
   
   static int round(ValueType value) { return int(std::round(value)); }
 
-  IntegralParameter() = default;
+  explicit IntegralParameter(ValueType init) noexcept : value_{round(init)} {}
 
-  explicit IntegralParameter(ValueType init) noexcept : value_{round(init)} {};
+  IntegralParameter() = default;
 
   ~IntegralParameter() = default;
 
