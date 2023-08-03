@@ -98,9 +98,9 @@ struct Coefficients {
    @returns Coefficients collection
    */
   static Coefficients LPF1(ValueType sampleRate, ValueType frequency) noexcept {
-    double theta = 2.0 * M_PI * frequency / sampleRate;
-    double gamma = std::cos(theta) / (1.0 + std::sin(theta));
-    return Coefficients((1.0 - gamma) / 2.0, (1.0 - gamma) / 2.0, 0.0, -gamma, 0.0);
+    ValueType theta = 2.0f * M_PI * frequency / sampleRate;
+    ValueType gamma = std::cos(theta) / (1.0f + std::sin(theta));
+    return Coefficients((1.0 - gamma) / 2.0f, (1.0f - gamma) / 2.0f, 0.0f, -gamma, 0.0f);
   }
   
   /**
@@ -111,9 +111,9 @@ struct Coefficients {
    @returns Coefficients collection
    */
   static Coefficients HPF1(ValueType sampleRate, ValueType frequency) noexcept {
-    double theta = 2.0 * M_PI * frequency / sampleRate;
-    double gamma = std::cos(theta) / (1.0 + std::sin(theta));
-    return Coefficients((1.0 + gamma) / 2.0, (1.0 + gamma) / -2.0, 0.0, -gamma, 0.0);
+    ValueType theta = 2.0f * M_PI * frequency / sampleRate;
+    ValueType gamma = std::cos(theta) / (1.0f + std::sin(theta));
+    return Coefficients((1.0 + gamma) / 2.0f, (1.0f + gamma) / -2.0f, 0.0f, -gamma, 0.0f);
   }
   
   /**
@@ -125,13 +125,13 @@ struct Coefficients {
    @returns Coefficients collection
    */
   static Coefficients LPF2(ValueType sampleRate, ValueType frequency, ValueType resonance) noexcept {
-    double theta = 2.0 * M_PI * frequency / sampleRate;
-    double d = 1.0 / resonance / 2.0;
-    double sinTheta = d * std::sin(theta);
-    double beta = 0.5 * (1 - sinTheta) / (1 + sinTheta);
-    double gamma = (0.5 + beta) * std::cos(theta);
-    double alpha = (0.5 + beta - gamma) / 2.0;
-    return Coefficients(alpha, 2.0 * alpha, alpha, -2.0 * gamma, 2.0 * beta);
+    ValueType theta = 2.0f * M_PI * frequency / sampleRate;
+    ValueType d = 1.0f / resonance / 2.0;
+    ValueType sinTheta = d * std::sin(theta);
+    ValueType beta = 0.5f * (1.0f - sinTheta) / (1.0f + sinTheta);
+    ValueType gamma = (0.5f + beta) * std::cos(theta);
+    ValueType alpha = (0.5f + beta - gamma) / 2.0f;
+    return Coefficients(alpha, 2.0f * alpha, alpha, -2.0f * gamma, 2.0f * beta);
   }
   
   /**
@@ -143,12 +143,12 @@ struct Coefficients {
    @returns Coefficients collection
    */
   static Coefficients HPF2(ValueType sampleRate, ValueType frequency, ValueType resonance) noexcept {
-    double theta = 2.0 * M_PI * frequency / sampleRate;
-    double d = 1.0 / resonance;
-    double beta = 0.5 * (1 - d / 2.0 * std::sin(theta)) / (1 + d / 2.0 * std::sin(theta));
-    double gamma = (0.5 + beta) * std::cos(theta);
-    return Coefficients((0.5 + beta + gamma) / 2.0, -1.0 * (0.5 + beta + gamma), (0.5 + beta + gamma) / 2.0,
-                        -2.0 * gamma, 2.0 * beta);
+    ValueType theta = 2.0f * M_PI * frequency / sampleRate;
+    ValueType d = 1.0f / resonance;
+    ValueType beta = 0.5f * (1 - d / 2.0f * std::sin(theta)) / (1.0f + d / 2.0f * std::sin(theta));
+    ValueType gamma = (0.5f + beta) * std::cos(theta);
+    return Coefficients((0.5f + beta + gamma) / 2.0f, -1.0f * (0.5f + beta + gamma), (0.5f + beta + gamma) / 2.0f,
+                        -2.0f * gamma, 2.0f * beta);
   }
   
   /**
@@ -159,9 +159,9 @@ struct Coefficients {
    @returns Coefficients collection
    */
   static Coefficients APF1(ValueType sampleRate, ValueType frequency) noexcept {
-    double tangent = std::tan(M_PI * frequency / sampleRate);
-    double alpha = (tangent - 1.0) / (tangent + 1.0);
-    return Coefficients(alpha, 1.0, 0.0, alpha, 0.0);
+    ValueType tangent = std::tan(M_PI * frequency / sampleRate);
+    ValueType alpha = (tangent - 1.0f) / (tangent + 1.0f);
+    return Coefficients(alpha, 1.0f, 0.0f, alpha, 0.0f);
   }
   
   /**
@@ -173,13 +173,13 @@ struct Coefficients {
    @returns Coefficients collection
    */
   static Coefficients APF2(ValueType sampleRate, ValueType frequency, ValueType resonance) noexcept {
-    double bandwidth = frequency / resonance;
-    double argTan = M_PI * bandwidth / sampleRate;
-    if (argTan >= 0.95 * M_PI / 2.0) argTan = 0.95 * M_PI / 2.0;
-    double tangent = std::tan(argTan);
-    double alpha = (tangent - 1.0) / (tangent + 1.0);
-    double beta = -std::cos(2.0 * M_PI * frequency / sampleRate);
-    return Coefficients(-alpha, beta * (1.0 - alpha), 1.0, beta * (1.0 - alpha), -alpha);
+    ValueType bandwidth = frequency / resonance;
+    ValueType argTan = M_PI * bandwidth / sampleRate;
+    if (argTan >= 0.95f * M_PI / 2.0f) argTan = 0.95f * M_PI / 2.0f;
+    ValueType tangent = std::tan(argTan);
+    ValueType alpha = (tangent - 1.0f) / (tangent + 1.0f);
+    ValueType beta = -std::cos(2.0f * M_PI * frequency / sampleRate);
+    return Coefficients(-alpha, beta * (1.0f - alpha), 1.0f, beta * (1.0f - alpha), -alpha);
   }
 
   /**
@@ -191,7 +191,7 @@ struct Coefficients {
    */
   Coefficients rampFactor(const Coefficients& goal, size_t sampleCount) const noexcept
   {
-    double factor = 1.0 / sampleCount;
+    ValueType factor = 1.0 / sampleCount;
     return Coefficients((goal.a0 - a0) * factor,
                         (goal.a1 - a1) * factor,
                         (goal.a2 - a2) * factor,
@@ -255,8 +255,8 @@ struct Base {
    @returns value or 0.0
    */
   static ValueType forceMinToZero(ValueType value) noexcept {
-    static constexpr ValueType noiseFloor = 2.0e-10;
-    return (value > 0.0 && value <= noiseFloor) || (value < 0.0 && -value <= noiseFloor) ? 0.0 : value;
+    static constexpr ValueType noiseFloor = 2.0e-10f;
+    return (value > 0.0f && value <= noiseFloor) || (value < 0.0f && -value <= noiseFloor) ? 0.0f : value;
   }
 };
 
