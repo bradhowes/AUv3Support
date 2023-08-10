@@ -573,8 +573,8 @@ private:
    */
   CoefficientsType& coefficients() noexcept { return ramper_.coefficients(); }
 
-  mutable Ramper ramper_;
   StateType state_;
+  mutable Ramper ramper_;
 };
 
 template <typename ValueType = AUValue>
