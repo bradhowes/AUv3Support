@@ -4,6 +4,7 @@
 
 #import <os/log.h>
 #import <algorithm>
+#import <atomic>
 #import <string>
 #import <vector>
 
@@ -42,10 +43,16 @@ public:
 
    @param bypass if true disable filter processing and just copy samples from input to output
    */
-  void setBypass(bool bypass) noexcept { bypassed_ = bypass; }
+  void setBypass(bool bypass) noexcept {
+    if (bypass) {
+      bypassed_.test_and_set();
+    } else {
+      bypassed_.clear();
+    }
+  }
 
   /// @returns true if effect is bypassed
-  bool isBypassed() const noexcept { return bypassed_; }
+  bool isBypassed() const noexcept { return bypassed_.test(); }
 
   /**
    Set the rendering state of the host.
@@ -53,8 +60,12 @@ public:
    @param rendering if true the host is "transport" is moving and we are expected to render samples.
    */
   void setRendering(bool rendering) noexcept {
-    if (rendering != rendering_) {
-      rendering_ = rendering;
+    if (rendering != rendering_.test()) {
+      if (rendering) {
+        rendering_.test_and_set();
+      } else {
+        rendering_.clear();
+      }
       derived_.doRenderingStateChanged(rendering);
 
       // Stop any ramping when the rendering state changes. Makes no sense to keep ramping after such major audio
@@ -67,7 +78,7 @@ public:
   bool isRamping() const noexcept { return rampRemaining_ > 0; }
 
   /// @returns true if actively rendering samples
-  bool isRendering() const noexcept { return rendering_; }
+  bool isRendering() const noexcept { return rendering_.test(); }
 
   /**
    Update kernel and buffers to support the given format.
@@ -297,8 +308,8 @@ private:
   std::vector<SampleBuffer> buffers_;
   std::vector<BufferFacet> facets_;
   AUAudioFrameCount rampRemaining_{0};
-  bool bypassed_ = false;
-  bool rendering_ = false;
+  std::atomic_flag bypassed_ = ATOMIC_FLAG_INIT;
+  std::atomic_flag rendering_ = ATOMIC_FLAG_INIT;
 };
 
 } // end namespace DSPHeaders
