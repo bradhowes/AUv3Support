@@ -154,8 +154,6 @@ extension FilterAudioUnit {
   override public var factoryPresets: [AUAudioUnitPreset]? { parameters.factoryPresets }
   /// Announce support for user presets
   override public var supportsUserPresets: Bool { true }
-  /// Obtain the current bypass setting
-  override public var shouldBypassEffect: Bool { didSet { kernel.setBypass(shouldBypassEffect); }}
   /// Announce that the filter can work directly on upstream sample buffers
   override public var canProcessInPlace: Bool { true }
 
@@ -232,6 +230,10 @@ extension FilterAudioUnit {
 // MARK: - Rendering
 
 extension FilterAudioUnit {
+
+  /// The bypass setting is bridged with the v2 property. We detect when it changes here and forward it to the kernel.
+  /// A better way might be to integrate it with the AUParameterTree with a standard bypass parameter.
+  override public var shouldBypassEffect: Bool { didSet { kernel.setBypass(shouldBypassEffect); }}
 
   /**
    Take notice of input/output bus formats and prepare for rendering. If there are any errors getting things ready,
