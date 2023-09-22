@@ -4,6 +4,7 @@
 
 #import <array>
 #import <algorithm>
+#import <cassert>
 #import <cmath>
 
 #import "DSPHeaders/ConstMath.hpp"

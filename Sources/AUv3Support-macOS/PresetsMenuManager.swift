@@ -2,7 +2,7 @@
 
 #if os(macOS)
 
-import Cocoa
+import AppKit
 import AUv3Support
 import AudioToolbox
 import os.log
