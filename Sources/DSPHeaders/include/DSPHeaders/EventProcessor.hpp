@@ -251,7 +251,7 @@ private:
       switch (event->head.eventType) {
         case AURenderEventParameterRamp:
           setRampingDuration(event->parameter.rampDurationSampleFrames);
-          // NOTE: fall-through here on purpose
+          [[fallthrough]];
         case AURenderEventParameter:
           derived_.doParameterEvent(event->parameter);
           break;
