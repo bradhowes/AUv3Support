@@ -255,8 +255,12 @@ private:
         case AURenderEventParameter:
           derived_.doParameterEvent(event->parameter);
           break;
-        case AURenderEventMIDI: derived_.doMIDIEvent(event->MIDI); break;
-        default: break;
+        case AURenderEventMIDI: 
+        case AURenderEventMIDISysEx:
+          derived_.doMIDIEvent(event->MIDI);
+          break;
+        default:
+          break;
       }
       event = event->head.next;
     }
