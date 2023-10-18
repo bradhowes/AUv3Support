@@ -249,16 +249,24 @@ private:
     // processing.
     while (event != nullptr && event->head.eventSampleTime <= now) {
       switch (event->head.eventType) {
+
         case AURenderEventParameterRamp:
           setRampingDuration(event->parameter.rampDurationSampleFrames);
           [[fallthrough]];
+
         case AURenderEventParameter:
           derived_.doParameterEvent(event->parameter);
           break;
-        case AURenderEventMIDI: 
+
+        case AURenderEventMIDI:
         case AURenderEventMIDISysEx:
           derived_.doMIDIEvent(event->MIDI);
           break;
+
+        case AURenderEventMIDIEventList:
+          // TODO: handle MIDI v2 packets
+          break;
+
         default:
           break;
       }
