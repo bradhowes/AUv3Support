@@ -2,8 +2,8 @@
 
 #pragma once
 
-#import <array>
 #import <algorithm>
+#import <array>
 #import <cassert>
 #import <cmath>
 
