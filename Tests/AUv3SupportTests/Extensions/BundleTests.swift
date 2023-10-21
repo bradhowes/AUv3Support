@@ -1,4 +1,4 @@
-// Copyright © 2020 Brad Howes. All rights reserved.
+// Copyright © 2020, 2023 Brad Howes. All rights reserved.
 
 import XCTest
 import AUv3Support
@@ -18,12 +18,12 @@ class BundleTests: XCTestCase {
     var path = us.resourcePath!
 
     if !FileManager.default.fileExists(atPath: path) {
-      path = "/" + path.split(separator: "/").dropLast(3).joined(separator: "/").appending("/AUv3SupportPackage_AUv3SupportTests.bundle/Resources")
+      path = "/" + path.split(separator: "/").dropLast(3).joined(separator: "/").appending("/AUv3Support_AUv3SupportTests.bundle/Resources")
     } else {
 #if os(iOS)
-      path = path.appending("/AUv3SupportPackage_AUv3SupportTests.bundle/Resources")
+      path = path.appending("/AUv3Support_AUv3SupportTests.bundle/Resources")
 #elseif os(macOS)
-      path = path.appending("/AUv3SupportPackage_AUv3SupportTests.bundle/Contents/Resources/Resources")
+      path = path.appending("/AUv3Support_AUv3SupportTests.bundle/Contents/Resources/Resources")
 #endif
     }
 

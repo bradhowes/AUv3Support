@@ -42,7 +42,7 @@ class StringTests: XCTestCase {
 //    }
 //
 //    let testBundle = Bundle(for: type(of: self))
-//    guard let resourceBundleUrl = testBundle.url(forResource: "AUv3SupportPackage_AUv3Support",
+//    guard let resourceBundleUrl = testBundle.url(forResource: "AUv3Support_AUv3Support",
 //                                                 withExtension: "bundle") else {
 //      return
 //    }
@@ -57,4 +57,3 @@ class StringTests: XCTestCase {
 //  }
 //#endif
 }
-
