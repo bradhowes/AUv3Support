@@ -96,6 +96,7 @@ inline constexpr double linear(double partial, double x0, double x1) noexcept { 
 struct Cubic4thOrder {
   static constexpr size_t TableSize = 1024;
   using WeightsEntry = std::array<double, 4>;
+  static WeightsEntry generator(size_t index);
   static std::array<WeightsEntry, TableSize> weights_;
 };
 

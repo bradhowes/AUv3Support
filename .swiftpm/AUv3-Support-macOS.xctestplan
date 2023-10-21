@@ -9,14 +9,14 @@
     }
   ],
   "defaultOptions" : {
-    "codeCoverage" : false
+
   },
   "testTargets" : [
     {
       "target" : {
         "containerPath" : "container:",
-        "identifier" : "AUv3Support-macOSTests",
-        "name" : "AUv3Support-macOSTests"
+        "identifier" : "DSPHeadersTests",
+        "name" : "DSPHeadersTests"
       }
     },
     {
@@ -29,8 +29,8 @@
     {
       "target" : {
         "containerPath" : "container:",
-        "identifier" : "DSPHeadersTests",
-        "name" : "DSPHeadersTests"
+        "identifier" : "AUv3Support-macOSTests",
+        "name" : "AUv3Support-macOSTests"
       }
     }
   ],

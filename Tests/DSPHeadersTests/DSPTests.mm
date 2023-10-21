@@ -2,7 +2,7 @@
 
 #import <XCTest/XCTest.h>
 #import <cmath>
-
+#import <iostream>
 #import "DSPHeaders/DSP.hpp"
 
 using namespace DSPHeaders;
@@ -104,6 +104,27 @@ using namespace DSPHeaders;
 
   v = DSPHeaders::DSP::Interpolation::linear(0.9, 1.0, 2.0);
   XCTAssertEqualWithAccuracy((1.0 - 0.9) * 1.0 + 0.9 * 2.0, v, epsilon);
+}
+
+- (void)testInterpolationGenerator {
+  auto w4 = DSPHeaders::DSP::Interpolation::Cubic4thOrder::generator(0);
+  // std::cout << w4[0] << ' ' << w4[1] << ' ' << w4[2] << ' ' << w4[3] << '\n';
+  XCTAssertEqualWithAccuracy(0.0, w4[0], 1.0E-6);
+  XCTAssertEqualWithAccuracy(1.0, w4[1], 1.0E-6);
+  XCTAssertEqualWithAccuracy(0.0, w4[2], 1.0E-6);
+  XCTAssertEqualWithAccuracy(0.0, w4[3], 1.0E-6);
+  w4 = DSPHeaders::DSP::Interpolation::Cubic4thOrder::generator(1);
+  std::cout << w4[0] << ' ' << w4[1] << ' ' << w4[2] << ' ' << w4[3] << '\n';
+  XCTAssertEqualWithAccuracy(-0.000487328, w4[0], 1.0E-6);
+  XCTAssertEqualWithAccuracy(0.999998, w4[1], 1.0E-6);
+  XCTAssertEqualWithAccuracy(0.000490187, w4[2], 1.0E-6);
+  XCTAssertEqualWithAccuracy(-4.76371e-07, w4[3], 1.0E-6);
+  w4 = DSPHeaders::DSP::Interpolation::Cubic4thOrder::generator(DSPHeaders::DSP::Interpolation::Cubic4thOrder::TableSize - 1);
+  std::cout << w4[0] << ' ' << w4[1] << ' ' << w4[2] << ' ' << w4[3] << '\n';
+  XCTAssertEqualWithAccuracy(-4.76371e-07, w4[0], 1.0E-6);
+  XCTAssertEqualWithAccuracy(0.000490187, w4[1], 1.0E-6);
+  XCTAssertEqualWithAccuracy(0.999998, w4[2], 1.0E-6);
+  XCTAssertEqualWithAccuracy(-0.000487328, w4[3], 1.0E-6);
 }
 
 //- (void)testZZZ {

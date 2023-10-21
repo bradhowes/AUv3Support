@@ -51,5 +51,7 @@ static constexpr WeightsEntry generator(size_t index) {
   return WeightsEntry{generator0(index), generator1(index), generator2(index), generator3(index)};
 }
 
+WeightsEntry DSPHeaders::DSP::Interpolation::Cubic4thOrder::generator(size_t index) { return ::generator(index); }
+
 std::array<WeightsEntry, TableSize> Interpolation::Cubic4thOrder::weights_ =
   ConstMath::make_array<WeightsEntry, TableSize>(generator);

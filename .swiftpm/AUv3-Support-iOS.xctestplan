@@ -9,7 +9,25 @@
     }
   ],
   "defaultOptions" : {
-    "codeCoverage" : false
+    "codeCoverage" : {
+      "targets" : [
+        {
+          "containerPath" : "container:",
+          "identifier" : "AUv3-DSP-Headers",
+          "name" : "AUv3-DSP-Headers"
+        },
+        {
+          "containerPath" : "container:",
+          "identifier" : "AUv3-Support",
+          "name" : "AUv3-Support"
+        },
+        {
+          "containerPath" : "container:",
+          "identifier" : "AUv3-Support-iOS",
+          "name" : "AUv3-Support-iOS"
+        }
+      ]
+    }
   },
   "testTargets" : [
     {
