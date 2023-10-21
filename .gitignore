@@ -3,7 +3,7 @@
 /Packages
 /*.xcodeproj
 xcuserdata/
-.swiftpm/xcode
+# .swiftpm/xcode
 .DerivedData-iOS/
 .DerivedData-macOS/
 coverage_iOS.txt
