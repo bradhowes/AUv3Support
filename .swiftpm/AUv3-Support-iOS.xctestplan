@@ -1,0 +1,38 @@
+{
+  "configurations" : [
+    {
+      "id" : "E4F192BB-C591-4BD1-82E5-07FA4876C44E",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "AUv3Support-iOSTests",
+        "name" : "AUv3Support-iOSTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "AUv3SupportTests",
+        "name" : "AUv3SupportTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "DSPHeadersTests",
+        "name" : "DSPHeadersTests"
+      }
+    }
+  ],
+  "version" : 1
+}

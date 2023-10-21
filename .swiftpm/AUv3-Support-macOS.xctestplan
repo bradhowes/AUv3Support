@@ -1,0 +1,38 @@
+{
+  "configurations" : [
+    {
+      "id" : "CDE1E68B-F6E8-4368-8C7B-DBFC9BE04553",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "AUv3Support-macOSTests",
+        "name" : "AUv3Support-macOSTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "AUv3SupportTests",
+        "name" : "AUv3SupportTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "DSPHeadersTests",
+        "name" : "DSPHeadersTests"
+      }
+    }
+  ],
+  "version" : 1
+}
