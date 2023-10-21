@@ -4,8 +4,8 @@
 /*.xcodeproj
 xcuserdata/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
-DerivedData-iOS/
-DerivedData-macOS/
+.DerivedData-iOS/
+.DerivedData-macOS/
 coverage_iOS.txt
 coverage_macOS.txt
 percentage.txt

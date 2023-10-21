@@ -1,30 +1,39 @@
-PLATFORM_IOS = iOS Simulator,name=iPhone 14 Pro
+PLATFORM_IOS = iOS Simulator,name=iPad mini (6th generation)
 PLATFORM_MACOS = macOS
+XCCOV = xcrun xccov view --report --only-targets
 
 default: percentage
 
+build-iOS:
+	rm -rf "$(PWD)/.DerivedData-iOS"
+	xcodebuild build \
+		-scheme AUv3-Support-iOS \
+		-derivedDataPath "$(PWD)/.DerivedData-iOS" \
+		-destination platform="$(PLATFORM_IOS)"
+		-enableCodeCoverage YES
+
 test-iOS:
-	rm -rf "$(PWD)/DerivedData-iOS"
+	rm -rf "$(PWD)/.DerivedData-iOS"
 	xcodebuild test \
 		-scheme AUv3-Support-iOS \
-		-derivedDataPath "$(PWD)/DerivedData-iOS" \
+		-derivedDataPath "$(PWD)/.DerivedData-iOS" \
 		-destination platform="$(PLATFORM_IOS)"
 		-enableCodeCoverage YES
 
 coverage-iOS: test-iOS
-	xcrun xccov view --report --only-targets $(PWD)/DerivedData-iOS/Logs/Test/*.xcresult > coverage_iOS.txt
+	$(XCCOV) $(PWD)/.DerivedData-iOS/Logs/Test/*.xcresult > coverage_iOS.txt
 	cat coverage_iOS.txt
 
 test-macOS:
-	rm -rf "$(PWD)/DerivedData-macOS"
+	rm -rf "$(PWD)/.DerivedData-macOS"
 	xcodebuild test \
 		-scheme AUv3-Support-macOS \
-		-derivedDataPath "$(PWD)/DerivedData-macOS" \
+		-derivedDataPath "$(PWD)/.DerivedData-macOS" \
 		-destination platform="$(PLATFORM_MACOS)" \
 		-enableCodeCoverage YES
 
 coverage-macOS: test-macOS
-	xcrun xccov view --report --only-targets $(PWD)/DerivedData-macOS/Logs/Test/*.xcresult > coverage_macOS.txt
+	$(XCCOV) $(PWD)/.DerivedData-macOS/Logs/Test/*.xcresult > coverage_macOS.txt
 	cat coverage_macOS.txt
 
 test: test-iOS test-macOS
@@ -39,3 +48,6 @@ percentage: coverage
     fi
 
 .PHONY: test test-iOS test-macOS coverage-iOS coverage-macOS coverage percentage
+
+clean:
+	-rm -rf $(PWD)/.DerivedData-macOS $(PWD)/.DerivedData-iOS coverage*.txt percentage.txt
