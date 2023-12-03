@@ -169,7 +169,7 @@ let package = Package(
       exclude: ["Pirkle/README.md", "Pirkle/readme.txt"],
       linkerSettings: [
         .linkedFramework("AVFoundation"),
-        .unsafeFlags(["-Xlinker", "-no_warn_duplicate_libraries"])
+        // .unsafeFlags(["-Xlinker", "-no_warn_duplicate_libraries"])
       ]
     )
   ],
