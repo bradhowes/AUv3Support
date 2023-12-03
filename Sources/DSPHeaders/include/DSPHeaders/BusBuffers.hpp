@@ -112,7 +112,7 @@ public:
   AUValue*& operator[](size_t index) noexcept { return buffers_[index]; }
 
   /**
-   Adjust the buffer pointers so that they start `frames` later. Currently, this is only uses in unit tests. There is
+   Adjust the buffer pointers so that they start `frames` later. Currently, this is only used in unit tests. There is
    not a need for this type of activity in normal AUv3 sample rendering since BufferPair instances always start at the
    right location.
 

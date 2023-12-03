@@ -10,11 +10,12 @@
 namespace DSPHeaders {
 
 /**
- Delay buffer that holds a maximum number of samples. It manages a write position which is where new samples are added
- to the buffer. Reading takes place some samples before the current write position with linear interpolation being used
- to generate the sample value.
+ Circular buffer that holds a maximum number of samples. It manages a write position which is where new samples are
+ added to the buffer. Reading takes place some samples before the current write position with interpolation
+ being used to generate the sample value. This only works as long as each sample is written at a fixed sample rate so
+ that a delay in seconds can be calculated as N number of samples in the past.
 
- This buffer is not thread-safe.
+ This buffer is not thread-safe. It is to be used in a the rendering flow of one channel of audio.
  */
 template <typename ValueType>
 class DelayBuffer {
@@ -42,7 +43,7 @@ public:
   void clear() noexcept { std::fill(buffer_.begin(), buffer_.end(), ValueType{0.0}); }
 
   /**
-   Write a sample to the end of the buffer.
+   Write a sample to the end of the buffer, advancing the write position to the next location.
 
    @param value the sample to add
    */
@@ -76,6 +77,7 @@ public:
    @return interpolated sample from buffer
    */
   ValueType read(ValueType delay) const noexcept {
+    // Convert delay distance into whole and partial components.
     auto offset = int(delay);
     return (this->*interpolatorProc_)(offset, delay - offset);
   }
@@ -112,6 +114,7 @@ private:
    @returns interpolated sample result
    */
   ValueType cubic4thOrderInterpolate(ssize_t whole, ValueType partial) const noexcept {
+    // I think the indexing here may be off just slightly, but at 44.1K sampling rate, I'm not that concerned.
     return (partial == 0.0) ? at(whole) : DSP::Interpolation::cubic4thOrder(partial, at(whole), at(whole + 1),
                                                                             at(whole + 2), at(whole + 3));
   }

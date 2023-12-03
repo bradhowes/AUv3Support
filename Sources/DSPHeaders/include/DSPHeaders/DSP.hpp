@@ -14,46 +14,46 @@ namespace DSPHeaders::DSP {
 /**
  Translate value in range [0, +1] into one in range [-1, +1]
  
- @param modulator the value to translate
+ @param value the value to translate
  @returns value in range [-1, +1]
  */
 template <typename ValueType>
-constexpr auto unipolarToBipolar(ValueType modulator) noexcept { return 2.0 * modulator - 1.0; }
+constexpr auto unipolarToBipolar(ValueType value) noexcept { return 2.0 * value - 1.0; }
 
 /**
  Translate value in range [-1, +1] into one in range [0, +1]
  
- @param modulator the value to translate
+ @param value the value to translate
  @returns value in range [0, +1]
  */
 template <typename ValueType>
-constexpr auto bipolarToUnipolar(ValueType modulator) noexcept { return 0.5 * modulator + 0.5; }
+constexpr auto bipolarToUnipolar(ValueType value) noexcept { return 0.5 * value + 0.5; }
 
 /**
  Perform linear translation from a value in range [0.0, 1.0] into one in [minValue, maxValue].
  
- @param modulator the value to translate
+ @param value the value to translate
  @param minValue the lowest value to return when modulator is 0
  @param maxValue the highest value to return when modulator is +1
  @returns value in range [minValue, maxValue]
  */
 template <typename ValueType>
-constexpr auto unipolarModulation(ValueType modulator, ValueType minValue, ValueType maxValue) noexcept {
-  return std::clamp<ValueType>(modulator, 0.0, 1.0) * (maxValue - minValue) + minValue;
+constexpr auto unipolarModulation(ValueType value, ValueType minValue, ValueType maxValue) noexcept {
+  return std::clamp<ValueType>(value, 0.0, 1.0) * (maxValue - minValue) + minValue;
 }
 
 /**
  Perform linear translation from a value in range [-1.0, 1.0] into one in [minValue, maxValue]
  
- @param modulator the value to translate
+ @param value the value to translate
  @param minValue the lowest value to return when modulator is -1
  @param maxValue the highest value to return when modulator is +1
  @returns value in range [minValue, maxValue]
  */
 template <typename ValueType>
-constexpr auto bipolarModulation(ValueType modulator, ValueType minValue, ValueType maxValue) noexcept {
+constexpr auto bipolarModulation(ValueType value, ValueType minValue, ValueType maxValue) noexcept {
   auto mid = (maxValue - minValue) * 0.5;
-  return std::clamp<ValueType>(modulator, -1.0, 1.0) * mid + mid + minValue;
+  return std::clamp<ValueType>(value, -1.0, 1.0) * mid + mid + minValue;
 }
 
 /**

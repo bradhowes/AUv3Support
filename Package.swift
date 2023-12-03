@@ -167,7 +167,10 @@ let package = Package(
       name: "DSPHeadersTests",
       dependencies: ["DSPHeaders"],
       exclude: ["Pirkle/README.md", "Pirkle/readme.txt"],
-      linkerSettings: [.linkedFramework("AVFoundation")]
+      linkerSettings: [
+        .linkedFramework("AVFoundation"),
+        .unsafeFlags(["-Xlinker", "-no_warn_duplicate_libraries"])
+      ]
     )
   ],
   cxxLanguageStandard: .cxx17

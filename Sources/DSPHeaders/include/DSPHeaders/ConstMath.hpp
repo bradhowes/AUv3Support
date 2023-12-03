@@ -245,7 +245,7 @@ constexpr IntegralAsDouble<ValueType> log_integral_check(ValueType x) noexcept {
          log_check( static_cast<IntegralAsDouble<ValueType>>(x) ) );
 }
 
-}  // namespace detail
+} // namespace detail
 
 /**
  Obtain the sine value for a given argument in radians

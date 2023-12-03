@@ -238,12 +238,6 @@ private:
     }
   }
 
-  void unlinkBuffers() noexcept {
-    for (auto& entry : facets_) {
-      if (entry.isLinked()) entry.unlink();
-    }
-  }
-
   AURenderEvent const* processEventsUntil(AUEventSampleTime now, AURenderEvent const* event) noexcept {
     // See http://devnotes.kymatica.com/auv3_parameters.html for some nice details and advice about parameter event
     // processing.
