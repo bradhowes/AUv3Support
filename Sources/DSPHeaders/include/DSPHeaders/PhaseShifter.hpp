@@ -96,7 +96,7 @@ public:
    */
   ValueType process(ValueType modulation, ValueType input) noexcept {
 
-    // With samplersPerFilterUpdate_ == 1, this replicates the phaser processing described in
+    // With samplesPerFilterUpdate_ == 1, this replicates the phaser processing described in
     // "Designing Audio Effect Plugins in C++" by Will C. Pirkle (2019).
     //
     if (++filterUpdateCounter_ >= samplesPerFilterUpdate_) {
