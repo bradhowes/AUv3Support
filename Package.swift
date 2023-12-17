@@ -173,5 +173,5 @@ let package = Package(
       ]
     )
   ],
-  cxxLanguageStandard: .cxx17
+  cxxLanguageStandard: .cxx20
 )

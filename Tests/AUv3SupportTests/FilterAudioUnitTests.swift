@@ -65,6 +65,9 @@ private struct formatter: AUParameterFormatting {
 
 fileprivate class Kernel: AudioRenderer {
 
+  func parameterValueObserverBlock() -> AUImplementorValueObserver { self.set }
+  func parameterValueProviderBlock() -> AUImplementorValueProvider { self.get }
+  
   var bypassed: Bool = false
   var busCount: Int = 0
   var format: AVAudioFormat = .init(commonFormat: .pcmFormatInt16, sampleRate: 44100.0, channels: 2, interleaved: true)!
@@ -200,8 +203,8 @@ final class FilterAudioUnitTests: XCTestCase {
     param.setValue(15.0, originator: nil)
     XCTAssertEqual(param.value, 15.0)
     audioUnit = nil
-    param.setValue(15.0, originator: nil)
-    XCTAssertEqual(param.value, 0.0)
+    param.setValue(10.0, originator: nil)
+    XCTAssertEqual(param.value, 10.0)
   }
 
   func testSetParameterTreeIsIgnored() throws {

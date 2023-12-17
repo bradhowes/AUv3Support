@@ -25,7 +25,7 @@ namespace DSPHeaders {
 
  - doParameterEvent
  - doMIDIEvent
- - doRenderFrames
+ - doRendering
  - doRenderingStateChanged
 
  */
@@ -317,5 +317,30 @@ private:
   std::atomic_flag bypassed_ = ATOMIC_FLAG_INIT;
   std::atomic_flag rendering_ = ATOMIC_FLAG_INIT;
 };
+
+/**
+ Concept definition for a valid Kernel class, one that provides method definitions for the functions
+ used by the EventProcessor template.
+ */
+template<typename T>
+concept KernelT = requires(T a, const AUParameterEvent& param, const AUMIDIEvent& midi, BusBuffers bb)
+{
+  { a.doParameterEvent(param) } -> std::convertible_to<void>;
+  { a.doMIDIEvent(midi) } -> std::convertible_to<void>;
+  { a.doRendering(NSInteger(1), bb, bb, AUAudioFrameCount(1) ) } -> std::convertible_to<void>;
+  { a.doRenderingStateChanged(false) } -> std::convertible_to<void>;
+};
+
+/**
+ A semi-hacky way to obtain compile-time errors for a Kernel class that is not configured correctly.
+ Ideally this would be part of the `EventProcessor` template but that is not possible due to the use
+ of CRTP since the traits defined in `KernelT` require a complete type, but the use of CRTP results
+ in an incomplete type until the type is closed.
+ ```
+ ValidatedKernel<MyKernel> _;
+ ```
+ */
+template <KernelT T>
+struct ValidatedKernel {};
 
 } // end namespace DSPHeaders

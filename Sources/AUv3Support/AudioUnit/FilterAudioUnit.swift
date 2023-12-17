@@ -119,14 +119,10 @@ extension FilterAudioUnit {
     self.kernel = kernel
 
     // Install handler that provides a value for an AUParameter in the parameter tree.
-    parameters.parameterTree.implementorValueProvider = { [weak self] param in
-      self?.kernel.get(param) ?? AUValue(0)
-    }
+    parameters.parameterTree.implementorValueProvider = self.kernel.parameterValueProviderBlock()
 
     // Install handler that updates an AUParameter in the parameter tree with a new value.
-    parameters.parameterTree.implementorValueObserver = { [weak self] param, value in
-      self?.kernel.set(param, value: value)
-    }
+    parameters.parameterTree.implementorValueObserver = self.kernel.parameterValueObserverBlock()
 
     // At start, configure effect to do something interesting. Hosts can and should update the effect state after it is
     // initialized via `fullState` attribute.

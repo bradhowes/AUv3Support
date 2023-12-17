@@ -6,18 +6,16 @@ import CoreAudioKit
 @objc public protocol AUParameterHandler {
 
   /**
-   Set an AUParameter to a new value
+   Obtain a block that can safely change kernel parameter values.
 
-   - parameter parameter: the AUParameter to update
-   - parameter value: the value to store
+   @returns block that takes an `AUParameter` pointer, and an `AUValue`.
    */
-  func set(_ parameter: AUParameter, value: AUValue)
+  func parameterValueObserverBlock() -> AUImplementorValueObserver
 
   /**
-   Get the current value of an AUParameter
+   Obtain a block that can safely obtain kernel parameter values.
 
-   - parameter parameter: the AUParameter to query
-   - returns the current value
+   @returns block that takes an `AUParameter` pointer and returns an `AUValue`.
    */
-  func get(_ parameter: AUParameter) -> AUValue
+  func parameterValueProviderBlock() -> AUImplementorValueProvider
 }

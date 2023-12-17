@@ -14,7 +14,7 @@ struct MockEffect : public EventProcessor<MockEffect>
 
   void doParameterEvent(const AUParameterEvent&) {}
 
-  void doMIDIEvent(AUMIDIEvent) {}
+  void doMIDIEvent(const AUMIDIEvent&) {}
 
   void doRendering(NSInteger outputBusNumber, BusBuffers, BusBuffers, AUAudioFrameCount frameCount) {
     frameCounts_.push_back(frameCount);
@@ -24,6 +24,9 @@ struct MockEffect : public EventProcessor<MockEffect>
 
   std::vector<AUAudioFrameCount> frameCounts_{};
 };
+
+// To validate the API of the MockEffect
+ValidatedKernel<MockEffect> _;
 
 @interface EventProcessorTests : XCTestCase
 @property MockEffect* effect;
@@ -236,6 +239,5 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
   XCTAssertEqual(self.effect->frameCounts_[1], 1);
   XCTAssertEqual(self.effect->frameCounts_[2], 10);
 }
-
 
 @end

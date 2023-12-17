@@ -31,6 +31,9 @@ fileprivate class Parameters: ParameterSource {
 
 fileprivate class Kernel: AudioRenderer {
 
+  func parameterValueObserverBlock() -> AUImplementorValueObserver { self.set }
+  func parameterValueProviderBlock() -> AUImplementorValueProvider { self.get }
+
   var bypassed: Bool = false
   var busCount: Int = 0
   var format: AVAudioFormat = .init(commonFormat: .pcmFormatInt16, sampleRate: 44100.0, channels: 2, interleaved: true)!
