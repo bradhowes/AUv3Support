@@ -19,7 +19,7 @@ public:
 
    @param init the value to hold
    */
-  explicit BoolParameter(bool init = false) noexcept : super(Transformers::boolIn(init), Transformers::boolIn, Transformers::boolOut) {}
+  explicit BoolParameter(bool init = false) noexcept : super(Transformers::boolIn(init), Transformers::boolIn, Transformers::passthru) {}
 
   /// @returns the boolean state of the parameter
   operator bool() const noexcept { return super::getSafe(); }

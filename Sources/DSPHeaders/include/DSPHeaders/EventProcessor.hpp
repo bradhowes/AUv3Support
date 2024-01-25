@@ -195,6 +195,7 @@ public:
 protected:
 
   void registerParameter(Parameters::RampingParameter& parameter) { parameters_.push_back(&parameter); }
+
   /**
    Obtain a `busBuffer` for the given bus.
 
