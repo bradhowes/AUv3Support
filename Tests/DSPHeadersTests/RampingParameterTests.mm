@@ -22,52 +22,52 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testInit {
-  auto param = RampingParameter();
-  XCTAssertEqual(param.get(), 0.0);
+  auto param1 = RampingParameter();
+  XCTAssertEqual(param1.getSafe(), 0.0);
 
-  param = RampingParameter(AUValue(12.34));
-  XCTAssertEqualWithAccuracy(param.get(), 12.34, 1.0e-6);
+  auto param2 = RampingParameter(AUValue(12.34));
+  XCTAssertEqualWithAccuracy(param2.getSafe(), 12.34, 1.0e-6);
 }
 
 - (void)testRamping {
   auto param = RampingParameter();
-  param.set(1.0, 4);
-  XCTAssertEqual(param.get(), 1.0);
+  param.setSafe(1.0, 4);
+  XCTAssertEqual(param.getSafe(), 1.0);
   XCTAssertEqual(param.frameValue(), 0.25);
-  XCTAssertEqual(param.get(), 1.0);
+  XCTAssertEqual(param.getSafe(), 1.0);
   XCTAssertEqual(param.frameValue(), 0.50);
   XCTAssertEqual(param.frameValue(), 0.75);
   XCTAssertEqual(param.frameValue(), 1.0);
-  XCTAssertEqual(param.get(), 1.0);
+  XCTAssertEqual(param.getSafe(), 1.0);
 }
 
 - (void)testReRamping {
   auto param = RampingParameter();
-  param.set(1.0, 4);
+  param.setSafe(1.0, 4);
   XCTAssertEqual(param.frameValue(), 0.25);
   XCTAssertEqual(param.frameValue(), 0.50);
-  param.set(0.0, 4);
+  param.setSafe(0.0, 4);
   XCTAssertEqual(param.frameValue(), 0.375);
   XCTAssertEqual(param.frameValue(), 0.250);
   XCTAssertEqual(param.frameValue(), 0.125);
   XCTAssertEqual(param.frameValue(), 0.000);
-  XCTAssertEqual(param.get(), 0.0);
+  XCTAssertEqual(param.getSafe(), 0.0);
 }
 
 - (void)testStopRamping {
   auto param = RampingParameter();
-  param.set(1.0, 4);
-  XCTAssertEqual(param.get(), 1.0);
+  param.setSafe(1.0, 4);
+  XCTAssertEqual(param.getSafe(), 1.0);
   XCTAssertEqual(param.frameValue(), 0.25);
-  XCTAssertEqual(param.get(), 1.0);
+  XCTAssertEqual(param.getSafe(), 1.0);
   param.stopRamping();
   XCTAssertEqual(param.frameValue(), 1.0);
-  XCTAssertEqual(param.get(), 1.0);
+  XCTAssertEqual(param.getSafe(), 1.0);
 }
 
 - (void)testAdvanceControl {
   auto param = RampingParameter();
-  param.set(1.0, 4);
+  param.setSafe(1.0, 4);
   XCTAssertEqual(param.frameValue(), 0.25);
   XCTAssertEqual(param.frameValue(false), 0.25);
   XCTAssertEqual(param.frameValue(), 0.50);

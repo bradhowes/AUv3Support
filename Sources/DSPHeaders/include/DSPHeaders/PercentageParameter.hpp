@@ -10,7 +10,7 @@ namespace DSPHeaders::Parameters {
  Manage a value that represents a percentage. External values are [0-100] while internally it holds [0-1].
  */
 template <typename ValueType = AUValue>
-class PercentageParameter : public RampingParameter<ValueType> {
+class PercentageParameter : private RampingParameter<ValueType> {
 public:
   using super = RampingParameter<ValueType>;
 
@@ -27,13 +27,18 @@ public:
    @param target the value in range [0-100] to use for the parameter
    @param duration the number of frames to transition over
    */
-  void set(ValueType value, AUAudioFrameCount frameCount) noexcept { super::set(normalize(value), frameCount); }
+  void setUnsafe(ValueType value) noexcept { super::setUnsafe(normalize(value)); }
 
   /// @returns the current parameter value in range [0-100]
-  ValueType get() const noexcept { return super::get() * 100.0; }
+  ValueType getUnsafe() const noexcept { return super::getUnsafe() * 100.0; }
 
-  /// @returns the current parameter value in range [0-1]
-  ValueType normalized() const noexcept { return super::get(); }
+  void setSafe(ValueType value, AUAudioFrameCount duration) noexcept { super::setSafe(normalize(value), duration); }
+
+  ValueType getSafe() const noexcept { return super::getSafe(); }
+
+  ValueType frameValue(bool advance = true) noexcept { return super::frameValue(advance); }
+  
+  void checkForChange(AUAudioFrameCount duration) noexcept { super::checkForChange(); }
 
 private:
   inline static constexpr ValueType normalize(ValueType value) noexcept { return std::clamp(value / 100.0, 0.0, 1.0); }

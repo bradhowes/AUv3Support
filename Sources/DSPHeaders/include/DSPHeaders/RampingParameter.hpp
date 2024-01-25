@@ -1,5 +1,8 @@
 #pragma once
 
+#import <libkern/OSAtomic.h>
+#import <atomic>
+
 #import <AVFoundation/AVFoundation.h>
 
 namespace DSPHeaders::Parameters {
@@ -16,7 +19,7 @@ public:
 
    @param initialValue the starting value for the parameter
    */
-  explicit RampingParameter(ValueType initialValue) noexcept : value_{initialValue}, rampedValue_{initialValue} {}
+  explicit RampingParameter(ValueType initialValue) noexcept : value_{initialValue}, pendingValue_{initialValue} {}
 
   RampingParameter() = default;
 
@@ -26,29 +29,36 @@ public:
    Cancel any active ramping.
    */
   void stopRamping() noexcept {
-    if (rampRemaining_ > 0) {
-      rampRemaining_ = 0;
-      rampedValue_ = value_;
-    }
+    rampRemaining_ = 0;
   }
 
   /**
-   Set the new parameter value. If the given duration is not zero, then transition to the new value over that number of
-   frames or calls to `frameValue`.
+   Set a new value that comes from outside render thread. In order not to cause any disrutpions to active
+   render operations, we delay using the new value until the next render phase.
 
-   @param target the ultimate value to use for the parameter
+   @param value the new value to use
+   */
+  void setUnsafe(ValueType target) noexcept {
+    pendingValue_ = target;
+    std::atomic_fetch_add(&changeCounter_, 1);
+  }
+
+  /**
+   Obtain the last value set in an unsafe (UI) way.
+   @returns last unsafe value set
+   */
+  ValueType getUnsafe() const noexcept { return pendingValue_; }
+
+  /**
+   Set a new value that comes from the render thread.
+
+   @param value the new value to use
    @param duration the number of frames to transition over
    */
-  void set(ValueType target, AUAudioFrameCount duration = 0) noexcept {
-    if (duration > 0) {
-      rampRemaining_ = duration;
-      rampStep_ = (target - rampedValue_) / AUValue(duration);
-      value_ = target;
-    } else {
-      value_ = target;
-      rampedValue_ = target;
-      rampRemaining_ = 0;
-    }
+  void setSafe(ValueType target, AUAudioFrameCount duration) noexcept {
+    valueCounter_ = changeCounter_;
+    pendingValue_ = target;
+    startRamp(duration);
   }
 
   /**
@@ -57,7 +67,19 @@ public:
 
    @return the current parameter value
    */
-  ValueType get() const noexcept { return value_; }
+  ValueType getSafe() const noexcept { return value_; }
+
+  /**
+   Check if there is a new value to ramp to from the AUParameterTree.
+
+   @param duration the number of frames to transition over
+   */
+  void checkForChange(AUAudioFrameCount duration) noexcept {
+    uint32_t changeCounterValue = changeCounter_;
+    if (changeCounterValue == valueCounter_) return;
+    valueCounter_ = changeCounterValue;
+    startRamp(duration);
+  }
 
   /**
    Fetch the current value, incrementing the internal value if ramping is in effect. NOTE: unlike `get` this is not an
@@ -69,21 +91,32 @@ public:
    @return the current parameter value
    */
   ValueType frameValue(bool advance = true) noexcept {
-    if (advance && rampRemaining_ > 0) {
-      rampedValue_ = (--rampRemaining_ == 0) ? value_ : (rampedValue_ + rampStep_);
-    }
-    return rampedValue_;
+    AUAudioFrameCount adjustment = (advance && rampRemaining_) ? -1 : 0;
+    auto value = rampValue(adjustment);
+    rampRemaining_ += adjustment;
+    return value;
   }
 
 private:
+
+  ValueType rampValue(AUAudioFrameCount adjustment) noexcept { return rampRemaining_ ? ((rampRemaining_ + adjustment) * rampRate_ + value_) : value_; }
+
+  void startRamp(AUAudioFrameCount duration) noexcept {
+    if (duration) {
+      rampRate_ = (frameValue(false) - pendingValue_) / AUValue(duration);
+    }
+    value_ = pendingValue_;
+    rampRemaining_ = duration;
+  }
+
   /// The value of the parameter, regardless of any ramping that may be taking place
   ValueType value_;
-  /// The "ramped" value which will become `value_` after `rampRemaining_` frames.
-  ValueType rampedValue_;
-  /// The change that takes place in `rampedValue_` after a frame.
-  ValueType rampStep_{0.0};
-  /// The number of frames remaining in a ramp.
-  AUAudioFrameCount rampRemaining_{0};
+  ValueType rampRate_{};
+  AUAudioFrameCount rampRemaining_{};
+
+  ValueType pendingValue_;
+  std::atomic<uint32_t> changeCounter_{0};
+  uint32_t valueCounter_ = 0;
 };
 
 } // end namespace DSPHeaders::Parameters

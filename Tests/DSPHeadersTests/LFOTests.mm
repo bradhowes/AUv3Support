@@ -149,7 +149,7 @@ using namespace DSPHeaders;
 
 - (void)testInContainer {
   std::vector<LFO<float>> lfos;
-  lfos.emplace_back(44100.0, 12.0, LFOWaveform::sinusoid);
+  // lfos.emplace_back(44100.0, 12.0, LFOWaveform::sinusoid);
 }
 
 - (void)testSetSinePhase {

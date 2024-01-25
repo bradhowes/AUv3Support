@@ -35,7 +35,7 @@ public:
    */
   LFO(ValueType sampleRate, ValueType frequency, LFOWaveform waveform) noexcept
   : valueGenerator_{WaveformGenerator(waveform)}, waveform_{waveform}, sampleRate_{sampleRate} {
-    setFrequency(frequency, 0);
+    setFrequencySafe(frequency, 0);
     reset();
   }
 
@@ -59,9 +59,9 @@ public:
 
     // We don't keep around the LFO frequency. It can be recalculated but that depends on existing sampleRate_ value.
     // Save the current frequency value and then reapply it after changing sampleRate_.
-    auto tmp = frequency();
+    auto tmp = frequencySafe();
     sampleRate_ = sampleRate;
-    setFrequency(tmp, 0);
+    setFrequencySafe(tmp, 0);
   }
 
   /**
@@ -80,9 +80,18 @@ public:
    @param frequency the frequency to operate at
    @param rampingDuration number of samples to ramp over
    */
-  void setFrequency(ValueType frequency, AUAudioFrameCount rampingDuration) noexcept {
-    assert(sampleRate_ != 0.0 && frequency >= 0.0 && rampingDuration >= 0);
-    phaseIncrement_.set(frequency / sampleRate_, rampingDuration);
+  void setFrequencyUnsafe(ValueType frequency) noexcept {
+    phaseIncrement_.setUnsafe(frequency / sampleRate_);
+  }
+
+  /**
+   Set the frequency of the oscillator.
+
+   @param frequency the frequency to operate at
+   @param rampingDuration number of samples to ramp over
+   */
+  void setFrequencySafe(ValueType frequency, AUAudioFrameCount rampingDuration) noexcept {
+    phaseIncrement_.setSafe(frequency / sampleRate_, rampingDuration);
   }
 
   /**
@@ -117,8 +126,11 @@ public:
     phase_ = wrappedModuloCounter(phase_ + phaseIncrement_.frameValue());
   }
 
+  /// @returns current frequency in Hz
+  ValueType frequencyUnsafe() const noexcept { return phaseIncrement_.getUnsafe() * sampleRate_; }
+
    /// @returns current frequency in Hz
-  ValueType frequency() const noexcept { return phaseIncrement_.get() * sampleRate_; }
+  ValueType frequencySafe() const noexcept { return phaseIncrement_.getSafe() * sampleRate_; }
 
   /// @returns the current waveform in effect for the LFO
   LFOWaveform waveform() const noexcept { return waveform_; }

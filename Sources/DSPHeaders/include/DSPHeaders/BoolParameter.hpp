@@ -2,7 +2,7 @@
 
 #pragma once
 
-#import <AVFoundation/AVFoundation.h>
+#import "RampingParameter.hpp"
 
 namespace DSPHeaders::Parameters {
 
@@ -11,40 +11,33 @@ namespace DSPHeaders::Parameters {
  this one does not support ramping -- the change is instantaneous.
  */
 template <typename ValueType = AUValue>
-class BoolParameter {
+class BoolParameter : private RampingParameter<ValueType> {
 public:
+  using super = RampingParameter<ValueType>;
+
   /**
    Construct new instance from POD value.
 
    @param init the value to hold
    */
-  explicit BoolParameter(bool init) noexcept : value_{init} {}
-  /**
-   Construct new instance from AUValue
-
-   @param init if value == 0.0 then held value is `false` otherwise it is `true`
-   */
-  explicit BoolParameter(ValueType init) noexcept : value_{} { set(init); }
+  explicit BoolParameter(bool init) noexcept : super(init ? 1.0 : 0.0) {}
 
   BoolParameter() = default;
 
   ~BoolParameter() = default;
 
-  /**
-   Set the new parameter value. Treat anything non-zero as `true` and 0.0 as `false`.
+  void setUnsafe(bool value) noexcept { super::setUnsafe(value ? 1.0 : 0.0); }
 
-   @param value the new value to use
-   */
-  void set(ValueType value) noexcept { value_ = value != 0.0; }
+  ValueType getUnsafe() const noexcept { return super::getUnsafe(); }
 
-  /// @returns 1.0 if `true` and 0.0 if `false`
-  ValueType get() const noexcept { return value_ ? 1.0 : 0.0; }
+  ValueType getSafe() const noexcept { return super::getSafe(); }
+
+  void setSafe(bool value, AUAudioFrameCount duration = 0) { super::setSafe(value ? 1.0 : 0.0, 0); }
+
+  void checkForChange(AUAudioFrameCount duration) noexcept { super::checkForChange(0); }
 
   /// @returns the boolean state of the parameter
-  operator bool() const noexcept { return value_; }
-
-private:
-  bool value_;
+  operator bool() const noexcept { return super::getSafe(); }
 };
 
 } // end namespace DSPHeaders::Parameters
