@@ -16,14 +16,14 @@ using namespace DSPHeaders::Parameters;
 };
 
 - (void)setUp {
-  epsilon = 1.0e-8;
+  epsilon = 1.0e-5;
 }
 
 - (void)tearDown {
 }
 
 - (void)testInit {
-  auto param1 = MillisecondsParameter<double>();
+  auto param1 = MillisecondsParameter();
   XCTAssertEqual(param1.getSafe(), 0.0);
 
   auto param2 = MillisecondsParameter(123.4);

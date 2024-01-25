@@ -5,36 +5,19 @@
 #import <cmath>
 #import <AVFoundation/AVFoundation.h>
 
+#import "DSPHeaders/BaseRampingParameter.hpp"
+
 namespace DSPHeaders::Parameters {
 
 /**
  Holds an integer value and handles conversion from/to AUValue representations. Unlike other parameter representations,
  this one does not support ramping -- the change is instantaneous.
  */
-template <typename ValueType = AUValue>
-class IntegralParameter {
+class IntegralParameter : public BaseRampingParameter {
 public:
-  
-  static int round(ValueType value) { return int(std::round(value)); }
+  using super = BaseRampingParameter;
 
-  explicit IntegralParameter(ValueType init) noexcept : value_{round(init)} {}
-
-  IntegralParameter() = default;
-
-  ~IntegralParameter() = default;
-
-  /**
-   Set the new parameter value.
-
-   @param value the new value to use
-   */
-  void set(ValueType value) noexcept { value_ = round(value); }
-
-  /// @returns current value
-  ValueType get() const noexcept { return value_; }
-
-private:
-  int value_;
+  explicit IntegralParameter(AUValue init = 0.0) noexcept : super(Transformers::rounded(init), Transformers::rounded, Transformers::rounded) {}
 };
 
 } // end namespace DSPHeaders::Parameters

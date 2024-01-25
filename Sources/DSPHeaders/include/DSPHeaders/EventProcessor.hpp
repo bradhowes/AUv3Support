@@ -12,6 +12,7 @@
 
 #import "DSPHeaders/SampleBuffer.hpp"
 #import "DSPHeaders/BusBuffers.hpp"
+#import "DSPHeaders/RampingParameter.hpp"
 
 namespace DSPHeaders {
 
@@ -193,6 +194,7 @@ public:
 
 protected:
 
+  void registerParameter(Parameters::RampingParameter& parameter) { parameters_.push_back(&parameter); }
   /**
    Obtain a `busBuffer` for the given bus.
 
@@ -323,6 +325,8 @@ private:
   std::atomic_flag bypassed_ = ATOMIC_FLAG_INIT;
   std::atomic_flag rendering_ = ATOMIC_FLAG_INIT;
   double sampleRate_{};
+
+  std::vector<DSPHeaders::Parameters::RampingParameter*> parameters_{};
 };
 
 /**

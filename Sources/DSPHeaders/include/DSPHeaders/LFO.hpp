@@ -171,7 +171,7 @@ private:
   LFOWaveform waveform_;
   ValueGenerator valueGenerator_;
   ValueType phase_ = {0.0};
-  Parameters::RampingParameter<ValueType> phaseIncrement_;
+  Parameters::RampingParameter phaseIncrement_;
 };
 
 } // end namespace DSPHeaders

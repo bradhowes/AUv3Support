@@ -42,16 +42,16 @@ using namespace DSPHeaders::Parameters;
   XCTAssertFalse(param);
   XCTAssertEqual(param.getUnsafe(), 1.0);
 
-  param.setSafe(123.0);
+  param.setSafe(123.0, 0);
   XCTAssertEqual(param.getSafe(), 1.0);
   XCTAssertTrue(param);
   XCTAssertEqual(param.getUnsafe(), 1.0);
 
-  param.setSafe(0.1);
+  param.setSafe(0.1, 0);
   XCTAssertEqual(param.getSafe(), 1.0);
   XCTAssertTrue(param);
 
-  param.setSafe(0.0);
+  param.setSafe(0.0, 0);
   XCTAssertEqual(param.getSafe(), 0.0);
   XCTAssertFalse(param);
 }

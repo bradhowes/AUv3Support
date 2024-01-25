@@ -16,7 +16,7 @@ using namespace DSPHeaders;
 @implementation PhaseShifterTests
 
 - (void)setUp {
-  _epsilon = 1.0e-12;
+  _epsilon = 1.0e-5;
   self.continueAfterFailure = false;
 }
 

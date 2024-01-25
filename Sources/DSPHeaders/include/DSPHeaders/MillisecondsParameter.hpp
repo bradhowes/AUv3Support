@@ -2,7 +2,7 @@
 
 #pragma once
 
-#import "RampingParameter.hpp"
+#import "DSPHeaders/BaseRampingParameter.hpp"
 
 namespace DSPHeaders::Parameters {
 
@@ -10,16 +10,11 @@ namespace DSPHeaders::Parameters {
  Manage a value that represents duration in milliseconds. No transform is applied to set/get values. Purely serves as
  a notational mechanism.
  */
-template <typename ValueType = AUValue>
-class MillisecondsParameter : public RampingParameter<ValueType> {
+class MillisecondsParameter : public BaseRampingParameter {
 public:
-  using super = RampingParameter<ValueType>;
+  using super = BaseRampingParameter;
 
-  explicit MillisecondsParameter(ValueType milliseconds) noexcept : super(milliseconds) {}
-
-  MillisecondsParameter() = default;
-
-  ~MillisecondsParameter() = default;
+  explicit MillisecondsParameter(AUValue milliseconds = 0.0) noexcept : super(milliseconds, Transformers::passthru, Transformers::passthru) {}
 };
 
 } // end namespace DSPHeaders::Parameters
