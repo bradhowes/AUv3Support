@@ -22,6 +22,8 @@ struct MockEffect : public EventProcessor<MockEffect>
 
   void doRenderingStateChanged(bool rendering) {}
 
+  void doCheckForParameterChanges() {}
+  
   std::vector<AUAudioFrameCount> frameCounts_{};
 };
 

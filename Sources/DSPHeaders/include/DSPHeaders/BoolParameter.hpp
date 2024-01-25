@@ -36,6 +36,8 @@ public:
 
   void checkForChange(AUAudioFrameCount duration) noexcept { super::checkForChange(0); }
 
+  void stopRamping() noexcept { super::stopRamping(); }
+
   /// @returns the boolean state of the parameter
   operator bool() const noexcept { return super::getSafe(); }
 };

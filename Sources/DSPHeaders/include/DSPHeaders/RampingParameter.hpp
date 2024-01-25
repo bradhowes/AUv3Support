@@ -74,11 +74,12 @@ public:
 
    @param duration the number of frames to transition over
    */
-  void checkForChange(AUAudioFrameCount duration) noexcept {
+  bool checkForChange(AUAudioFrameCount duration) noexcept {
     uint32_t changeCounterValue = changeCounter_;
-    if (changeCounterValue == valueCounter_) return;
+    if (changeCounterValue == valueCounter_) return false;
     valueCounter_ = changeCounterValue;
     startRamp(duration);
+    return true;
   }
 
   /**

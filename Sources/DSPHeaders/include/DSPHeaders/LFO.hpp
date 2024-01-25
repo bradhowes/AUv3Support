@@ -64,6 +64,9 @@ public:
     setFrequencySafe(tmp, 0);
   }
 
+  bool checkForChange(AUAudioFrameCount duration) noexcept {
+    return phaseIncrement_.checkForChange(duration);
+  }
   /**
    Set the waveform to use
    

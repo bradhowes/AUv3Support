@@ -38,7 +38,9 @@ public:
 
   ValueType frameValue(bool advance = true) noexcept { return super::frameValue(advance); }
   
-  void checkForChange(AUAudioFrameCount duration) noexcept { super::checkForChange(); }
+  bool checkForChange(AUAudioFrameCount duration) noexcept { return super::checkForChange(duration); }
+
+  void stopRamping() noexcept { super::stopRamping(); }
 
 private:
   inline static constexpr ValueType normalize(ValueType value) noexcept { return std::clamp(value / 100.0, 0.0, 1.0); }

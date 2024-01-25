@@ -88,6 +88,8 @@ public:
    @param maxFramesToRender the maximum number of frames to expect on input
    */
   void setRenderingFormat(NSInteger busCount, AVAudioFormat* format, AUAudioFrameCount maxFramesToRender) noexcept {
+    sampleRate_ = format.sampleRate;
+
     auto channelCount{[format channelCount]};
 
     // We want an internal buffer for each bus that we can generate output on. This is not strictly required since we
@@ -184,6 +186,7 @@ public:
       }
     }
 
+    derived_.doCheckForParameterChanges();
     render(outputBusNumber, timestamp, frameCount, realtimeEventListHead);
     return noErr;
   }
@@ -206,6 +209,9 @@ protected:
   void setRampingDuration(AUAudioFrameCount duration) noexcept {
     if (duration > rampRemaining_) rampRemaining_ = duration;
   }
+
+  /// @returns current sample rate that is in effect
+  double sampleRate() const noexcept { return sampleRate_; }
 
 private:
 
@@ -316,6 +322,7 @@ private:
   AUAudioFrameCount rampRemaining_{0};
   std::atomic_flag bypassed_ = ATOMIC_FLAG_INIT;
   std::atomic_flag rendering_ = ATOMIC_FLAG_INIT;
+  double sampleRate_{};
 };
 
 /**
@@ -329,6 +336,7 @@ concept KernelT = requires(T a, const AUParameterEvent& param, const AUMIDIEvent
   { a.doMIDIEvent(midi) } -> std::convertible_to<void>;
   { a.doRendering(NSInteger(1), bb, bb, AUAudioFrameCount(1) ) } -> std::convertible_to<void>;
   { a.doRenderingStateChanged(false) } -> std::convertible_to<void>;
+  { a.doCheckForParameterChanges() } -> std::convertible_to<void>;
 };
 
 /**
