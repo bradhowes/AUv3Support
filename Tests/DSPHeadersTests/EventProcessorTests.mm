@@ -5,12 +5,17 @@
 
 #import "DSPHeaders/DSP.hpp"
 #import "DSPHeaders/EventProcessor.hpp"
+#import "DSPHeaders/RampingParameter.hpp"
 
 using namespace DSPHeaders;
 
 struct MockEffect : public EventProcessor<MockEffect>
 {
-  MockEffect() : EventProcessor<MockEffect>() {}
+  using super = EventProcessor<MockEffect>;
+
+  MockEffect() : EventProcessor<MockEffect>() {
+    registerParameter(param_);
+  }
 
   void doParameterEvent(const AUParameterEvent&) {}
 
@@ -22,8 +27,10 @@ struct MockEffect : public EventProcessor<MockEffect>
 
   void doRenderingStateChanged(bool rendering) {}
 
-  void doCheckForParameterChanges() {}
+  void checkForParameterChanges() { super::checkForParameterChanges(); }
   
+  Parameters::RampingParameter param_{0};
+
   std::vector<AUAudioFrameCount> frameCounts_{};
 };
 
@@ -34,9 +41,12 @@ ValidatedKernel<MockEffect> _;
 @property MockEffect* effect;
 @end
 
-@implementation EventProcessorTests
+@implementation EventProcessorTests {
+  AUValue epsilon;
+}
 
 - (void)setUp {
+  epsilon = 1.0E-6;
   self.effect = new MockEffect();
   AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
   AUAudioFrameCount maxFrames = 512;
@@ -192,7 +202,7 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
 
   AURenderEvent* eventList = reinterpret_cast<AURenderEvent*>(rampingEvent);
   eventList->head.eventType = AURenderEventParameterRamp;
-  
+
   auto status = self.effect->processAndRender(&timestamp, frames, 0, outputData, eventList, mockPullInput);
   XCTAssertEqual(status, 0);
   XCTAssertEqual(self.effect->frameCounts_.size(), 5);
@@ -240,6 +250,23 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
   XCTAssertEqual(self.effect->frameCounts_[0], 1);
   XCTAssertEqual(self.effect->frameCounts_[1], 1);
   XCTAssertEqual(self.effect->frameCounts_[2], 10);
+}
+
+- (void)testDetectParameterChange {
+  self.effect->param_.setPending(123.5);
+  XCTAssertEqualWithAccuracy(self.effect->param_.getPending(), 123.5, epsilon);
+  XCTAssertEqual(self.effect->param_.get(), 0.0);
+  XCTAssertFalse(self.effect->isRamping());
+  self.effect->checkForParameterChanges();
+  XCTAssertTrue(self.effect->isRamping());
+}
+
+- (void)testRenderDisableClearsRamping {
+  self.effect->param_.setPending(123.5);
+  self.effect->checkForParameterChanges();
+  XCTAssertTrue(self.effect->isRamping());
+  self.effect->setRendering(false);
+  XCTAssertFalse(self.effect->isRamping());
 }
 
 @end

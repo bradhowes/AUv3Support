@@ -35,7 +35,7 @@ public:
    */
   LFO(ValueType sampleRate, ValueType frequency, LFOWaveform waveform) noexcept
   : valueGenerator_{WaveformGenerator(waveform)}, waveform_{waveform}, sampleRate_{sampleRate} {
-    setFrequencySafe(frequency, 0);
+    setFrequency(frequency, 0);
     reset();
   }
 
@@ -59,9 +59,9 @@ public:
 
     // We don't keep around the LFO frequency. It can be recalculated but that depends on existing sampleRate_ value.
     // Save the current frequency value and then reapply it after changing sampleRate_.
-    auto tmp = frequencySafe();
+    auto tmp = frequencyPending();
     sampleRate_ = sampleRate;
-    setFrequencySafe(tmp, 0);
+    setFrequency(tmp, 0);
   }
 
   bool checkForChange(AUAudioFrameCount duration) noexcept {
@@ -83,8 +83,8 @@ public:
    @param frequency the frequency to operate at
    @param rampingDuration number of samples to ramp over
    */
-  void setFrequencyUnsafe(ValueType frequency) noexcept {
-    phaseIncrement_.setUnsafe(frequency / sampleRate_);
+  void setFrequencyPending(ValueType frequency) noexcept {
+    phaseIncrement_.setPending(frequency / sampleRate_);
   }
 
   /**
@@ -93,8 +93,8 @@ public:
    @param frequency the frequency to operate at
    @param rampingDuration number of samples to ramp over
    */
-  void setFrequencySafe(ValueType frequency, AUAudioFrameCount rampingDuration) noexcept {
-    phaseIncrement_.setSafe(frequency / sampleRate_, rampingDuration);
+  void setFrequency(ValueType frequency, AUAudioFrameCount rampingDuration) noexcept {
+    phaseIncrement_.set(frequency / sampleRate_, rampingDuration);
   }
 
   /**
@@ -130,10 +130,10 @@ public:
   }
 
   /// @returns current frequency in Hz
-  ValueType frequencyUnsafe() const noexcept { return phaseIncrement_.getUnsafe() * sampleRate_; }
+  ValueType frequencyPending() const noexcept { return phaseIncrement_.getPending() * sampleRate_; }
 
    /// @returns current frequency in Hz
-  ValueType frequencySafe() const noexcept { return phaseIncrement_.getSafe() * sampleRate_; }
+  ValueType frequency() const noexcept { return phaseIncrement_.get() * sampleRate_; }
 
   /// @returns the current waveform in effect for the LFO
   LFOWaveform waveform() const noexcept { return waveform_; }
@@ -142,6 +142,14 @@ public:
    Stop any ramping that is active for the LFO frequency.
    */
   void stopRamping() noexcept { phaseIncrement_.stopRamping(); }
+
+  /**
+   Obtain the ramping parameter instance that controls the LFO frequency. NOTE: this is only exposed to
+   allow for general management of ramping state. This should not be used to set new values.
+
+   @returns frequency ramping parameter
+   */
+  Parameters::RampingParameter& frequencyParameter() noexcept { return phaseIncrement_; }
 
 private:
   using ValueGenerator = ValueType (*)(ValueType);

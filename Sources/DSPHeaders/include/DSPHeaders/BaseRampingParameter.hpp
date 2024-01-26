@@ -1,6 +1,7 @@
 #pragma once
 
-#import <libkern/OSAtomic.h>
+// #import <libkern/OSAtomic.h>
+#import <algorithm>
 #import <atomic>
 #import <cmath>
 
@@ -68,42 +69,31 @@ public:
   void stopRamping() noexcept { rampRemaining_ = 0; }
 
   /**
-   Set a new value that comes from outside render thread. In order not to cause any disrutpions to active
-   render operations, we delay using the new value until the next render phase.
+   Set a new value that comes from outside render thread. It will be seen at the start of the next
+   render pass.
 
    @param value the new value to use
    */
-  void setUnsafe(AUValue target) noexcept {
-
-    // Spin until render thread has taken the last value
-    while (changeCounter_.load(std::memory_order_relaxed) > 0U)
-      ;
-
-    // Safe to set this value
-    pendingValue_ = transformIn(target);
-
-    // Signal a new value
-    std::atomic_fetch_add(&changeCounter_, 1);
+  void setPending(AUValue value) noexcept {
+    pendingValue_.store(transformIn_(value), std::memory_order_relaxed);
   }
 
   /**
-   Obtain the last value set in an unsafe (UI) way.
+   Obtain the last value set via `setPending`.
 
    @returns last unsafe value set
    */
-  AUValue getUnsafe() const noexcept { return transformOut(pendingValue_); }
+  AUValue getPending() const noexcept { return transformOut_(pendingValue_.load(std::memory_order_relaxed)); }
 
   /**
-   Set a new value that comes from the render thread. Note that technically this is unsafe from the standpoint of
-   any UI that may be asking for the parameter's value at the same time, which is a very rare chance of happening
+   Set a new value that comes from the render thread. Which is a very rare chance of happening
    since the UI would normally not need to query for the value to show.
 
    @param value the new value to use
    @param duration the number of frames to transition over
    */
-  void setSafe(AUValue target, AUAudioFrameCount duration) noexcept {
-    auto value = transformIn(target);
-    pendingValue_ = value;
+  void set(AUValue target, AUAudioFrameCount duration) noexcept {
+    auto value = transformIn_(target);
     startRamp(value, duration);
   }
 
@@ -113,7 +103,7 @@ public:
 
    @return the current parameter value
    */
-  AUValue getSafe() const noexcept { return value_; }
+  AUValue get() const noexcept { return value_; }
 
   /**
    Check if there is a new value to ramp to from the AUParameterTree.
@@ -121,16 +111,8 @@ public:
    @param duration the number of frames to transition over
    */
   bool checkForChange(AUAudioFrameCount duration) noexcept {
-
-    // See if UI has set value
-    if (changeCounter_.load(std::memory_order_relaxed) == 0U) return false;
-
-    // Safe to grab the new value
-    auto value = pendingValue_;
-
-    // Now clear the sentinal
-    std::atomic_fetch_add(&changeCounter_, -1);
-
+    auto value = pendingValue_.load(std::memory_order_relaxed);
+    if (value == value_) return false;
     startRamp(value, duration);
     return true;
   }
@@ -159,15 +141,12 @@ protected:
    @param value the starting value for the parameter
    */
   BaseRampingParameter(AUValue value, ValueTransformer forward, ValueTransformer reverse) noexcept :
-  value_{forward(value)}, pendingValue_{value_}, forwardTransform_{forward}, reverseTransform_{reverse} {
-    assert(forwardTransform_ && reverseTransform_);
+  value_{forward(value)}, transformIn_{forward}, transformOut_{reverse} {
+    assert(transformIn_ && transformOut_);
+    pendingValue_.store(value_, std::memory_order_relaxed);
   }
 
 private:
-
-  AUValue transformIn(AUValue value) const noexcept { return forwardTransform_(value); }
-
-  AUValue transformOut(AUValue value) const noexcept { return reverseTransform_(value); }
 
   AUValue rampValue(AUAudioFrameCount adjustment) noexcept { return rampRemaining_ ? ((rampRemaining_ + adjustment) * rampRate_ + value_) : value_; }
 
@@ -182,11 +161,10 @@ private:
   AUValue rampRate_{};
   AUAudioFrameCount rampRemaining_{};
 
-  AUValue pendingValue_;
-  std::atomic<uint32_t> changeCounter_{0};
+  std::atomic<AUValue> pendingValue_ = ATOMIC_VAR_INIT(0.0);
 
-  ValueTransformer forwardTransform_{nullptr};
-  ValueTransformer reverseTransform_{nullptr};
+  ValueTransformer transformIn_{nullptr};
+  ValueTransformer transformOut_{nullptr};
 };
 
 } // end namespace DSPHeaders::Parameters

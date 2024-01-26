@@ -67,7 +67,7 @@ public:
       } else {
         rendering_.clear();
       }
-      derived_.doRenderingStateChanged(rendering);
+      renderingStateChanged(rendering);
 
       // Stop any ramping when the rendering state changes. Makes no sense to keep ramping after such major audio
       // changes.
@@ -187,14 +187,20 @@ public:
       }
     }
 
-    derived_.doCheckForParameterChanges();
+    // Apply any paramter changes posted by the UI
+    checkForParameterChanges();
     render(outputBusNumber, timestamp, frameCount, realtimeEventListHead);
+
     return noErr;
   }
 
 protected:
 
-  void registerParameter(Parameters::RampingParameter& parameter) { parameters_.push_back(&parameter); }
+  void registerParameters(std::vector<DSPHeaders::Parameters::BaseRampingParameter*>&& collection) {
+    parameters_ = collection;
+  }
+
+  void registerParameter(Parameters::BaseRampingParameter& parameter) { parameters_.push_back(&parameter); }
 
   /**
    Obtain a `busBuffer` for the given bus.
@@ -216,7 +222,25 @@ protected:
   /// @returns current sample rate that is in effect
   double sampleRate() const noexcept { return sampleRate_; }
 
+  void checkForParameterChanges() noexcept {
+    auto rampDuration = AUAudioFrameCount(floor(0.02 * this->sampleRate()));
+    auto changed = false;
+    for (auto param : parameters_) {
+      changed |= param->checkForChange(rampDuration);
+    }
+    if (changed) setRampingDuration(rampDuration);
+  }
+
 private:
+
+  void renderingStateChanged(bool rendering) noexcept {
+    if (!rendering) {
+      for (auto param : parameters_) {
+        param->stopRamping();
+      }
+    }
+    derived_.doRenderingStateChanged(rendering);
+  }
 
   BufferFacet& inputFacet() noexcept { assert(!facets_.empty()); return facets_.back(); }
 
@@ -327,7 +351,7 @@ private:
   std::atomic_flag rendering_ = ATOMIC_FLAG_INIT;
   double sampleRate_{};
 
-  std::vector<DSPHeaders::Parameters::RampingParameter*> parameters_{};
+  std::vector<DSPHeaders::Parameters::BaseRampingParameter*> parameters_{};
 };
 
 /**
@@ -341,7 +365,6 @@ concept KernelT = requires(T a, const AUParameterEvent& param, const AUMIDIEvent
   { a.doMIDIEvent(midi) } -> std::convertible_to<void>;
   { a.doRendering(NSInteger(1), bb, bb, AUAudioFrameCount(1) ) } -> std::convertible_to<void>;
   { a.doRenderingStateChanged(false) } -> std::convertible_to<void>;
-  { a.doCheckForParameterChanges() } -> std::convertible_to<void>;
 };
 
 /**

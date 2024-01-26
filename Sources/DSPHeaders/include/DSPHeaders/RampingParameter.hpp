@@ -20,7 +20,7 @@ public:
   /**
    Construct a new parameter.
 
-   @param initialValue the starting value for the parameter
+   @param value the starting value for the parameter
    */
   RampingParameter(AUValue value = 0.0) noexcept : super(Transformers::passthru(value), Transformers::passthru, Transformers::passthru) {}
 };

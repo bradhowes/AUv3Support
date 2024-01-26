@@ -8,7 +8,6 @@
 using namespace DSPHeaders::Parameters;
 
 @interface BoolParameterTests : XCTestCase
-
 @end
 
 @implementation BoolParameterTests {
@@ -24,35 +23,35 @@ using namespace DSPHeaders::Parameters;
 
 - (void)testInit {
   auto param1 = BoolParameter();
-  XCTAssertEqual(param1.getSafe(), 0.0);
-  XCTAssertEqual(param1.getUnsafe(), 0.0);
+  XCTAssertEqual(param1.get(), 0.0);
+  XCTAssertEqual(param1.getPending(), 0.0);
   XCTAssertFalse(param1);
 
   auto param2 = BoolParameter(true);
-  XCTAssertEqual(param2.getSafe(), 1.0);
-  XCTAssertEqual(param2.getUnsafe(), 1.0);
+  XCTAssertEqual(param2.get(), 1.0);
+  XCTAssertEqual(param2.getPending(), 1.0);
   XCTAssertTrue(param2);
 }
 
 - (void)testSetting {
   auto param = BoolParameter();
 
-  param.setUnsafe(-1.0);
-  XCTAssertEqual(param.getSafe(), 0.0);
+  param.setPending(-1.0);
+  XCTAssertEqual(param.get(), 0.0);
   XCTAssertFalse(param);
-  XCTAssertEqual(param.getUnsafe(), 1.0);
+  XCTAssertEqual(param.getPending(), 1.0);
 
-  param.setSafe(123.0, 0);
-  XCTAssertEqual(param.getSafe(), 1.0);
+  param.set(123.0, 0);
+  XCTAssertEqual(param.get(), 1.0);
   XCTAssertTrue(param);
-  XCTAssertEqual(param.getUnsafe(), 1.0);
+  XCTAssertEqual(param.getPending(), 1.0);
 
-  param.setSafe(0.1, 0);
-  XCTAssertEqual(param.getSafe(), 1.0);
+  param.set(0.1, 0);
+  XCTAssertEqual(param.get(), 1.0);
   XCTAssertTrue(param);
 
-  param.setSafe(0.0, 0);
-  XCTAssertEqual(param.getSafe(), 0.0);
+  param.set(0.0, 0);
+  XCTAssertEqual(param.get(), 0.0);
   XCTAssertFalse(param);
 }
 

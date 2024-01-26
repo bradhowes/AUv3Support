@@ -24,10 +24,10 @@ using namespace DSPHeaders::Parameters;
 
 - (void)testInit {
   auto param1 = MillisecondsParameter();
-  XCTAssertEqual(param1.getSafe(), 0.0);
+  XCTAssertEqual(param1.get(), 0.0);
 
   auto param2 = MillisecondsParameter(123.4);
-  XCTAssertEqualWithAccuracy(param2.getSafe(), 123.4, epsilon);
+  XCTAssertEqualWithAccuracy(param2.get(), 123.4, epsilon);
 }
 
 @end

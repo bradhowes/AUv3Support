@@ -22,7 +22,7 @@ public:
   explicit BoolParameter(bool init = false) noexcept : super(Transformers::boolIn(init), Transformers::boolIn, Transformers::passthru) {}
 
   /// @returns the boolean state of the parameter
-  operator bool() const noexcept { return super::getSafe(); }
+  operator bool() const noexcept { return super::get(); }
 };
 
 } // end namespace DSPHeaders::Parameters

@@ -19,30 +19,30 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testInit {
-  XCTAssertEqual(IntegralParameter().getSafe(), 0.0);
-  XCTAssertEqual(IntegralParameter(0.0).getSafe(), 0.0);
-  XCTAssertEqual(IntegralParameter(0.25).getSafe(), 0.0);
-  XCTAssertEqual(IntegralParameter(0.5).getSafe(), 1.0);
-  XCTAssertEqual(IntegralParameter(0.9).getSafe(), 1.0);
-  XCTAssertEqual(IntegralParameter(1.0).getSafe(), 1.0);
-  XCTAssertEqual(IntegralParameter(-0.25).getSafe(), 0.0);
-  XCTAssertEqual(IntegralParameter(-0.5).getSafe(), -1.0);
+  XCTAssertEqual(IntegralParameter().get(), 0.0);
+  XCTAssertEqual(IntegralParameter(0.0).get(), 0.0);
+  XCTAssertEqual(IntegralParameter(0.25).get(), 0.0);
+  XCTAssertEqual(IntegralParameter(0.5).get(), 1.0);
+  XCTAssertEqual(IntegralParameter(0.9).get(), 1.0);
+  XCTAssertEqual(IntegralParameter(1.0).get(), 1.0);
+  XCTAssertEqual(IntegralParameter(-0.25).get(), 0.0);
+  XCTAssertEqual(IntegralParameter(-0.5).get(), -1.0);
 }
 
 - (void)testSetting {
   auto param = IntegralParameter();
 
-  param.setSafe(-1.0, 0);
-  XCTAssertEqual(param.getSafe(), -1.0);
+  param.set(-1.0, 0);
+  XCTAssertEqual(param.get(), -1.0);
 
-  param.setSafe(1.0, 0);
-  XCTAssertEqual(param.getSafe(), 1.0);
+  param.set(1.0, 0);
+  XCTAssertEqual(param.get(), 1.0);
 
-  param.setSafe(0.1, 0);
-  XCTAssertEqual(param.getSafe(), 0.0);
+  param.set(0.1, 0);
+  XCTAssertEqual(param.get(), 0.0);
 
-  param.setSafe(1.9, 0);
-  XCTAssertEqual(param.getSafe(), 2.0);
+  param.set(1.9, 0);
+  XCTAssertEqual(param.get(), 2.0);
 }
 
 @end

@@ -93,8 +93,6 @@ private:
     return kind == Interpolator::linear ? &DelayBuffer::linearInterpolate : &DelayBuffer::cubic4thOrderInterpolate;
   }
 
-  ValueType at(ssize_t offset) const noexcept { return readFromOffset(offset); }
-
   /**
    Obtain a linearly interpolated sample for a given index value.
 
@@ -103,7 +101,9 @@ private:
    @returns interpolated sample result
    */
   ValueType linearInterpolate(ssize_t whole, ValueType partial) const noexcept {
-    return (partial == 0.0) ? at(whole) : DSP::Interpolation::linear(partial, at(whole), at(whole + 1));
+    return (partial == 0.0) ? readFromOffset(whole) : DSP::Interpolation::linear(partial,
+                                                                                 readFromOffset(whole),
+                                                                                 readFromOffset(whole + 1));
   }
 
   /**
@@ -115,8 +115,11 @@ private:
    */
   ValueType cubic4thOrderInterpolate(ssize_t whole, ValueType partial) const noexcept {
     // I think the indexing here may be off just slightly, but at 44.1K sampling rate, I'm not that concerned.
-    return (partial == 0.0) ? at(whole) : DSP::Interpolation::cubic4thOrder(partial, at(whole), at(whole + 1),
-                                                                            at(whole + 2), at(whole + 3));
+    return (partial == 0.0) ? readFromOffset(whole) : DSP::Interpolation::cubic4thOrder(partial,
+                                                                                        readFromOffset(whole),
+                                                                                        readFromOffset(whole + 1),
+                                                                                        readFromOffset(whole + 2),
+                                                                                        readFromOffset(whole + 3));
   }
 
   std::vector<ValueType> buffer_;
