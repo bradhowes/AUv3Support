@@ -25,7 +25,7 @@ struct Transformers {
    @param value the value to transform
    @returns transformed value
    */
-  static AUValue percentageIn(AUValue value) noexcept { return std::clamp(value / 100.0, 0.0, 1.0); }
+  static AUValue percentageIn(AUValue value) noexcept { return std::clamp(value / 100.0f, 0.0f, 1.0f); }
 
   /**
    A transformer of normalized values (0.0-1.0) into percentages (0-100)
@@ -33,7 +33,7 @@ struct Transformers {
    @param value the value to transform
    @returns transformed value
    */
-  static AUValue percentageOut(AUValue value) noexcept { return value * 100.0; }
+  static AUValue percentageOut(AUValue value) noexcept { return value * 100.0f; }
 
   /**
    A transformer of floating-point values into a boolean, where 0.0 means false and anything else 1.0.
@@ -41,7 +41,7 @@ struct Transformers {
    @param value the value to transform
    @returns transformed value
    */
-  static AUValue boolIn(AUValue value) noexcept { return value ? 1.0 : 0.0; }
+  static AUValue boolIn(AUValue value) noexcept { return value ? 1.0f : 0.0f; }
 
   /**
    A transformer of floating-point values into integral ones.
@@ -74,9 +74,7 @@ public:
 
    @param value the new value to use
    */
-  void setPending(AUValue value) noexcept {
-    pendingValue_.store(transformIn_(value), std::memory_order_relaxed);
-  }
+  void setPending(AUValue value) noexcept { pendingValue_.store(transformIn_(value), std::memory_order_relaxed); }
 
   /**
    Obtain the last value set via `setPending`.
@@ -92,10 +90,7 @@ public:
    @param value the new value to use
    @param duration the number of frames to transition over
    */
-  void set(AUValue target, AUAudioFrameCount duration) noexcept {
-    auto value = transformIn_(target);
-    startRamp(value, duration);
-  }
+  void set(AUValue value, AUAudioFrameCount duration) noexcept { startRamp(transformIn_(value), duration); }
 
   /**
    Obtain the current parameter value. Note that if ramping is in effect, this returns the final value at the end of
@@ -127,9 +122,9 @@ public:
    @return the current parameter value
    */
   AUValue frameValue(bool advance = true) noexcept {
-    AUAudioFrameCount adjustment = (advance && rampRemaining_) ? -1 : 0;
+    AUAudioFrameCount adjustment = (advance && rampRemaining_) ? 1 : 0;
     auto value = rampValue(adjustment);
-    rampRemaining_ += adjustment;
+    rampRemaining_ -= adjustment;
     return value;
   }
 
@@ -148,7 +143,7 @@ protected:
 
 private:
 
-  AUValue rampValue(AUAudioFrameCount adjustment) noexcept { return rampRemaining_ ? ((rampRemaining_ + adjustment) * rampRate_ + value_) : value_; }
+  AUValue rampValue(AUAudioFrameCount adjustment) noexcept { return rampRemaining_ ? ((rampRemaining_ - adjustment) * rampRate_ + value_) : value_; }
 
   void startRamp(AUValue pendingValue, AUAudioFrameCount duration) noexcept {
     if (duration) rampRate_ = (frameValue(false) - pendingValue) / AUValue(duration);
