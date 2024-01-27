@@ -21,6 +21,10 @@ namespace DSPHeaders {
  The output is bipolar ([-1.0, 1.0]). Use DSP::bipolarToUnipolar to generate values in [0.0, 1.0].
 
  Loosely based on code found in "Designing Audio Effect Plugins in C++" by Will C. Pirkle (2019).
+
+ The LFO operates at a frequency which is controlled by an AU parameter setting that can be adjusted in
+ real-time. The LFO provides a facade for controlling this value, but internally, the value that is
+ being managed is the phase increment that governs how the signal changes at each sample.
  */
 template <typename ValueType = AUValue>
 class LFO {
