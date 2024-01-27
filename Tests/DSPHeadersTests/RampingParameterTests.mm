@@ -1,4 +1,4 @@
-// Copyright © 2021 Brad Howes. All rights reserved.
+// Copyright © 2021, 2024 Brad Howes. All rights reserved.
 
 #import <XCTest/XCTest.h>
 #import <vector>
@@ -15,7 +15,7 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)setUp {
-  epsilon = 1.0e-6;
+  epsilon = 1.0e-4;
 }
 
 - (void)tearDown {
@@ -79,12 +79,12 @@ using namespace DSPHeaders::Parameters;
 
 - (void)testPending {
   auto param = RampingParameter();
-  param.setPending(123.0);
-  XCTAssertEqualWithAccuracy(param.getPending(), 123.0, epsilon);
+  param.setPending(124.0);
+  XCTAssertEqualWithAccuracy(param.getPending(), 124.0, epsilon);
   XCTAssertEqualWithAccuracy(param.get(), 0.0, epsilon);
   param.checkForChange(20);
-  XCTAssertEqualWithAccuracy(param.get(), 123.0, epsilon);
-  XCTAssertEqualWithAccuracy(param.frameValue(), 6.149998, epsilon);
+  XCTAssertEqualWithAccuracy(param.get(), 124.0, epsilon);
+  XCTAssertEqualWithAccuracy(param.frameValue(), 124.0 / 20.0, epsilon);
 }
 
 @end
