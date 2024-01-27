@@ -41,7 +41,7 @@ struct Transformers {
    @param value the value to transform
    @returns transformed value
    */
-  static AUValue boolIn(AUValue value) noexcept { return value ? 1.0f : 0.0f; }
+  static AUValue boolIn(AUValue value) noexcept { return std::abs(value) < 0.5 ? 0.0f : 1.0f; }
 
   /**
    A transformer of floating-point values into integral ones.
