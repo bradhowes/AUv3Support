@@ -4,7 +4,6 @@
 
 #import <algorithm>
 #import <atomic>
-#import <cmath>
 
 #import <AVFoundation/AVFoundation.h>
 
@@ -42,7 +41,7 @@ struct Transformer {
    @param value the value to transform
    @returns transformed value
    */
-  static AUValue boolIn(AUValue value) noexcept { return std::abs(value) < 0.5 ? 0.0f : 1.0f; }
+  static AUValue boolIn(AUValue value) noexcept { return value < 0.5 ? 0.0f : 1.0f; }
 
   /**
    A transformer of floating-point values into integral ones.
@@ -85,13 +84,17 @@ public:
   AUValue getPending() const noexcept { return transformOut_(pendingValue_.load(std::memory_order_relaxed)); }
 
   /**
-   Set a new value that comes from the render thread. Which is a very rare chance of happening
-   since the UI would normally not need to query for the value to show.
+   Set a new value that comes from the render thread.
 
    @param value the new value to use
    @param duration the number of frames to transition over
+
+   @todo Need to signal the AUParameterTree that this has happened
    */
-  void set(AUValue value, AUAudioFrameCount duration) noexcept { startRamp(transformIn_(value), duration); }
+  void set(AUValue value, AUAudioFrameCount duration) noexcept {
+    startRamp(transformIn_(value), duration);
+    pendingValue_.store(transformIn_(value));
+  }
 
   /**
    Obtain the current parameter value. Note that if ramping is in effect, this returns the final value at the end of

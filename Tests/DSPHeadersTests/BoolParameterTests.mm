@@ -39,7 +39,7 @@ using namespace DSPHeaders::Parameters;
   param.setPending(-1.0);
   XCTAssertEqual(param.get(), 0.0);
   XCTAssertFalse(param);
-  XCTAssertEqual(param.getPending(), 1.0);
+  XCTAssertEqual(param.getPending(), 0.0);
 
   param.set(123.0, 0);
   XCTAssertEqual(param.get(), 1.0);
@@ -59,8 +59,8 @@ using namespace DSPHeaders::Parameters;
   XCTAssertFalse(param);
 
   param.set(-0.6, 0);
-  XCTAssertEqual(param.get(), 1.0);
-  XCTAssertTrue(param);
+  XCTAssertEqual(param.get(), 0.0);
+  XCTAssertFalse(param);
 
   param.set(0.0, 0);
   XCTAssertEqual(param.get(), 0.0);
