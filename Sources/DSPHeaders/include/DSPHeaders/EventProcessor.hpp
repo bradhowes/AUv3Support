@@ -45,15 +45,11 @@ public:
    @param bypass if true disable filter processing and just copy samples from input to output
    */
   void setBypass(bool bypass) noexcept {
-    if (bypass) {
-      bypassed_.test_and_set();
-    } else {
-      bypassed_.clear();
-    }
+    bypassed_.store(bypass, std::memory_order_relaxed);
   }
 
   /// @returns true if effect is bypassed
-  bool isBypassed() const noexcept { return bypassed_.test(); }
+  bool isBypassed() const noexcept { return bypassed_; }
 
   /**
    Set the rendering state of the host.
@@ -61,25 +57,17 @@ public:
    @param rendering if true the host is "transport" is moving and we are expected to render samples.
    */
   void setRendering(bool rendering) noexcept {
-    if (rendering != rendering_.test()) {
-      if (rendering) {
-        rendering_.test_and_set();
-      } else {
-        rendering_.clear();
-      }
-      renderingStateChanged(rendering);
-
-      // Stop any ramping when the rendering state changes. Makes no sense to keep ramping after such major audio
-      // changes.
-      rampRemaining_ = 0;
-    }
+    if (rendering == rendering_) return;
+    rendering_.store(rendering, std::memory_order_relaxed);
+    renderingStateChanged(rendering);
+    rampRemaining_ = 0;
   }
 
   /// @returns true if actively ramping one or more parameters
   bool isRamping() const noexcept { return rampRemaining_ > 0; }
 
   /// @returns true if actively rendering samples
-  bool isRendering() const noexcept { return rendering_.test(); }
+  bool isRendering() const noexcept { return rendering_; }
 
   /**
    Update kernel and buffers to support the given format.
@@ -126,6 +114,8 @@ public:
    Rendering has stopped. Free up any resources it used.
    */
   void deallocateRenderResources() noexcept {
+    setRendering(false);
+
     for (auto& entry : facets_) {
       if (entry.isLinked()) entry.unlink();
     }
@@ -133,8 +123,6 @@ public:
     for (auto& entry : buffers_) {
       entry.release();
     }
-
-    setRendering(false);
   }
 
   /**
@@ -234,11 +222,10 @@ protected:
 private:
 
   void renderingStateChanged(bool rendering) noexcept {
-    if (!rendering) {
-      for (auto param : parameters_) {
-        param->stopRamping();
-      }
+    for (auto param : parameters_) {
+      param->stopRamping();
     }
+    rampRemaining_ = 0;
     derived_.doRenderingStateChanged(rendering);
   }
 
@@ -347,8 +334,10 @@ private:
   std::vector<SampleBuffer> buffers_;
   std::vector<BufferFacet> facets_;
   AUAudioFrameCount rampRemaining_{0};
-  std::atomic_flag bypassed_ = ATOMIC_FLAG_INIT;
-  std::atomic_flag rendering_ = ATOMIC_FLAG_INIT;
+
+  std::atomic<bool> bypassed_ = ATOMIC_VAR_INIT(false);
+  std::atomic<bool> rendering_ = ATOMIC_VAR_INIT(false);
+
   double sampleRate_{};
 
   std::vector<DSPHeaders::Parameters::Base*> parameters_{};
