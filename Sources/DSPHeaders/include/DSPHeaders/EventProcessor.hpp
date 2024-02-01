@@ -148,7 +148,7 @@ public:
     // Get a buffer to use to read into if there is a `pullInputBlock`. We will also modify it in-place if necessary
     // use it for an output buffer if necessary.
     auto& outputBusBuffer{buffers_[outputBusIndex]};
-    if (frameCount > outputBusBuffer.capacity()) {
+    if (frameCount > outputBusBuffer.capacity()) [[unlikely]] {
       return kAudioUnitErr_TooManyFramesToProcess;
     }
 
@@ -156,7 +156,7 @@ public:
     facets_[outputBusIndex].assignBufferList(output, outputBusBuffer.mutableAudioBufferList());
     facets_[outputBusIndex].setFrameCount(frameCount);
 
-    if (pullInputBlock) {
+    if (pullInputBlock) [[likely]] {
 
       // Pull input samples from upstream. Use same output buffer to perform in-place rendering.
       BufferFacet& input{inputFacet()};
@@ -168,7 +168,7 @@ public:
       if (status != noErr) {
         return status;
       }
-    } else {
+    } else [[unlikely]] {
 
       // Clear the output buffer before use when there is no input data. Important if we are in bypass mode.
       UInt32 byteSize = frameCount * sizeof(AUValue);
@@ -206,7 +206,7 @@ protected:
     for (auto param : parameters_) {
       changed |= param->checkForChange(rampDuration_);
     }
-    if (changed && rampDuration_ > rampRemaining_) rampRemaining_ = rampDuration_;
+    if (changed && rampDuration_ > rampRemaining_) [[unlikely]] rampRemaining_ = rampDuration_;
   }
 
 private:
@@ -230,14 +230,14 @@ private:
     while (framesRemaining > 0) {
 
       // Short-circuit if there are no more events to interleave
-      if (events == nullptr) {
+      if (events == nullptr) [[likely]] {
         renderFrames(outputBusNumber, framesRemaining, frameCount - framesRemaining);
         return;
       }
 
       // Render the frames for the times between now and the time of the first event.
       auto framesThisSegment = AUAudioFrameCount(std::max(events->head.eventSampleTime - now, zero));
-      if (framesThisSegment > 0) {
+      if (framesThisSegment > 0) [[likely]] { // chance of there being an event to process AND there are no samples to render before the event is low
         renderFrames(outputBusNumber, framesThisSegment, frameCount - framesRemaining);
         framesRemaining -= framesThisSegment;
         now += AUEventSampleTime(framesThisSegment);
@@ -295,7 +295,7 @@ private:
     }
 
     auto& input{inputFacet()};
-    if (isBypassed()) {
+    if (isBypassed()) [[unlikely]] {
       // If we have input samples from an upstream node, either use the sample buffers directly or copy samples over
       // to the output buffer. Otherwise, we have already zero'd out the output buffer, so we are done.
       if (input.isLinked()) {
@@ -308,17 +308,17 @@ private:
 
     // If ramping one or more parameters, we must render one frame at a time. Since this is more expensive than the
     // non-ramp case, we only do it when necessary.
-    if (isRamping()) {
+    if (isRamping()) [[unlikely]] {
       auto rampCount = std::min(rampRemaining_, frameCount);
-      rampRemaining_ -= rampCount;
       frameCount -= rampCount;
       for (; rampCount > 0; --rampCount) {
         derived_.doRendering(outputBusNumber, input.busBuffers(), output.busBuffers(), 1);
       }
+      rampRemaining_ -= rampCount;
     }
 
-    // Non-ramping case
-    if (frameCount > 0) {
+    // Non-ramping case. NOTE: do not use else since we could end a ramp while still having frameCount > 0.
+    if (frameCount > 0) [[likely]] {
       derived_.doRendering(outputBusNumber, input.busBuffers(), output.busBuffers(), frameCount);
     }
   }

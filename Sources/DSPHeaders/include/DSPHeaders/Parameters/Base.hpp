@@ -69,7 +69,7 @@ public:
    */
   bool checkForChange(AUAudioFrameCount duration) noexcept {
     auto value = pendingValue_.load(std::memory_order_relaxed);
-    if (value == value_) return false;
+    if (value == value_) [[likely]] return false;
     startRamp(value, duration);
     return true;
   }
@@ -104,7 +104,7 @@ protected:
   }
 
   virtual void startRamp(AUValue pendingValue, AUAudioFrameCount duration) noexcept {
-    if (duration) rampRate_ = (frameValue(false) - pendingValue) / AUValue(duration);
+    if (duration) [[likely]] rampRate_ = (frameValue(false) - pendingValue) / AUValue(duration);
     value_ = pendingValue;
     rampRemaining_ = duration;
   }

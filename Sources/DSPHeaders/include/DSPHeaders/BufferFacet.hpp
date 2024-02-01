@@ -121,12 +121,12 @@ struct BufferFacet {
   AUAudioUnitStatus pullInput(AudioUnitRenderActionFlags* actionFlags, AudioTimeStamp const* timestamp,
                               AVAudioFrameCount frameCount, NSInteger inputBusNumber,
                               AURenderPullInputBlock pullInputBlock) noexcept {
-    if (pullInputBlock == nullptr) {
+    if (pullInputBlock == nullptr) [[unlikely]] {
       return kAudioUnitErr_NoConnection;
     }
 
     validateBufferList();
-    if (frameCount * sizeof(AUValue) > bufferList_->mBuffers[0].mDataByteSize) {
+    if (frameCount * sizeof(AUValue) > bufferList_->mBuffers[0].mDataByteSize) [[unlikely]] {
       return kAudioUnitErr_TooManyFramesToProcess;
     }
 
@@ -168,7 +168,7 @@ struct BufferFacet {
 private:
 
   void validateBufferList() const {
-    if (bufferList_ == nullptr) {
+    if (bufferList_ == nullptr) [[unlikely]] {
       throw std::runtime_error("bufferList_ == nullptr");
     }
   }
