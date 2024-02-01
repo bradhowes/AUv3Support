@@ -2,7 +2,7 @@
 
 #pragma once
 
-#import "DSPHeaders/BaseRampingParameter.hpp"
+#import "DSPHeaders/Parameters/Base.hpp"
 
 namespace DSPHeaders::Parameters {
 
@@ -10,19 +10,23 @@ namespace DSPHeaders::Parameters {
  Holds a boolean value and handles conversion from/to AUValue representations. Unlike other parameter representations,
  this one does not support ramping -- the change is instantaneous.
  */
-class BoolParameter : public BaseRampingParameter {
+class Bool : public Base {
 public:
-  using super = BaseRampingParameter;
+  using super = Base;
 
   /**
    Construct new instance from POD value.
 
    @param init the value to hold
    */
-  explicit BoolParameter(bool init = false) noexcept : super(Transformers::boolIn(init), Transformers::boolIn, Transformers::passthru) {}
+  explicit Bool(bool init = false) noexcept : super(Transformer::boolIn(init), Transformer::boolIn, Transformer::passthru) {}
 
   /// @returns the boolean state of the parameter
   operator bool() const noexcept { return super::get(); }
+
+private:
+
+  void startRamp(AUValue pendingValue, AUAudioFrameCount duration) noexcept override { super::startRamp(pendingValue, 0); }
 };
 
 } // end namespace DSPHeaders::Parameters

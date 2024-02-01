@@ -3,7 +3,7 @@
 #import <XCTest/XCTest.h>
 #import <vector>
 
-#import "DSPHeaders/RampingParameter.hpp"
+#import "DSPHeaders/Parameters/Float.hpp"
 
 using namespace DSPHeaders::Parameters;
 
@@ -23,15 +23,15 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testInit {
-  auto param1 = RampingParameter();
+  auto param1 = Float();
   XCTAssertEqual(param1.get(), 0.0);
 
-  auto param2 = RampingParameter(AUValue(12.34));
+  auto param2 = Float(AUValue(12.34));
   XCTAssertEqualWithAccuracy(param2.get(), 12.34, 1.0e-6);
 }
 
 - (void)testRamping {
-  auto param = RampingParameter();
+  auto param = Float();
   param.set(1.0, 4);
   XCTAssertEqual(param.get(), 1.0);
   XCTAssertEqual(param.frameValue(), 0.25);
@@ -43,7 +43,7 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testReRamping {
-  auto param = RampingParameter();
+  auto param = Float();
   param.set(1.0, 4);
   XCTAssertEqual(param.frameValue(), 0.25);
   XCTAssertEqual(param.frameValue(), 0.50);
@@ -56,7 +56,7 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testStopRamping {
-  auto param = RampingParameter();
+  auto param = Float();
   param.set(1.0, 4);
   XCTAssertEqual(param.get(), 1.0);
   XCTAssertEqual(param.frameValue(), 0.25);
@@ -67,7 +67,7 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testAdvanceControl {
-  auto param = RampingParameter();
+  auto param = Float();
   param.set(1.0, 4);
   XCTAssertEqual(param.frameValue(), 0.25);
   XCTAssertEqual(param.frameValue(false), 0.25);
@@ -78,7 +78,7 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testPending {
-  auto param = RampingParameter();
+  auto param = Float();
   param.setPending(124.0);
   XCTAssertEqualWithAccuracy(param.getPending(), 124.0, epsilon);
   XCTAssertEqualWithAccuracy(param.get(), 0.0, epsilon);

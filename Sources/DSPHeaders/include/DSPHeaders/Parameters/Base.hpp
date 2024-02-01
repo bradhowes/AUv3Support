@@ -1,6 +1,7 @@
+// Copyright © 2022 Brad Howes. All rights reserved.
+
 #pragma once
 
-// #import <libkern/OSAtomic.h>
 #import <algorithm>
 #import <atomic>
 #import <cmath>
@@ -9,7 +10,7 @@
 
 namespace DSPHeaders::Parameters {
 
-struct Transformers {
+struct Transformer {
 
   /**
    A no-op transformer
@@ -57,11 +58,11 @@ struct Transformers {
  It does so in a thread-safe manner so that changes coming from AUParameterTree notifications (presumably from UI
  activity) does not modify state that may be in use in a rendering thread.
  */
-class BaseRampingParameter {
+class Base {
 public:
   using ValueTransformer = AUValue (*)(AUValue);
 
-  ~BaseRampingParameter() noexcept = default;
+  virtual ~Base() noexcept = default;
 
   /**
    Cancel any active ramping.
@@ -123,7 +124,7 @@ public:
    */
   AUValue frameValue(bool advance = true) noexcept {
     AUAudioFrameCount adjustment = (advance && rampRemaining_) ? 1 : 0;
-    auto value = rampValue(adjustment);
+    auto value = rampRemaining_ ? ((rampRemaining_ - adjustment) * rampRate_ + value_) : value_;
     rampRemaining_ -= adjustment;
     return value;
   }
@@ -135,17 +136,13 @@ protected:
 
    @param value the starting value for the parameter
    */
-  BaseRampingParameter(AUValue value, ValueTransformer forward, ValueTransformer reverse) noexcept :
+  Base(AUValue value, ValueTransformer forward, ValueTransformer reverse) noexcept :
   value_{forward(value)}, transformIn_{forward}, transformOut_{reverse} {
     assert(transformIn_ && transformOut_);
     pendingValue_.store(value_, std::memory_order_relaxed);
   }
 
-private:
-
-  AUValue rampValue(AUAudioFrameCount adjustment) noexcept { return rampRemaining_ ? ((rampRemaining_ - adjustment) * rampRate_ + value_) : value_; }
-
-  void startRamp(AUValue pendingValue, AUAudioFrameCount duration) noexcept {
+  virtual void startRamp(AUValue pendingValue, AUAudioFrameCount duration) noexcept {
     if (duration) rampRate_ = (frameValue(false) - pendingValue) / AUValue(duration);
     value_ = pendingValue;
     rampRemaining_ = duration;

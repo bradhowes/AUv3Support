@@ -3,7 +3,7 @@
 #import <XCTest/XCTest.h>
 #import <vector>
 
-#import "DSPHeaders/BoolParameter.hpp"
+#import "DSPHeaders/Parameters/Bool.hpp"
 
 using namespace DSPHeaders::Parameters;
 
@@ -22,19 +22,19 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testInit {
-  auto param1 = BoolParameter();
+  auto param1 = Bool();
   XCTAssertEqual(param1.get(), 0.0);
   XCTAssertEqual(param1.getPending(), 0.0);
   XCTAssertFalse(param1);
 
-  auto param2 = BoolParameter(true);
+  auto param2 = Bool(true);
   XCTAssertEqual(param2.get(), 1.0);
   XCTAssertEqual(param2.getPending(), 1.0);
   XCTAssertTrue(param2);
 }
 
 - (void)testSetting {
-  auto param = BoolParameter();
+  auto param = Bool();
 
   param.setPending(-1.0);
   XCTAssertEqual(param.get(), 0.0);

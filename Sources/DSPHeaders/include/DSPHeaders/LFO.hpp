@@ -5,7 +5,7 @@
 #import <cmath>
 
 #import "DSP.hpp"
-#import "DSPHeaders/RampingParameter.hpp"
+#import "DSPHeaders/Parameters/Float.hpp"
 
 enum class LFOWaveform { sinusoid, triangle, sawtooth, square};
 
@@ -153,7 +153,7 @@ public:
 
    @returns frequency ramping parameter
    */
-  Parameters::RampingParameter& frequencyParameter() noexcept { return phaseIncrement_; }
+  Parameters::Float& frequencyParameter() noexcept { return phaseIncrement_; }
 
 private:
   using ValueGenerator = ValueType (*)(ValueType);
@@ -183,7 +183,7 @@ private:
   LFOWaveform waveform_;
   ValueGenerator valueGenerator_;
   ValueType phase_ = {0.0};
-  Parameters::RampingParameter phaseIncrement_;
+  Parameters::Float phaseIncrement_;
 };
 
 } // end namespace DSPHeaders

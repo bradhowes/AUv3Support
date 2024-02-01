@@ -3,7 +3,7 @@
 #import <XCTest/XCTest.h>
 #import <vector>
 
-#import "DSPHeaders/PercentageParameter.hpp"
+#import "DSPHeaders/Parameters/Percentage.hpp"
 
 using namespace DSPHeaders::Parameters;
 
@@ -23,15 +23,15 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testInit {
-  auto param1 = PercentageParameter();
+  auto param1 = Percentage();
   XCTAssertEqual(param1.get(), 0.0);
 
-  auto param2 = PercentageParameter(100.0);
+  auto param2 = Percentage(100.0);
   XCTAssertEqualWithAccuracy(param2.get(), 1.0, epsilon);
 }
 
 - (void)testRepresentation {
-  auto param = PercentageParameter(50.0);
+  auto param = Percentage(50.0);
   XCTAssertEqual(param.get(), 0.5);
   XCTAssertEqual(param.frameValue(), 0.5);
 

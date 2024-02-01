@@ -3,7 +3,7 @@
 #import <XCTest/XCTest.h>
 #import <vector>
 
-#import "DSPHeaders/MillisecondsParameter.hpp"
+#import "DSPHeaders/Parameters/Milliseconds.hpp"
 
 using namespace DSPHeaders::Parameters;
 
@@ -23,10 +23,10 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testInit {
-  auto param1 = MillisecondsParameter();
+  auto param1 = Milliseconds();
   XCTAssertEqual(param1.get(), 0.0);
 
-  auto param2 = MillisecondsParameter(123.4);
+  auto param2 = Milliseconds(123.4);
   XCTAssertEqualWithAccuracy(param2.get(), 123.4, epsilon);
 }
 

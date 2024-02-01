@@ -5,7 +5,7 @@
 
 #import "DSPHeaders/DSP.hpp"
 #import "DSPHeaders/EventProcessor.hpp"
-#import "DSPHeaders/RampingParameter.hpp"
+#import "DSPHeaders/Parameters/Float.hpp"
 
 using namespace DSPHeaders;
 
@@ -29,7 +29,7 @@ struct MockEffect : public EventProcessor<MockEffect>
 
   void checkForParameterChanges() { super::checkForParameterChanges(); }
   
-  Parameters::RampingParameter param_{0};
+  Parameters::Float param_{0};
 
   std::vector<AUAudioFrameCount> frameCounts_{};
 };

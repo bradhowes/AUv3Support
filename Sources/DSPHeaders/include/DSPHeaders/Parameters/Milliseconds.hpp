@@ -2,7 +2,7 @@
 
 #pragma once
 
-#import "DSPHeaders/BaseRampingParameter.hpp"
+#import "DSPHeaders/Parameters/Base.hpp"
 
 namespace DSPHeaders::Parameters {
 
@@ -10,11 +10,11 @@ namespace DSPHeaders::Parameters {
  Manage a value that represents duration in milliseconds. No transform is applied to set/get values. Purely serves as
  a notational mechanism.
  */
-class MillisecondsParameter : public BaseRampingParameter {
+class Milliseconds : public Base {
 public:
-  using super = BaseRampingParameter;
+  using super = Base;
 
-  explicit MillisecondsParameter(AUValue milliseconds = 0.0) noexcept : super(milliseconds, Transformers::passthru, Transformers::passthru) {}
+  explicit Milliseconds(AUValue milliseconds = 0.0) noexcept : super(milliseconds, Transformer::passthru, Transformer::passthru) {}
 };
 
 } // end namespace DSPHeaders::Parameters
