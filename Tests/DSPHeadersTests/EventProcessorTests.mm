@@ -17,7 +17,10 @@ struct MockEffect : public EventProcessor<MockEffect>
     registerParameter(param_);
   }
 
-  void doParameterEvent(const AUParameterEvent&) {}
+  bool doParameterEvent(const AUParameterEvent& event, AUAudioFrameCount duration) {
+    param_.set(event.value, duration);
+    return event.parameterAddress == 1;
+  }
 
   void doMIDIEvent(const AUMIDIEvent&) {}
 
@@ -193,6 +196,7 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
   outputData->mBuffers[0].mData = nil;
   outputData->mBuffers[1].mData = nil;
 
+  // Set a parameter that ramps for 4 samples
   AUParameterEvent* rampingEvent = new AUParameterEvent();
   rampingEvent->next = nullptr;
   rampingEvent->eventSampleTime = -1;
@@ -203,6 +207,7 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
   AURenderEvent* eventList = reinterpret_cast<AURenderEvent*>(rampingEvent);
   eventList->head.eventType = AURenderEventParameterRamp;
 
+  // Do rendering for 512 samples. Expectation is 4 1-sample render calls and then 1 508 sample render.
   auto status = self.effect->processAndRender(&timestamp, frames, 0, outputData, eventList, mockPullInput);
   XCTAssertEqual(status, 0);
   XCTAssertEqual(self.effect->frameCounts_.size(), 5);

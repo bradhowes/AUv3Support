@@ -24,7 +24,7 @@ namespace DSPHeaders {
  It is expected that the template parameter class T defines the following methods which this class will
  invoke at the appropriate times but without any virtual dispatching.
 
- - doParameterEvent
+ - doParameterEvent -- process AURenderEventParameterRamp or AURenderEventParameter event and return `true` if valid
  - doMIDIEvent
  - doRendering
  - doRenderingStateChanged
@@ -60,14 +60,13 @@ public:
     if (rendering == rendering_) return;
     rendering_.store(rendering, std::memory_order_relaxed);
     renderingStateChanged(rendering);
-    rampRemaining_ = 0;
   }
-
-  /// @returns true if actively ramping one or more parameters
-  bool isRamping() const noexcept { return rampRemaining_ > 0; }
 
   /// @returns true if actively rendering samples
   bool isRendering() const noexcept { return rendering_; }
+
+  /// @returns true if actively ramping one or more parameters
+  bool isRamping() const noexcept { return rampRemaining_ > 0; }
 
   /**
    Update kernel and buffers to support the given format.
@@ -78,6 +77,7 @@ public:
    */
   void setRenderingFormat(NSInteger busCount, AVAudioFormat* format, AUAudioFrameCount maxFramesToRender) noexcept {
     sampleRate_ = format.sampleRate;
+    rampDuration_ = AUAudioFrameCount(floor(0.02 * sampleRate_));
 
     auto channelCount{[format channelCount]};
 
@@ -109,6 +109,9 @@ public:
 
     setRendering(true);
   }
+
+  /// @returns current sample rate that is in effect
+  double sampleRate() const noexcept { return sampleRate_; }
 
   /**
    Rendering has stopped. Free up any resources it used.
@@ -198,25 +201,12 @@ protected:
    */
   BusBuffers busBuffers(size_t bus) noexcept { return facets_[bus].busBuffers(); }
 
-  /**
-   Set the duration of a ramped parameter.
-
-   @param duration number of samples a parameter is changing
-   */
-  void setRampingDuration(AUAudioFrameCount duration) noexcept {
-    if (duration > rampRemaining_) rampRemaining_ = duration;
-  }
-
-  /// @returns current sample rate that is in effect
-  double sampleRate() const noexcept { return sampleRate_; }
-
   void checkForParameterChanges() noexcept {
-    auto rampDuration = AUAudioFrameCount(floor(0.02 * this->sampleRate()));
     auto changed = false;
     for (auto param : parameters_) {
-      changed |= param->checkForChange(rampDuration);
+      changed |= param->checkForChange(rampDuration_);
     }
-    if (changed) setRampingDuration(rampDuration);
+    if (changed && rampDuration_ > rampRemaining_) rampRemaining_ = rampDuration_;
   }
 
 private:
@@ -263,13 +253,16 @@ private:
     // processing.
     while (event != nullptr && event->head.eventSampleTime <= now) {
       switch (event->head.eventType) {
+        case AURenderEventParameter:
+          if (derived_.doParameterEvent(event->parameter, rampDuration_)) {
+            if (rampDuration_ > rampRemaining_) rampRemaining_ = rampDuration_;
+          }
+          break;
 
         case AURenderEventParameterRamp:
-          setRampingDuration(event->parameter.rampDurationSampleFrames);
-          [[fallthrough]];
-
-        case AURenderEventParameter:
-          derived_.doParameterEvent(event->parameter);
+          if (derived_.doParameterEvent(event->parameter, event->parameter.rampDurationSampleFrames)) {
+            if (event->parameter.rampDurationSampleFrames > rampRemaining_) rampRemaining_ = event->parameter.rampDurationSampleFrames;
+          }
           break;
 
         case AURenderEventMIDI:
@@ -333,6 +326,7 @@ private:
   ValueType& derived_;
   std::vector<SampleBuffer> buffers_;
   std::vector<BufferFacet> facets_;
+  AUAudioFrameCount rampDuration_{0};
   AUAudioFrameCount rampRemaining_{0};
 
   std::atomic<bool> bypassed_ = ATOMIC_VAR_INIT(false);
@@ -341,6 +335,7 @@ private:
   double sampleRate_{};
 
   std::vector<DSPHeaders::Parameters::Base*> parameters_{};
+  AUParameterTree* parameterTree_ = nullptr;
 };
 
 /**
@@ -350,7 +345,7 @@ private:
 template<typename T>
 concept KernelT = requires(T a, const AUParameterEvent& param, const AUMIDIEvent& midi, BusBuffers bb)
 {
-  { a.doParameterEvent(param) } -> std::convertible_to<void>;
+  { a.doParameterEvent(param, AUAudioFrameCount(1)) } -> std::convertible_to<bool>;
   { a.doMIDIEvent(midi) } -> std::convertible_to<void>;
   { a.doRendering(NSInteger(1), bb, bb, AUAudioFrameCount(1) ) } -> std::convertible_to<void>;
   { a.doRenderingStateChanged(false) } -> std::convertible_to<void>;

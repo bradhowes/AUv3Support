@@ -7,7 +7,7 @@
 namespace DSPHeaders::Parameters {
 
 /**
- Manages a parameter value that can transition from one value to another over some number of frames.
+ Manages an AUValue parameter that can transition from one value to another over some number of frames.
  */
 class Float : public Base {
 public:

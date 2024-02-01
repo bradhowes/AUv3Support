@@ -7,8 +7,8 @@
 namespace DSPHeaders::Parameters {
 
 /**
- Holds a boolean value and handles conversion from/to AUValue representations. Unlike other parameter representations,
- this one does not support ramping -- the change is instantaneous.
+ A pseudo-bool parameter that relies on an AUValue value to determine true or false state. It has a modified `startRamp` method
+ so that pending changes will be instantaneous when they are applied.
  */
 class Bool : public Base {
 public:
