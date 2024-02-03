@@ -228,7 +228,6 @@ extension FilterAudioUnit {
 extension FilterAudioUnit {
 
   /// The bypass setting is bridged with the v2 property. We detect when it changes here and forward it to the kernel.
-  /// A better way might be to integrate it with the AUParameterTree with a standard bypass parameter.
   override public var shouldBypassEffect: Bool { didSet { kernel.setBypass(shouldBypassEffect); }}
 
   /**
@@ -270,8 +269,7 @@ extension FilterAudioUnit {
   override public var internalRenderBlock: AUInternalRenderBlock {
     os_log(.info, log: log, "internalRenderBlock - BEGIN")
     precondition(kernel != nil)
-    let transportStateBlock = self.transportStateBlock
-    return kernel.internalRenderBlock(transportStateBlock)
+    return kernel.internalRenderBlock()
   }
 }
 

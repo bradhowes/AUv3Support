@@ -27,7 +27,6 @@ namespace DSPHeaders {
  - doParameterEvent -- process AURenderEventParameterRamp or AURenderEventParameter event and return `true` if valid
  - doMIDIEvent
  - doRendering
- - doRenderingStateChanged
 
  */
 template <typename ValueType>
@@ -50,17 +49,6 @@ public:
 
   /// @returns true if effect is bypassed
   bool isBypassed() const noexcept { return bypassed_; }
-
-  /**
-   Set the rendering state of the host.
-
-   @param rendering if true the host is "transport" is moving and we are expected to render samples.
-   */
-  void setRendering(bool rendering) noexcept {
-    if (rendering == rendering_) return;
-    rendering_.store(rendering, std::memory_order_relaxed);
-    renderingStateChanged(rendering);
-  }
 
   /// @returns true if actively rendering samples
   bool isRendering() const noexcept { return rendering_; }
@@ -187,6 +175,17 @@ public:
 
 protected:
 
+  /**
+   Set the rendering state of the host.
+
+   @param rendering if true the host is "transport" is moving and we are expected to render samples.
+   */
+  void setRendering(bool rendering) noexcept {
+    if (rendering == rendering_) return;
+    rendering_.store(rendering, std::memory_order_relaxed);
+    renderingStateChanged();
+  }
+
   void registerParameters(std::vector<DSPHeaders::Parameters::Base*>&& collection) {
     parameters_ = collection;
   }
@@ -211,12 +210,11 @@ protected:
 
 private:
 
-  void renderingStateChanged(bool rendering) noexcept {
+  void renderingStateChanged() noexcept {
     for (auto param : parameters_) {
       param->stopRamping();
     }
     rampRemaining_ = 0;
-    derived_.doRenderingStateChanged(rendering);
   }
 
   BufferFacet& inputFacet() noexcept { assert(!facets_.empty()); return facets_.back(); }
@@ -348,7 +346,6 @@ concept KernelT = requires(T a, const AUParameterEvent& param, const AUMIDIEvent
   { a.doParameterEvent(param, AUAudioFrameCount(1)) } -> std::convertible_to<bool>;
   { a.doMIDIEvent(midi) } -> std::convertible_to<void>;
   { a.doRendering(NSInteger(1), bb, bb, AUAudioFrameCount(1) ) } -> std::convertible_to<void>;
-  { a.doRenderingStateChanged(false) } -> std::convertible_to<void>;
 };
 
 /**

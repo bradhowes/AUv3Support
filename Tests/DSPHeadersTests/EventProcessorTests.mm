@@ -51,6 +51,10 @@ ValidatedKernel<MockEffect> _;
 - (void)setUp {
   epsilon = 1.0E-6;
   self.effect = new MockEffect();
+  [self setRenderingFormat];
+}
+
+- (void)setRenderingFormat {
   AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
   AUAudioFrameCount maxFrames = 512;
   self.effect->setRenderingFormat(1, format, maxFrames);
@@ -73,10 +77,6 @@ ValidatedKernel<MockEffect> _;
 }
 
 - (void)testRenderingState {
-  XCTAssertTrue(self.effect->isRendering());
-  self.effect->setRendering(false);
-  XCTAssertFalse(self.effect->isRendering());
-  self.effect->setRendering(true);
   XCTAssertTrue(self.effect->isRendering());
   self.effect->deallocateRenderResources();
   XCTAssertFalse(self.effect->isRendering());
@@ -238,15 +238,16 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
   AURenderEvent* eventList = reinterpret_cast<AURenderEvent*>(rampingEvent);
   eventList->head.eventType = AURenderEventParameterRamp;
 
-  // Do 2 frames. Should be split into 1 frame render calls
+  // Do 2 frames. Should be split into 2 1-frame render calls.
   auto status = self.effect->processAndRender(&timestamp, 2, 0, outputData, eventList, mockPullInput);
   XCTAssertEqual(status, 0);
   XCTAssertEqual(self.effect->frameCounts_.size(), 2);
   XCTAssertEqual(self.effect->frameCounts_[0], 1);
   XCTAssertEqual(self.effect->frameCounts_[1], 1);
 
-  self.effect->setRendering(false);
-  self.effect->setRendering(true);
+  // Stop / start rendering
+  self.effect->deallocateRenderResources();
+  [self setRenderingFormat];
 
   // Do 10 frames. Should be done as 1 10-frame render call.
   status = self.effect->processAndRender(&timestamp, 10, 0, outputData, nullptr, mockPullInput);
@@ -270,7 +271,7 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
   self.effect->param_.setPending(123.5);
   self.effect->checkForParameterChanges();
   XCTAssertTrue(self.effect->isRamping());
-  self.effect->setRendering(false);
+  self.effect->deallocateRenderResources();
   XCTAssertFalse(self.effect->isRamping());
 }
 
