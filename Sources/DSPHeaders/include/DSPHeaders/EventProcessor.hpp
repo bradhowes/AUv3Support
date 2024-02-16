@@ -5,6 +5,7 @@
 #import <os/log.h>
 #import <algorithm>
 #import <atomic>
+#import <functional>
 #import <string>
 #import <vector>
 
@@ -32,6 +33,7 @@ namespace DSPHeaders {
 template <typename ValueType>
 class EventProcessor {
 public:
+  using ParameterVector = std::vector<std::reference_wrapper<DSPHeaders::Parameters::Base>>;
 
   /**
    Construct new instance.
@@ -186,11 +188,11 @@ protected:
     renderingStateChanged();
   }
 
-  void registerParameters(std::vector<DSPHeaders::Parameters::Base*>&& collection) {
+  void registerParameters(ParameterVector&& collection) {
     parameters_ = collection;
   }
 
-  void registerParameter(Parameters::Base& parameter) { parameters_.push_back(&parameter); }
+  void registerParameter(Parameters::Base& parameter) { parameters_.push_back(parameter); }
 
   /**
    Obtain a `busBuffer` for the given bus.
@@ -203,7 +205,7 @@ protected:
   void checkForParameterChanges() noexcept {
     auto changed = false;
     for (auto param : parameters_) {
-      changed |= param->checkForChange(rampDuration_);
+      changed |= param.get().checkForChange(rampDuration_);
     }
     if (changed && rampDuration_ > rampRemaining_) [[unlikely]] rampRemaining_ = rampDuration_;
   }
@@ -212,7 +214,7 @@ private:
 
   void renderingStateChanged() noexcept {
     for (auto param : parameters_) {
-      param->stopRamping();
+      param.get().stopRamping();
     }
     rampRemaining_ = 0;
   }
@@ -233,9 +235,8 @@ private:
         return;
       }
 
-      // Render the frames for the times between now and the time of the first event.
       auto framesThisSegment = AUAudioFrameCount(std::max(events->head.eventSampleTime - now, zero));
-      if (framesThisSegment > 0) [[likely]] { // chance of there being an event to process AND there are no samples to render before the event is low
+      if (framesThisSegment > 0) [[likely]] {
         renderFrames(outputBusNumber, framesThisSegment, frameCount - framesRemaining);
         framesRemaining -= framesThisSegment;
         now += AUEventSampleTime(framesThisSegment);
@@ -259,7 +260,9 @@ private:
 
         case AURenderEventParameterRamp:
           if (derived_.doParameterEvent(event->parameter, event->parameter.rampDurationSampleFrames)) {
-            if (event->parameter.rampDurationSampleFrames > rampRemaining_) rampRemaining_ = event->parameter.rampDurationSampleFrames;
+            if (event->parameter.rampDurationSampleFrames > rampRemaining_) {
+              rampRemaining_ = event->parameter.rampDurationSampleFrames;
+            }
           }
           break;
 
@@ -332,7 +335,7 @@ private:
 
   double sampleRate_{};
 
-  std::vector<DSPHeaders::Parameters::Base*> parameters_{};
+  ParameterVector parameters_{};
   AUParameterTree* parameterTree_ = nullptr;
 };
 
