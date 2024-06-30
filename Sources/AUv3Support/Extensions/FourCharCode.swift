@@ -44,5 +44,5 @@ extension FourCharCode {
 #if hasFeature(RetroactiveAttribute)
 extension FourCharCode: @retroactive ExpressibleByStringLiteral {}
 #else
-extension FourCharCode: @retroactive ExpressibleByStringLiteral {}
+extension FourCharCode: ExpressibleByStringLiteral {}
 #endif
