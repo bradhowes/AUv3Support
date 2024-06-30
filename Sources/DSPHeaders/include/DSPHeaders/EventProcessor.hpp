@@ -330,8 +330,8 @@ private:
   AUAudioFrameCount rampDuration_{0};
   AUAudioFrameCount rampRemaining_{0};
 
-  std::atomic<bool> bypassed_ = ATOMIC_VAR_INIT(false);
-  std::atomic<bool> rendering_ = ATOMIC_VAR_INIT(false);
+  std::atomic<bool> bypassed_{false};
+  std::atomic<bool> rendering_{false};
 
   double sampleRate_{};
 

@@ -114,7 +114,7 @@ protected:
   AUValue rampRate_{};
   AUAudioFrameCount rampRemaining_{};
 
-  std::atomic<AUValue> pendingValue_ = ATOMIC_VAR_INIT(0.0);
+  std::atomic<AUValue> pendingValue_{0.0};
 
   ValueTransformer transformIn_{nullptr};
   ValueTransformer transformOut_{nullptr};

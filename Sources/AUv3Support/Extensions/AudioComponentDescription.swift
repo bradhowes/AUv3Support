@@ -2,7 +2,7 @@
 
 import AudioToolbox
 
-extension AudioComponentDescription: CustomStringConvertible {
+extension AudioComponentDescription: @retroactive CustomStringConvertible {
   public var description: String {
     "<AudioComponentDescription type: '\(componentType.stringValue)' " +
     "subtype: '\(componentSubType.stringValue)' " +
@@ -11,7 +11,7 @@ extension AudioComponentDescription: CustomStringConvertible {
   }
 }
 
-extension AudioComponentDescription: Equatable {
+extension AudioComponentDescription: @retroactive Equatable {
   public static func == (lhs: AudioComponentDescription, rhs: AudioComponentDescription) -> Bool {
     lhs.componentType == rhs.componentType &&
     lhs.componentSubType == rhs.componentSubType &&

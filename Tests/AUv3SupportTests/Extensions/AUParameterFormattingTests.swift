@@ -13,7 +13,7 @@ private struct formatter: AUParameterFormatting, ParameterAddressProvider {
 private let paramDef = ParameterDefinition.defPercent("def", localized: "def", address: formatter())
 private let param = paramDef.parameter
 
-extension AUParameter: AUParameterFormatting {
+extension AUParameter: @retroactive AUParameterFormatting {
   public var suffix: String { makeFormattingSuffix(from: unitName) }
 }
 
