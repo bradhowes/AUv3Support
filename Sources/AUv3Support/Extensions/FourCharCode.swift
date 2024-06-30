@@ -3,10 +3,8 @@
 import Foundation
 import os.log
 
-extension UInt32: @retroactive ExpressibleByExtendedGraphemeClusterLiteral {}
-extension UInt32: @retroactive ExpressibleByUnicodeScalarLiteral {}
 extension FourCharCode: @retroactive ExpressibleByStringLiteral {
-  
+
   public init(stringLiteral value: StringLiteralType) {
     var code: FourCharCode = 0
     // Value has to consist of 4 printable ASCII characters, e.g. '420v'.
