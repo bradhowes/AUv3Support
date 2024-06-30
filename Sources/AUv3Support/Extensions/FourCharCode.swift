@@ -3,7 +3,7 @@
 import Foundation
 import os.log
 
-extension FourCharCode: @retroactive ExpressibleByStringLiteral {
+extension FourCharCode {
 
   public init(stringLiteral value: StringLiteralType) {
     var code: FourCharCode = 0
@@ -40,3 +40,9 @@ extension FourCharCode {
     }
   }
 }
+
+#if hasFeature(RetroactiveAttribute)
+extension FourCharCode: @retroactive ExpressibleByStringLiteral {}
+#else
+extension FourCharCode: @retroactive ExpressibleByStringLiteral {}
+#endif

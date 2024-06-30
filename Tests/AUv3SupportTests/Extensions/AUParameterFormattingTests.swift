@@ -13,7 +13,7 @@ private struct formatter: AUParameterFormatting, ParameterAddressProvider {
 private let paramDef = ParameterDefinition.defPercent("def", localized: "def", address: formatter())
 private let param = paramDef.parameter
 
-extension AUParameter: @retroactive AUParameterFormatting {
+extension AUParameter {
   public var suffix: String { makeFormattingSuffix(from: unitName) }
 }
 
@@ -41,3 +41,9 @@ class AUParameterFormattingTests: XCTestCase {
     XCTAssertEqual(param.editingValueFormatter(param.value), "3.142")
   }
 }
+
+#if hasFeature(RetroactiveAttribute)
+extension AUParameter: @retroactive AUParameterFormatting {}
+#else
+extension AUParameter: AUParameterFormatting {}
+#endif

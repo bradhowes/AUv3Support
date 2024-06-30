@@ -2,7 +2,7 @@
 
 import AudioToolbox
 
-extension AudioComponentDescription: @retroactive CustomStringConvertible {
+extension AudioComponentDescription {
   public var description: String {
     "<AudioComponentDescription type: '\(componentType.stringValue)' " +
     "subtype: '\(componentSubType.stringValue)' " +
@@ -11,7 +11,7 @@ extension AudioComponentDescription: @retroactive CustomStringConvertible {
   }
 }
 
-extension AudioComponentDescription: @retroactive Equatable {
+extension AudioComponentDescription {
   public static func == (lhs: AudioComponentDescription, rhs: AudioComponentDescription) -> Bool {
     lhs.componentType == rhs.componentType &&
     lhs.componentSubType == rhs.componentSubType &&
@@ -20,3 +20,10 @@ extension AudioComponentDescription: @retroactive Equatable {
     lhs.componentFlagsMask == rhs.componentFlagsMask
   }
 }
+
+#if hasFeature(RetroactiveAttribute)
+extension AudioComponentDescription: @retroactive CustomStringConvertible, @retroactive Equatable {}
+#else
+extension AudioComponentDescription: CustomStringConvertible, Equatable {}
+#endif
+
