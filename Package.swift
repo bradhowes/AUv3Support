@@ -7,8 +7,8 @@ let package = Package(
   platforms: [.iOS(.v13), .macOS(.v10_15)],
   products: [
     .library(name: "AUv3-Support", targets: ["AUv3Support"]),
-    .library(name: "AUv3-Support-iOS", targets: ["AUv3Support-iOS"]),
-    .library(name: "AUv3-Support-macOS", targets: ["AUv3Support-macOS"]),
+    .library(name: "AUv3-Support-iOS", targets: ["AUv3Support-iOS-Target"]),
+    .library(name: "AUv3-Support-macOS", targets: ["AUv3Support-macOS-Target"]),
     .library(name: "AUv3-DSP-Headers", targets: ["DSPHeaders"]),
   ],
   targets: [
@@ -138,11 +138,19 @@ let package = Package(
       swiftSettings: [.define("APPLICATION_EXTENSION_API_ONLY")]
     ),
     .target(
+      name: "AUv3Support-iOS-Target",
+      dependencies: [.target(name: "AUv3Support-iOS", condition: .when(platforms: [.iOS]))]
+    ),
+    .target(
       name: "AUv3Support-iOS",
       dependencies: ["AUv3Support"],
       exclude: ["README.md"],
       resources: [.process("Resources")],
       swiftSettings: [.define("APPLICATION_EXTENSION_API_ONLY")]
+    ),
+    .target(
+      name: "AUv3Support-macOS-Target",
+      dependencies: [.target(name: "AUv3Support-macOS", condition: .when(platforms: [.macOS]))]
     ),
     .target(
       name: "AUv3Support-macOS",

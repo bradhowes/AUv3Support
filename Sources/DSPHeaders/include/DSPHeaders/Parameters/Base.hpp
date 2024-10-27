@@ -4,6 +4,7 @@
 
 #import <algorithm>
 #import <atomic>
+#import <cassert>
 
 #import <AVFoundation/AVFoundation.h>
 #import "DSPHeaders/Parameters/Transformer.hpp"

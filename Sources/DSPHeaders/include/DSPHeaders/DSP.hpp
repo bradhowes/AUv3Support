@@ -112,7 +112,6 @@ struct Cubic4thOrder {
 inline constexpr double cubic4thOrder(double partial, double x0, double x1, double x2, double x3) noexcept {
   // Partial is expected to be < 1.0 so with truncation index should always be in range [0, 1)
   size_t index = size_t(partial * Cubic4thOrder::TableSize);
-  assert(index < Cubic4thOrder::TableSize);
   const auto& w{Cubic4thOrder::weights_[index]};
   return x0 * w[0] + x1 * w[1] + x2 * w[2] + x3 * w[3];
 }
