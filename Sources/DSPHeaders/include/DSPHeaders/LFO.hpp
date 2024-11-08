@@ -2,6 +2,7 @@
 
 #pragma once
 
+#import <cassert>
 #import <cmath>
 
 #import "DSP.hpp"

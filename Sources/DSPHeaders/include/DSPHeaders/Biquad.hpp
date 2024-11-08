@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <cmath>
 #include <limits>
 #include <utility>

@@ -2,6 +2,7 @@
 
 #pragma once
 
+#import <cassert>
 #import <string>
 
 #import <os/log.h>

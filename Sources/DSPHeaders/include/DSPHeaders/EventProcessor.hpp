@@ -5,6 +5,7 @@
 #import <os/log.h>
 #import <algorithm>
 #import <atomic>
+#import <cassert>
 #import <functional>
 #import <string>
 #import <vector>

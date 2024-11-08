@@ -4,6 +4,7 @@
 
 #import <algorithm>
 #import <array>
+#import <cassert>
 
 #import "Biquad.hpp"
 #import "DSP.hpp"
