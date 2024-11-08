@@ -20,10 +20,12 @@ class Base {
 public:
   using ValueTransformer = AUValue (*)(AUValue);
 
-  virtual ~Base() noexcept = default;
+  bool canRamp() const noexcept { return canRamp_; }
 
   /**
    Cancel any active ramping.
+
+   Note: this should only be invoked when the render thread is not running.
    */
   void stopRamping() noexcept { rampRemaining_ = 0; }
 
@@ -33,7 +35,9 @@ public:
 
    @param value the new value to use
    */
-  void setPending(AUValue value) noexcept { pendingValue_.store(transformIn_(value), std::memory_order_relaxed); }
+  void setPending(AUValue value) noexcept {
+    pendingValue_.store(transformIn_(value), std::memory_order_relaxed);
+  }
 
   /**
    Obtain the last value set via `setPending`.
@@ -43,14 +47,14 @@ public:
   AUValue getPending() const noexcept { return transformOut_(pendingValue_.load(std::memory_order_relaxed)); }
 
   /**
-   Set a new value that comes from the render thread.
+   Set a new value that comes from the render thread via `AURenderEventParameter` or `AURenderEventParameterRamp`.
 
    @param value the new value to use
    @param duration the number of frames to transition over
 
    @todo Need to signal the AUParameterTree that this has happened
    */
-  void set(AUValue value, AUAudioFrameCount duration) noexcept {
+  void setImmediate(AUValue value, AUAudioFrameCount duration) noexcept {
     value = transformIn_(value);
     startRamp(value, duration);
     pendingValue_.store(value, std::memory_order_relaxed);
@@ -58,21 +62,21 @@ public:
 
   /**
    Obtain the current parameter value. Note that if ramping is in effect, this returns the final value at the end of
-   ramping. One must use `frameValue` to obtain a ramping value.
+   ramping. One must use `frameValue` to obtain the ramped value.
 
    @return the current parameter value
    */
-  AUValue get() const noexcept { return value_; }
+  AUValue getImmediate() const noexcept { return value_; }
 
   /**
    Check if there is a new value to ramp to from the AUParameterTree.
 
    @param duration the number of frames to transition over
    */
-  bool checkForChange(AUAudioFrameCount duration) noexcept {
-    auto value = pendingValue_.load(std::memory_order_relaxed);
-    if (value == value_) [[likely]] return false;
-    startRamp(value, duration);
+  bool checkForPendingChange(AUAudioFrameCount duration) noexcept {
+    auto pending = pendingValue_.load(std::memory_order_relaxed);
+    if (pending == value_) [[likely]] return false;
+    startRamp(pending, duration);
     return true;
   }
 
@@ -82,12 +86,14 @@ public:
    will be processed for the same frame or make sure to call with `false` value to keep from advancing to the next
    value.
 
+   Should only be called from the rendering thread.
+
    @param advance if true (default), update the underlying value when ramping; otherwise, keep as-is.
    @return the current parameter value
    */
   AUValue frameValue(bool advance = true) noexcept {
     AUAudioFrameCount adjustment = (advance && rampRemaining_) ? 1 : 0;
-    auto value = rampRemaining_ ? ((rampRemaining_ - adjustment) * rampRate_ + value_) : value_;
+    auto value = rampRemaining_ ? ((rampRemaining_ - adjustment) * rampDelta_ + value_) : value_;
     rampRemaining_ -= adjustment;
     return value;
   }
@@ -105,20 +111,32 @@ protected:
     pendingValue_.store(value_, std::memory_order_relaxed);
   }
 
+private:
+
   void startRamp(AUValue pendingValue, AUAudioFrameCount duration) noexcept {
-    rampRate_ = (canRamp_ && duration) ? ((frameValue(false) - pendingValue) / AUValue(duration)) : 0.0;
+    rampDelta_ = (canRamp_ && duration) ? ((frameValue(false) - pendingValue) / AUValue(duration)) : 0.0;
     value_ = pendingValue;
     rampRemaining_ = duration;
   }
 
-  /// The value of the parameter, regardless of any ramping that may be taking place
+  /// The value of the parameter, regardless of any ramping that may be taking place. This should only be manipulated
+  /// by the rendering thread or when there is no rendering being done.
   AUValue value_;
-  AUValue rampRate_{};
+
+  /// The change to apply to the parameter at each frame while ramping. This should only be manipulated
+  /// by the rendering thread or when there is no rendering being done.
+  AUValue rampDelta_{};
+
+  /// The number of frames left while ramping the parameter to a new value. This should only be manipulated by the
+  /// rendering thread or when there is no rendering being done.
   AUAudioFrameCount rampRemaining_{};
 
+  /// The value to apply in the next render pass.
   std::atomic<AUValue> pendingValue_{0.0};
 
+  /// How to transform external values to internal representation used by the kernel.
   ValueTransformer transformIn_{nullptr};
+  /// How to transform kernel values to external representation.
   ValueTransformer transformOut_{nullptr};
 
   bool canRamp_;

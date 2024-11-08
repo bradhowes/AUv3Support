@@ -17,23 +17,38 @@ struct MockEffect : public EventProcessor<MockEffect>
     registerParameter(param_);
   }
 
-  bool doParameterEvent(const AUParameterEvent& event, AUAudioFrameCount duration) {
-    param_.set(event.value, duration);
-    return event.parameterAddress == 1;
+  bool doSetImmediateParameterValue(AUParameterAddress address, AUValue value, AUAudioFrameCount duration) {
+    param_.setImmediate(value, duration);
+    return address == 1;
+  }
+
+  bool doSetPendingParameterValue(AUParameterAddress address, AUValue value) {
+    param_.setPending(value);
+    return address == 1;
+  }
+
+  AUValue doGetImmediateParameterValue(AUParameterAddress address) const {
+    return param_.getImmediate();
+  }
+
+  AUValue doGetPendingParameterValue(AUParameterAddress address) const {
+    return param_.getPending();
   }
 
   void doMIDIEvent(const AUMIDIEvent&) {}
 
   void doRendering(NSInteger outputBusNumber, BusBuffers, BusBuffers, AUAudioFrameCount frameCount) {
+    paramValues_.push_back(param_.frameValue());
     frameCounts_.push_back(frameCount);
   }
 
   void doRenderingStateChanged(bool rendering) {}
 
+  // Expose protected API for testing.
   void checkForTreeBasedParameterChanges() { super::checkForTreeBasedParameterChanges(); }
 
   Parameters::Float param_{0};
-
+  std::vector<AUAudioFrameCount> paramValues_{};
   std::vector<AUAudioFrameCount> frameCounts_{};
 };
 
@@ -186,7 +201,7 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
   XCTAssertEqual(ptr[maxFrames - 1], 511.0);
 }
 
-- (void)testRampingDuration {
+- (void)testEventRampingDuration {
   AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
   AUAudioFrameCount maxFrames = 512;
   AudioTimeStamp timestamp = AudioTimeStamp();
@@ -210,12 +225,55 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
   // Do rendering for 512 samples. Expectation is 4 1-sample render calls and then 1 508 sample render.
   auto status = self.effect->processAndRender(&timestamp, frames, 0, outputData, eventList, mockPullInput);
   XCTAssertEqual(status, 0);
+  XCTAssertEqual(self.effect->param_.getImmediate(), 10.0);
+  XCTAssertEqual(self.effect->param_.getPending(), 10.0);
   XCTAssertEqual(self.effect->frameCounts_.size(), 5);
   XCTAssertEqual(self.effect->frameCounts_[0], 1);
   XCTAssertEqual(self.effect->frameCounts_[1], 1);
   XCTAssertEqual(self.effect->frameCounts_[2], 1);
   XCTAssertEqual(self.effect->frameCounts_[3], 1);
   XCTAssertEqual(self.effect->frameCounts_[4], 508);
+}
+
+- (void)testUIRampingDuration {
+  AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
+  AUAudioFrameCount maxFrames = 512;
+  AudioTimeStamp timestamp = AudioTimeStamp();
+  AUAudioFrameCount frames = maxFrames;
+  AVAudioPCMBuffer* buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:format frameCapacity:maxFrames];
+  AudioBufferList *outputData = [buffer mutableAudioBufferList];
+  outputData->mBuffers[0].mData = nil;
+  outputData->mBuffers[1].mData = nil;
+
+  // Set a parameter that ramps for 4 samples
+  self.effect->param_.setPending(882.0);
+  XCTAssertEqual(self.effect->param_.getPending(), 882.0);
+  XCTAssertEqual(self.effect->param_.getImmediate(), 0.0);
+  XCTAssertTrue(self.effect->param_.canRamp());
+
+  XCTAssertEqual(self.effect->rampRemaining(), 0);
+  XCTAssertEqual(self.effect->treeBasedRampDuration(), 882);
+
+  // Do rendering for 512 samples. Expectation is all are 1-sample render calls since we ramp for 882.
+  auto status = self.effect->processAndRender(&timestamp, frames, 0, outputData, nullptr, mockPullInput);
+  XCTAssertEqual(status, 0);
+  XCTAssertTrue(self.effect->isRamping());
+  XCTAssertEqual(self.effect->frameCounts_.size(), 512);
+  XCTAssertEqual(self.effect->frameCounts_[0], 1);
+  XCTAssertEqual(self.effect->rampRemaining(), 882 - 512);
+  XCTAssertEqualWithAccuracy(self.effect->param_.frameValue(false), 512.0, 1.0e-6);
+  self.effect->frameCounts_.clear();
+
+  // Do rendering for 512 samples. Expectation is 370 are 1-sample render calls (882 - 512) and 1 is 142.
+  status = self.effect->processAndRender(&timestamp, frames, 0, outputData, nullptr, mockPullInput);
+  XCTAssertEqual(status, 0);
+  XCTAssertFalse(self.effect->isRamping());
+  XCTAssertEqual(self.effect->frameCounts_.size(), 371);
+  XCTAssertEqual(self.effect->frameCounts_[0], 1);
+  XCTAssertEqual(self.effect->frameCounts_[369], 1);
+  XCTAssertEqual(self.effect->frameCounts_[370], 142);
+  XCTAssertFalse(self.effect->isRamping());
+  XCTAssertEqualWithAccuracy(self.effect->param_.frameValue(false), 882.0, 1.0e-6);
 }
 
 - (void)testRampingDurationClearedOnRenderStateChange {
@@ -261,7 +319,7 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
 - (void)testDetectParameterChange {
   self.effect->param_.setPending(123.5);
   XCTAssertEqualWithAccuracy(self.effect->param_.getPending(), 123.5, epsilon);
-  XCTAssertEqual(self.effect->param_.get(), 0.0);
+  XCTAssertEqual(self.effect->param_.getImmediate(), 0.0);
   XCTAssertFalse(self.effect->isRamping());
   self.effect->checkForTreeBasedParameterChanges();
   XCTAssertTrue(self.effect->isRamping());

@@ -26,7 +26,10 @@ namespace DSPHeaders {
  It is expected that the template parameter class T defines the following methods which this class will
  invoke at the appropriate times but without any virtual dispatching.
 
- - doParameterEvent -- process AURenderEventParameterRamp or AURenderEventParameter event and return `true` if valid
+ - doSetImmediateParameterValue
+ - doSetPendingParameterValue
+ - doGetImmediateParameterValue
+ - doGetPendingParameterValue
  - doMIDIEvent
  - doRendering
 
@@ -44,11 +47,12 @@ public:
   /**
    Set the bypass mode.
 
+   NOTE: we expose this to the kernel, but the AUv3 component has a value as well which actually does the
+   right thing when set to `true` in which case the kernel's rendering routines will not be called at all.
+
    @param bypass if true disable filter processing and just copy samples from input to output
    */
-  void setBypass(bool bypass) noexcept {
-    bypassed_.store(bypass, std::memory_order_relaxed);
-  }
+  void setBypass(bool bypass) noexcept { bypassed_.store(bypass, std::memory_order_relaxed); }
 
   /// @returns true if effect is bypassed
   bool isBypassed() const noexcept { return bypassed_.load(std::memory_order_relaxed); }
@@ -120,6 +124,32 @@ public:
   }
 
   /**
+   Process an AU parameter value change from the parameter tree.
+
+   @param address the address of the parameter that changed
+   @param value the new value for the parameter
+   */
+  bool setParameterValue(AUParameterAddress address, AUValue value) noexcept {
+    return isRendering() && false
+    ? derived_.doSetPendingParameterValue(address, value) // NOTE: any ramp duration is sent later
+    : derived_.doSetImmediateParameterValue(address, value, 0);
+  }
+
+  AUValue getParameterValue(AUParameterAddress address) noexcept {
+    return isRendering() && false
+    ? derived_.doGetPendingParameterValue(address)
+    : derived_.doGetImmediateParameterValue(address);
+  }
+
+  /**
+   Obtain from the kernel the current value of an AU parameter.
+
+   @param address the address of the parameter to return
+   @returns current parameter value
+   */
+  AUValue getPendingParameterValue(AUParameterAddress address) const noexcept;
+
+  /**
    Process events and render a given number of frames. Events and rendering are interleaved if necessary so that
    event times align with samples.
 
@@ -176,6 +206,10 @@ public:
     return noErr;
   }
 
+  AUAudioFrameCount treeBasedRampDuration() const noexcept { return treeBasedRampDuration_; }
+
+  AUAudioFrameCount rampRemaining() const noexcept { return rampRemaining_; }
+
 protected:
 
   /**
@@ -189,10 +223,22 @@ protected:
     renderingStateChanged();
   }
 
+  /**
+   Register one or more parameters for ramping tracking. While rendering, the EventProcessor will check to see if there
+   are any parameter changes that have been made, and it will update the rampRemaining\_ counter if there are any. Also,
+   when rendering stops, it will clear any active ramps.
+
+   @param collection the group of parameters to register.
+   */
   void registerParameters(ParameterVector&& collection) {
     parameters_ = collection;
   }
 
+  /**
+   Register one parameter for ramping tracking.
+
+   @param parameter the parameter to register
+   */
   void registerParameter(Parameters::Base& parameter) { parameters_.push_back(parameter); }
 
   /**
@@ -209,7 +255,7 @@ protected:
   void checkForTreeBasedParameterChanges() noexcept {
     auto changed = false;
     for (auto param : parameters_) {
-      changed |= param.get().checkForChange(treeBasedRampDuration_);
+      changed |= param.get().checkForPendingChange(treeBasedRampDuration_);
     }
 
     if (changed && treeBasedRampDuration_ > rampRemaining_) [[unlikely]]
@@ -253,21 +299,23 @@ private:
     }
   }
 
+  void processEventParameterChange(const AUParameterEvent& event, AUAudioFrameCount duration) noexcept {
+    if (derived_.doSetImmediateParameterValue(event.parameterAddress, event.value, duration)) {
+      rampRemaining_ = std::max(duration, rampRemaining_);
+    }
+  }
+
   AURenderEvent const* processEventsUntil(AUEventSampleTime now, AURenderEvent const* event) noexcept {
     // See http://devnotes.kymatica.com/auv3_parameters.html for some nice details and advice about parameter event
     // processing.
     while (event != nullptr && event->head.eventSampleTime <= now) {
       switch (event->head.eventType) {
         case AURenderEventParameter:
-          derived_.doParameterEvent(event->parameter, 0);
+          processEventParameterChange(event->parameter, treeBasedRampDuration_);
           break;
 
         case AURenderEventParameterRamp:
-          if (derived_.doParameterEvent(event->parameter, event->parameter.rampDurationSampleFrames)) {
-            if (event->parameter.rampDurationSampleFrames > rampRemaining_) {
-              rampRemaining_ = event->parameter.rampDurationSampleFrames;
-            }
-          }
+          processEventParameterChange(event->parameter, event->parameter.rampDurationSampleFrames);
           break;
 
         case AURenderEventMIDI:
@@ -315,11 +363,11 @@ private:
     // non-ramp case, we only do it when necessary.
     if (isRamping()) [[unlikely]] {
       auto rampCount = std::min(rampRemaining_, frameCount);
+      rampRemaining_ -= rampCount;
       frameCount -= rampCount;
       for (; rampCount > 0; --rampCount) {
         derived_.doRendering(outputBusNumber, input.busBuffers(), output.busBuffers(), 1);
       }
-      rampRemaining_ -= rampCount;
     }
 
     // Non-ramping case. NOTE: do not use else since we could end a ramp while still having frameCount > 0.
@@ -350,9 +398,12 @@ private:
 template<typename T>
 concept KernelT = requires(T a, const AUParameterEvent& param, const AUMIDIEvent& midi, BusBuffers bb)
 {
-  { a.doParameterEvent(param, AUAudioFrameCount(1)) } -> std::convertible_to<bool>;
   { a.doMIDIEvent(midi) } -> std::convertible_to<void>;
   { a.doRendering(NSInteger(1), bb, bb, AUAudioFrameCount(1) ) } -> std::convertible_to<void>;
+  { a.doGetPendingParameterValue(param.parameterAddress)} -> std::convertible_to<AUValue>;
+  { a.doGetImmediateParameterValue(param.parameterAddress)} -> std::convertible_to<AUValue>;
+  { a.doSetPendingParameterValue(param.parameterAddress, AUValue(1.0))} -> std::convertible_to<bool>;
+  { a.doSetImmediateParameterValue(param.parameterAddress, AUValue(1.0), AUAudioFrameCount(1))} -> std::convertible_to<bool>;
 };
 
 /**

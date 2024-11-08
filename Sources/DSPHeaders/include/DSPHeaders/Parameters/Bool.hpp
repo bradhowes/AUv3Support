@@ -22,7 +22,7 @@ public:
   : super(Transformer::boolIn(init), false, Transformer::boolIn, Transformer::passthru) {}
 
   /// @returns the boolean state of the parameter
-  operator bool() const noexcept { return super::get(); }
+  operator bool() const noexcept { return super::getImmediate(); }
 };
 
 } // end namespace DSPHeaders::Parameters

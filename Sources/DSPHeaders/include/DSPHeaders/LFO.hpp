@@ -69,8 +69,8 @@ public:
     setFrequency(tmp, 0);
   }
 
-  bool checkForChange(AUAudioFrameCount duration) noexcept {
-    return phaseIncrement_.checkForChange(duration);
+  bool checkForPendingChange(AUAudioFrameCount duration) noexcept {
+    return phaseIncrement_.checkForPendingChange(duration);
   }
   /**
    Set the waveform to use
@@ -99,7 +99,7 @@ public:
    @param rampingDuration number of samples to ramp over
    */
   void setFrequency(ValueType frequency, AUAudioFrameCount rampingDuration) noexcept {
-    phaseIncrement_.set(frequency / sampleRate_, rampingDuration);
+    phaseIncrement_.setImmediate(frequency / sampleRate_, rampingDuration);
   }
 
   /**
@@ -138,7 +138,7 @@ public:
   ValueType frequencyPending() const noexcept { return phaseIncrement_.getPending() * sampleRate_; }
 
    /// @returns current frequency in Hz
-  ValueType frequency() const noexcept { return phaseIncrement_.get() * sampleRate_; }
+  ValueType frequency() const noexcept { return phaseIncrement_.getImmediate() * sampleRate_; }
 
   /// @returns the current waveform in effect for the LFO
   LFOWaveform waveform() const noexcept { return waveform_; }
