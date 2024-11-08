@@ -186,10 +186,10 @@ public:
 
       AudioUnitRenderActionFlags actionFlags = 0;
       auto status = input.pullInput(&actionFlags, timestamp, frameCount, outputBusNumber, pullInputBlock);
-      if (status != noErr) {
+      if (status != noErr) [[unlikely]] {
         return status;
       }
-    } else [[unlikely]] {
+    } else {
 
       // Clear the output buffer before use when there is no input data. Important if we are in bypass mode.
       UInt32 byteSize = frameCount * sizeof(AUValue);
@@ -218,9 +218,10 @@ protected:
    @param rendering if true the host is "transport" is moving and we are expected to render samples.
    */
   void setRendering(bool rendering) noexcept {
-    if (rendering == rendering_) return;
-    rendering_.store(rendering, std::memory_order_relaxed);
-    renderingStateChanged();
+    if (rendering != rendering_) {
+      rendering_.store(rendering, std::memory_order_relaxed);
+      renderingStateChanged();
+    }
   }
 
   /**
@@ -258,8 +259,9 @@ protected:
       changed |= param.get().checkForPendingChange(treeBasedRampDuration_);
     }
 
-    if (changed && treeBasedRampDuration_ > rampRemaining_) [[unlikely]]
+    if (changed && treeBasedRampDuration_ > rampRemaining_) {
       rampRemaining_ = treeBasedRampDuration_;
+    }
   }
 
 private:
@@ -348,7 +350,7 @@ private:
     }
 
     auto& input{inputFacet()};
-    if (isBypassed()) [[unlikely]] {
+    if (isBypassed()) {
       // If we have input samples from an upstream node, either use the sample buffers directly or copy samples over
       // to the output buffer. Otherwise, we have already zero'd out the output buffer, so we are done.
       if (input.isLinked()) {
@@ -361,7 +363,7 @@ private:
 
     // If ramping one or more parameters, we must render one frame at a time. Since this is more expensive than the
     // non-ramp case, we only do it when necessary.
-    if (isRamping()) [[unlikely]] {
+    if (isRamping()) {
       auto rampCount = std::min(rampRemaining_, frameCount);
       rampRemaining_ -= rampCount;
       frameCount -= rampCount;
@@ -371,7 +373,7 @@ private:
     }
 
     // Non-ramping case. NOTE: do not use else since we could end a ramp while still having frameCount > 0.
-    if (frameCount > 0) [[likely]] {
+    if (frameCount > 0) {
       derived_.doRendering(outputBusNumber, input.busBuffers(), output.busBuffers(), frameCount);
     }
   }
@@ -388,7 +390,6 @@ private:
   double sampleRate_{};
 
   ParameterVector parameters_{};
-  AUParameterTree* parameterTree_ = nullptr;
 };
 
 /**

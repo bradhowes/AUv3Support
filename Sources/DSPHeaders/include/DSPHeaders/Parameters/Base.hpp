@@ -75,9 +75,11 @@ public:
    */
   bool checkForPendingChange(AUAudioFrameCount duration) noexcept {
     auto pending = pendingValue_.load(std::memory_order_relaxed);
-    if (pending == value_) [[likely]] return false;
+    if (pending == value_) [[likely]] {
+      return false;
+    }
     startRamp(pending, duration);
-    return true;
+    return canRamp_;
   }
 
   /**
@@ -92,9 +94,9 @@ public:
    @return the current parameter value
    */
   AUValue frameValue(bool advance = true) noexcept {
-    AUAudioFrameCount adjustment = (advance && rampRemaining_) ? 1 : 0;
-    auto value = rampRemaining_ ? ((rampRemaining_ - adjustment) * rampDelta_ + value_) : value_;
-    rampRemaining_ -= adjustment;
+    auto remaining = rampRemaining_ - AUAudioFrameCount((advance && rampRemaining_) ? 1 : 0);
+    auto value = remaining * rampDelta_ + value_;
+    rampRemaining_ = remaining;
     return value;
   }
 
@@ -114,9 +116,11 @@ protected:
 private:
 
   void startRamp(AUValue pendingValue, AUAudioFrameCount duration) noexcept {
-    rampDelta_ = (canRamp_ && duration) ? ((frameValue(false) - pendingValue) / AUValue(duration)) : 0.0;
+    if (canRamp_ && duration) {
+      rampDelta_ = (frameValue(false) - pendingValue) / AUValue(duration);
+      rampRemaining_ = duration;
+    }
     value_ = pendingValue;
-    rampRemaining_ = duration;
   }
 
   /// The value of the parameter, regardless of any ramping that may be taking place. This should only be manipulated
@@ -125,19 +129,20 @@ private:
 
   /// The change to apply to the parameter at each frame while ramping. This should only be manipulated
   /// by the rendering thread or when there is no rendering being done.
-  AUValue rampDelta_{};
+  AUValue rampDelta_{0.0};
 
   /// The number of frames left while ramping the parameter to a new value. This should only be manipulated by the
   /// rendering thread or when there is no rendering being done.
-  AUAudioFrameCount rampRemaining_{};
+  AUAudioFrameCount rampRemaining_{0};
 
   /// The value to apply in the next render pass.
-  std::atomic<AUValue> pendingValue_{0.0};
+  std::atomic<AUValue> pendingValue_;
 
   /// How to transform external values to internal representation used by the kernel.
-  ValueTransformer transformIn_{nullptr};
+  ValueTransformer transformIn_;
+
   /// How to transform kernel values to external representation.
-  ValueTransformer transformOut_{nullptr};
+  ValueTransformer transformOut_;
 
   bool canRamp_;
 };
