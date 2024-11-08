@@ -167,18 +167,18 @@ extension HostViewController {
     let isPlaying = audioUnitLoader?.togglePlayback() ?? false
     bypassButton.isEnabled = isPlaying
     playButton.isSelected = isPlaying
-    playButton.tintColor = isPlaying ? .systemYellow : config?.tintColor
 
-    if !isPlaying {
-      bypassButton.isSelected = false
-    }
+    setBypassState(false)
   }
 
   @IBAction public func toggleBypass(_ sender: UIButton) {
-    let wasBypassed = auAudioUnit?.shouldBypassEffect ?? false
-    let isBypassed = !wasBypassed
-    auAudioUnit?.shouldBypassEffect = isBypassed
-    sender.isSelected = isBypassed
+    let isBypassed = auAudioUnit?.shouldBypassEffect ?? false
+    setBypassState(!isBypassed)
+  }
+
+  private func setBypassState(_ state: Bool) {
+    bypassButton.isSelected = state
+    auAudioUnit?.shouldBypassEffect = state
   }
 
   @IBAction public func visitAppStore(_ sender: UIButton) {

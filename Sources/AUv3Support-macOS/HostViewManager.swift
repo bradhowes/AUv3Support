@@ -147,17 +147,18 @@ extension HostViewManager {
     config.bypassButton.isEnabled = isPlaying
     config.bypassMenuItem.isEnabled = isPlaying
 
-    if !isPlaying && auAudioUnit?.shouldBypassEffect ?? false {
-      toggleBypass(config.bypassButton)
-    }
+    setBypassState(false)
   }
 
   @IBAction private func toggleBypass(_ sender: NSButton) {
-    let wasBypassed = auAudioUnit?.shouldBypassEffect ?? false
-    let isBypassed = !wasBypassed
-    auAudioUnit?.shouldBypassEffect = isBypassed
-    config.bypassButton.state = isBypassed ? .on : .off
-    config.bypassMenuItem.title = isBypassed ? "Resume" : "Bypass"
+    let isBypassed = auAudioUnit?.shouldBypassEffect ?? false
+    setBypassState(!isBypassed)
+  }
+
+  private func setBypassState(_ state: Bool) {
+    config.bypassButton.state = state ? .on : .off
+    config.bypassMenuItem.title = state ? "Resume" : "Bypass"
+    auAudioUnit?.shouldBypassEffect = state
   }
 }
 
