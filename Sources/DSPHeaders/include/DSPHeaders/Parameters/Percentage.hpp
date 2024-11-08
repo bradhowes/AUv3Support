@@ -13,7 +13,8 @@ class Percentage : public Base {
 public:
   using super = Base;
 
-  explicit Percentage(AUValue value = 0.0) noexcept : super(Transformer::passthru(value), Transformer::percentageIn, Transformer::percentageOut) {}
+  explicit Percentage(AUValue value = 0.0, bool canRamp = true) noexcept
+  : super(Transformer::passthru(value), canRamp, Transformer::percentageIn, Transformer::percentageOut) {}
 };
 
 } // end namespace DSPHeaders::Parameters

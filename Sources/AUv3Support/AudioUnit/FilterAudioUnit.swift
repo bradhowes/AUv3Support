@@ -228,7 +228,13 @@ extension FilterAudioUnit {
 extension FilterAudioUnit {
 
   /// The bypass setting is bridged with the v2 property. We detect when it changes here and forward it to the kernel.
-  override public var shouldBypassEffect: Bool { didSet { kernel.setBypass(shouldBypassEffect); }}
+  override public var shouldBypassEffect: Bool {
+    didSet {
+      let value = shouldBypassEffect
+      kernel.setBypass(value)
+      os_log(.info, log: log, "shouldBypassEffect: %d", value)
+    }
+  }
 
   /**
    Take notice of input/output bus formats and prepare for rendering. If there are any errors getting things ready,

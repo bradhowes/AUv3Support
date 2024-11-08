@@ -51,10 +51,10 @@ public:
   }
 
   /// @returns true if effect is bypassed
-  bool isBypassed() const noexcept { return bypassed_; }
+  bool isBypassed() const noexcept { return bypassed_.load(std::memory_order_relaxed); }
 
   /// @returns true if actively rendering samples
-  bool isRendering() const noexcept { return rendering_; }
+  bool isRendering() const noexcept { return rendering_.load(std::memory_order_relaxed); }
 
   /// @returns true if actively ramping one or more parameters
   bool isRamping() const noexcept { return rampRemaining_ > 0; }
@@ -68,7 +68,7 @@ public:
    */
   void setRenderingFormat(NSInteger busCount, AVAudioFormat* format, AUAudioFrameCount maxFramesToRender) noexcept {
     sampleRate_ = format.sampleRate;
-    rampDuration_ = AUAudioFrameCount(floor(0.02 * sampleRate_));
+    treeBasedRampDuration_ = AUAudioFrameCount(floor(0.02 * sampleRate_));
 
     auto channelCount{[format channelCount]};
 
@@ -170,7 +170,7 @@ public:
     }
 
     // Apply any paramter changes posted by the UI
-    checkForParameterChanges();
+    checkForTreeBasedParameterChanges();
     render(outputBusNumber, timestamp, frameCount, realtimeEventListHead);
 
     return noErr;
@@ -203,12 +203,17 @@ protected:
    */
   BusBuffers busBuffers(size_t bus) noexcept { return facets_[bus].busBuffers(); }
 
-  void checkForParameterChanges() noexcept {
+  /**
+   Visit registered parameters and see if they have a change pending from the AUParameterTree.
+   */
+  void checkForTreeBasedParameterChanges() noexcept {
     auto changed = false;
     for (auto param : parameters_) {
-      changed |= param.get().checkForChange(rampDuration_);
+      changed |= param.get().checkForChange(treeBasedRampDuration_);
     }
-    if (changed && rampDuration_ > rampRemaining_) [[unlikely]] rampRemaining_ = rampDuration_;
+
+    if (changed && treeBasedRampDuration_ > rampRemaining_) [[unlikely]]
+      rampRemaining_ = treeBasedRampDuration_;
   }
 
 private:
@@ -254,9 +259,7 @@ private:
     while (event != nullptr && event->head.eventSampleTime <= now) {
       switch (event->head.eventType) {
         case AURenderEventParameter:
-          if (derived_.doParameterEvent(event->parameter, rampDuration_)) {
-            if (rampDuration_ > rampRemaining_) rampRemaining_ = rampDuration_;
-          }
+          derived_.doParameterEvent(event->parameter, 0);
           break;
 
         case AURenderEventParameterRamp:
@@ -328,7 +331,7 @@ private:
   ValueType& derived_;
   std::vector<SampleBuffer> buffers_;
   std::vector<BufferFacet> facets_;
-  AUAudioFrameCount rampDuration_{0};
+  AUAudioFrameCount treeBasedRampDuration_{0};
   AUAudioFrameCount rampRemaining_{0};
 
   std::atomic<bool> bypassed_{false};

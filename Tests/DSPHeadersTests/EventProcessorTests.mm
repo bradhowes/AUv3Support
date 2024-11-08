@@ -30,8 +30,8 @@ struct MockEffect : public EventProcessor<MockEffect>
 
   void doRenderingStateChanged(bool rendering) {}
 
-  void checkForParameterChanges() { super::checkForParameterChanges(); }
-  
+  void checkForTreeBasedParameterChanges() { super::checkForTreeBasedParameterChanges(); }
+
   Parameters::Float param_{0};
 
   std::vector<AUAudioFrameCount> frameCounts_{};
@@ -263,13 +263,13 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
   XCTAssertEqualWithAccuracy(self.effect->param_.getPending(), 123.5, epsilon);
   XCTAssertEqual(self.effect->param_.get(), 0.0);
   XCTAssertFalse(self.effect->isRamping());
-  self.effect->checkForParameterChanges();
+  self.effect->checkForTreeBasedParameterChanges();
   XCTAssertTrue(self.effect->isRamping());
 }
 
 - (void)testRenderDisableClearsRamping {
   self.effect->param_.setPending(123.5);
-  self.effect->checkForParameterChanges();
+  self.effect->checkForTreeBasedParameterChanges();
   XCTAssertTrue(self.effect->isRamping());
   self.effect->deallocateRenderResources();
   XCTAssertFalse(self.effect->isRamping());

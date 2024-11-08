@@ -51,8 +51,9 @@ public:
    @todo Need to signal the AUParameterTree that this has happened
    */
   void set(AUValue value, AUAudioFrameCount duration) noexcept {
-    startRamp(transformIn_(value), duration);
-    pendingValue_.store(transformIn_(value));
+    value = transformIn_(value);
+    startRamp(value, duration);
+    pendingValue_.store(value, std::memory_order_relaxed);
   }
 
   /**
@@ -98,14 +99,14 @@ protected:
 
    @param value the starting value for the parameter
    */
-  Base(AUValue value, ValueTransformer forward, ValueTransformer reverse) noexcept :
-  value_{forward(value)}, transformIn_{forward}, transformOut_{reverse} {
+  Base(AUValue value, bool canRamp, ValueTransformer forward, ValueTransformer reverse) noexcept :
+  value_{forward(value)}, transformIn_{forward}, transformOut_{reverse}, canRamp_{canRamp} {
     assert(transformIn_ && transformOut_);
     pendingValue_.store(value_, std::memory_order_relaxed);
   }
 
-  virtual void startRamp(AUValue pendingValue, AUAudioFrameCount duration) noexcept {
-    if (duration) [[likely]] rampRate_ = (frameValue(false) - pendingValue) / AUValue(duration);
+  void startRamp(AUValue pendingValue, AUAudioFrameCount duration) noexcept {
+    rampRate_ = (canRamp_ && duration) ? ((frameValue(false) - pendingValue) / AUValue(duration)) : 0.0;
     value_ = pendingValue;
     rampRemaining_ = duration;
   }
@@ -119,6 +120,8 @@ protected:
 
   ValueTransformer transformIn_{nullptr};
   ValueTransformer transformOut_{nullptr};
+
+  bool canRamp_;
 };
 
 } // end namespace DSPHeaders::Parameters
