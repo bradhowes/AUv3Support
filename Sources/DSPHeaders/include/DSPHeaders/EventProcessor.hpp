@@ -19,6 +19,24 @@
 namespace DSPHeaders {
 
 /**
+ Concept definition for a Kernel class with an optional `doRenderingStateChanged` method.
+ */
+template<typename T>
+concept HasRenderingStateChangedT = requires(T a)
+{
+  { a.doRenderingStateChanged(false) } -> std::convertible_to<void>;
+};
+
+/**
+ Concept definition for a Kernel class with an optional `doMIDIEvent` method.
+ */
+template<typename T>
+concept HasMIDIEventV1 = requires(T a, const AUMIDIEvent& midi)
+{
+  { a.doMIDIEvent(midi) } -> std::convertible_to<void>;
+};
+
+/**
  Base template class for DSP kernels that provides common functionality. It uses the "Curiously Recurring Template
  Pattern (CRTP)" to interleave base functionality contained in this class with custom functionality from the derived
  class without the need for virtual dispatching.
@@ -26,15 +44,15 @@ namespace DSPHeaders {
  It is expected that the template parameter class T defines the following methods which this class will
  invoke at the appropriate times but without any virtual dispatching.
 
- - doSetImmediateParameterValue
- - doSetPendingParameterValue
- - doGetImmediateParameterValue
- - doGetPendingParameterValue
- - doMIDIEvent
- - doRendering
-
+ - doSetImmediateParameterValue -- set a parameter value from within the render loop
+ - doSetPendingParameterValue -- set a paramete value from outside render loop (AUParameterTree)
+ - doGetImmediateParameterValue -- read parameter value set by render loop
+ - doGetPendingParameterValue -- read parameter value set outside render loop (AUParameterTree)
+ - doRendering -- perform rendering of samples
+ - doMIDIEvent [optional] -- process MIDI v1 message
+ - doRenderingStateChanged [optional] -- notification that the rendering state has changed
  */
-template <typename ValueType>
+template <typename KernelType>
 class EventProcessor {
 public:
   using ParameterVector = std::vector<std::reference_wrapper<DSPHeaders::Parameters::Base>>;
@@ -42,7 +60,7 @@ public:
   /**
    Construct new instance.
    */
-  EventProcessor() noexcept : derived_{static_cast<ValueType&>(*this)}, buffers_{}, facets_{} {}
+  EventProcessor() noexcept : derived_{static_cast<KernelType&>(*this)}, buffers_{}, facets_{} {}
 
   /**
    Set the bypass mode.
@@ -206,8 +224,10 @@ public:
     return noErr;
   }
 
+  /// @returns the ramp duration to use for UI changes
   AUAudioFrameCount treeBasedRampDuration() const noexcept { return treeBasedRampDuration_; }
 
+  /// @returns the max number of frames remaining in any parameter ramping.
   AUAudioFrameCount rampRemaining() const noexcept { return rampRemaining_; }
 
 protected:
@@ -220,6 +240,7 @@ protected:
   void setRendering(bool rendering) noexcept {
     if (rendering != rendering_) {
       rendering_.store(rendering, std::memory_order_relaxed);
+      /// @returns the ramp duration to use for UI changes
       renderingStateChanged();
     }
   }
@@ -271,6 +292,10 @@ private:
       param.get().stopRamping();
     }
     rampRemaining_ = 0;
+
+    if constexpr (HasRenderingStateChangedT<KernelType>) {
+      derived_.doRenderingStateChanged(isRendering());
+    }
   }
 
   BufferFacet& inputFacet() noexcept { assert(!facets_.empty()); return facets_.back(); }
@@ -322,7 +347,9 @@ private:
 
         case AURenderEventMIDI:
         case AURenderEventMIDISysEx:
-          derived_.doMIDIEvent(event->MIDI);
+          if constexpr (HasMIDIEventV1<KernelType>) {
+            derived_.doMIDIEvent(event->MIDI);
+          }
           break;
 
         case AURenderEventMIDIEventList:
@@ -378,7 +405,7 @@ private:
     }
   }
 
-  ValueType& derived_;
+  KernelType& derived_;
   std::vector<SampleBuffer> buffers_;
   std::vector<BufferFacet> facets_;
   AUAudioFrameCount treeBasedRampDuration_{0};
@@ -397,14 +424,14 @@ private:
  used by the EventProcessor template.
  */
 template<typename T>
-concept KernelT = requires(T a, const AUParameterEvent& param, const AUMIDIEvent& midi, BusBuffers bb)
+concept IsViableKernelType = requires(T a, const AUParameterEvent& param, const AUMIDIEvent& midi, BusBuffers bb)
 {
-  { a.doMIDIEvent(midi) } -> std::convertible_to<void>;
   { a.doRendering(NSInteger(1), bb, bb, AUAudioFrameCount(1) ) } -> std::convertible_to<void>;
   { a.doGetPendingParameterValue(param.parameterAddress)} -> std::convertible_to<AUValue>;
   { a.doGetImmediateParameterValue(param.parameterAddress)} -> std::convertible_to<AUValue>;
   { a.doSetPendingParameterValue(param.parameterAddress, AUValue(1.0))} -> std::convertible_to<bool>;
-  { a.doSetImmediateParameterValue(param.parameterAddress, AUValue(1.0), AUAudioFrameCount(1))} -> std::convertible_to<bool>;
+  { a.doSetImmediateParameterValue(param.parameterAddress, AUValue(1.0),
+                                   AUAudioFrameCount(1))} -> std::convertible_to<bool>;
 };
 
 /**
@@ -416,7 +443,7 @@ concept KernelT = requires(T a, const AUParameterEvent& param, const AUMIDIEvent
  ValidatedKernel<MyKernel> _;
  ```
  */
-template <KernelT T>
+template <IsViableKernelType T>
 struct ValidatedKernel {};
 
 } // end namespace DSPHeaders

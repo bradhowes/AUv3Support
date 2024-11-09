@@ -13,7 +13,7 @@ struct MockEffect : public EventProcessor<MockEffect>
 {
   using super = EventProcessor<MockEffect>;
 
-  MockEffect() : EventProcessor<MockEffect>() {
+  MockEffect() : super() {
     registerParameter(param_);
   }
 
@@ -35,14 +35,12 @@ struct MockEffect : public EventProcessor<MockEffect>
     return param_.getPending();
   }
 
-  void doMIDIEvent(const AUMIDIEvent&) {}
-
   void doRendering(NSInteger outputBusNumber, BusBuffers, BusBuffers, AUAudioFrameCount frameCount) {
     paramValues_.push_back(param_.frameValue());
     frameCounts_.push_back(frameCount);
   }
 
-  void doRenderingStateChanged(bool rendering) {}
+  // void doRenderingStateChanged(bool rendering) {}
 
   // Expose protected API for testing.
   void checkForTreeBasedParameterChanges() { super::checkForTreeBasedParameterChanges(); }
@@ -331,6 +329,129 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
   XCTAssertTrue(self.effect->isRamping());
   self.effect->deallocateRenderResources();
   XCTAssertFalse(self.effect->isRamping());
+}
+
+struct MockEffectWithRenderingStateChanged : public EventProcessor<MockEffectWithRenderingStateChanged>
+{
+  using super = EventProcessor<MockEffectWithRenderingStateChanged>;
+
+  MockEffectWithRenderingStateChanged() : super() {
+    registerParameter(param_);
+  }
+
+  bool doSetImmediateParameterValue(AUParameterAddress address, AUValue value, AUAudioFrameCount duration) {
+    param_.setImmediate(value, duration);
+    return address == 1;
+  }
+
+  bool doSetPendingParameterValue(AUParameterAddress address, AUValue value) {
+    param_.setPending(value);
+    return address == 1;
+  }
+
+  AUValue doGetImmediateParameterValue(AUParameterAddress address) const {
+    return param_.getImmediate();
+  }
+
+  AUValue doGetPendingParameterValue(AUParameterAddress address) const {
+    return param_.getPending();
+  }
+
+  void doMIDIEvent(const AUMIDIEvent&) {}
+
+  void doRendering(NSInteger outputBusNumber, BusBuffers, BusBuffers, AUAudioFrameCount frameCount) {
+    paramValues_.push_back(param_.frameValue());
+    frameCounts_.push_back(frameCount);
+  }
+
+  void doRenderingStateChanged(bool rendering) { renderingStateChanges_ += 1; }
+
+  // Expose protected API for testing.
+  void checkForTreeBasedParameterChanges() { super::checkForTreeBasedParameterChanges(); }
+
+  Parameters::Float param_{0};
+  std::vector<AUAudioFrameCount> paramValues_{};
+  std::vector<AUAudioFrameCount> frameCounts_{};
+  int renderingStateChanges_{0};
+};
+
+- (void)testRenderingStateChanged {
+  auto effect = new MockEffectWithRenderingStateChanged();
+  XCTAssertEqual(effect->renderingStateChanges_, 0);
+  AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
+  AUAudioFrameCount maxFrames = 512;
+  effect->setRenderingFormat(1, format, maxFrames);
+  XCTAssertEqual(effect->renderingStateChanges_, 1);
+  effect->deallocateRenderResources();
+  XCTAssertEqual(effect->renderingStateChanges_, 2);
+}
+
+struct MockEffectWithMIDI : public EventProcessor<MockEffectWithMIDI>
+{
+  using super = EventProcessor<MockEffectWithMIDI>;
+
+  MockEffectWithMIDI() : super() {
+    registerParameter(param_);
+  }
+
+  bool doSetImmediateParameterValue(AUParameterAddress address, AUValue value, AUAudioFrameCount duration) {
+    param_.setImmediate(value, duration);
+    return address == 1;
+  }
+
+  bool doSetPendingParameterValue(AUParameterAddress address, AUValue value) {
+    param_.setPending(value);
+    return address == 1;
+  }
+
+  AUValue doGetImmediateParameterValue(AUParameterAddress address) const {
+    return param_.getImmediate();
+  }
+
+  AUValue doGetPendingParameterValue(AUParameterAddress address) const {
+    return param_.getPending();
+  }
+
+  void doMIDIEvent(const AUMIDIEvent&) { midiEvents_ += 1; }
+
+  void doRendering(NSInteger outputBusNumber, BusBuffers, BusBuffers, AUAudioFrameCount frameCount) {
+    paramValues_.push_back(param_.frameValue());
+    frameCounts_.push_back(frameCount);
+  }
+
+  // Expose protected API for testing.
+  void checkForTreeBasedParameterChanges() { super::checkForTreeBasedParameterChanges(); }
+
+  Parameters::Float param_{0};
+  std::vector<AUAudioFrameCount> paramValues_{};
+  std::vector<AUAudioFrameCount> frameCounts_{};
+  int midiEvents_{0};
+};
+
+- (void)testMIDIEventProcessing {
+  auto effect = new MockEffectWithMIDI();
+  XCTAssertEqual(effect->midiEvents_, 0);
+  AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
+  AUAudioFrameCount maxFrames = 512;
+  effect->setRenderingFormat(1, format, maxFrames);
+
+  AudioTimeStamp timestamp = AudioTimeStamp();
+  AUAudioFrameCount frames = maxFrames;
+  AVAudioPCMBuffer* buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:format frameCapacity:maxFrames];
+  AudioBufferList *outputData = [buffer mutableAudioBufferList];
+  outputData->mBuffers[0].mData = nil;
+  outputData->mBuffers[1].mData = nil;
+
+  AUMIDIEvent* midiEvent = new AUMIDIEvent();
+  midiEvent->next = nullptr;
+  midiEvent->eventSampleTime = -1;
+
+  AURenderEvent* eventList = reinterpret_cast<AURenderEvent*>(midiEvent);
+  eventList->head.eventType = AURenderEventMIDI;
+
+  auto status = effect->processAndRender(&timestamp, maxFrames, 0, outputData, eventList, mockPullInput);
+  XCTAssertEqual(status, 0);
+  XCTAssertEqual(effect->midiEvents_, 1);
 }
 
 @end
