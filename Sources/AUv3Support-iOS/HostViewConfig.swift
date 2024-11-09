@@ -18,6 +18,10 @@ public struct HostViewConfig {
   public let tintColor: UIColor
   public let appStoreVisitor: (URL) -> Void
 
+  public var versionTag: String {
+    version.first == "v" ? version : "v\(version)"
+  }
+
   /**
    The configuration parameters.
 

@@ -20,6 +20,10 @@ public struct HostViewConfig {
   let bypassMenuItem: NSMenuItem
   let presetsMenu: NSMenu
 
+  var versionTag: String {
+    componentVersion.first == "v" ? componentVersion : "v\(componentVersion)"
+  }
+
   weak var viewController: NSViewController!
   weak var containerView: NSView!
 

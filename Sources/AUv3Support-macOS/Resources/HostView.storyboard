@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="21507" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="kVy-Jz-fMG">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="kVy-Jz-fMG">
     <dependencies>
-        <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21507"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="23504"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -99,7 +98,7 @@
                             <rect key="frame" x="0.0" y="0.0" width="600" height="300"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </view>
-                        <toolbar key="toolbar" implicitIdentifier="5207E1E8-A93F-4F10-9C18-0E48AC0FF7E7" autosavesConfiguration="NO" displayMode="iconAndLabel" sizeMode="regular" id="OVH-Ca-Dog">
+                        <toolbar key="toolbar" implicitIdentifier="5207E1E8-A93F-4F10-9C18-0E48AC0FF7E7" autosavesConfiguration="NO" showsBaselineSeparator="NO" displayMode="iconAndLabel" sizeMode="regular" id="OVH-Ca-Dog">
                             <allowedToolbarItems>
                                 <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="i5W-Q4-eS5"/>
                                 <toolbarItem implicitItemIdentifier="290CDF7D-A4F5-4CB1-8BAB-065BEAC4FDC3" label="Play" paletteLabel="Play Button" image="play" sizingBehavior="auto" id="T3B-Wl-RFv">
@@ -132,7 +131,7 @@
                                         <autoresizingMask key="autoresizingMask"/>
                                         <popUpButtonCell key="cell" type="bevel" bezelStyle="regularSquare" image="popUpButtonCell:Hck-jZ-nVC:image" imagePosition="only" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" arrowPosition="noArrow" autoenablesItems="NO" altersStateOfSelectedItem="NO" selectedItem="fwK-L3-EYN" id="Hck-jZ-nVC">
                                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                            <font key="font" metaFont="menu"/>
+                                            <font key="font" metaFont="message"/>
                                             <menu key="menu" autoenablesItems="NO" id="SLL-02-hC9">
                                                 <items>
                                                     <menuItem state="on" image="user" hidden="YES" id="fwK-L3-EYN" userLabel="Button Item"/>
@@ -184,7 +183,7 @@
                             <customView autoresizesSubviews="NO" translatesAutoresizingMaskIntoConstraints="NO" id="61o-Tw-aQd" userLabel="Content View">
                                 <rect key="frame" x="10" y="10" width="447" height="394"/>
                                 <subviews>
-                                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="dP5-oM-4wr">
+                                    <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="dP5-oM-4wr">
                                         <rect key="frame" x="172" y="183" width="103" height="28"/>
                                         <textFieldCell key="cell" lineBreakMode="clipping" title="Loading…" id="mjH-Mw-3vz">
                                             <font key="font" metaFont="system" size="24"/>
