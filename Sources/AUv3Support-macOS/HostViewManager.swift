@@ -32,7 +32,9 @@ public final class HostViewManager: NSObject {
   private var userPresetsObserverToken: NSKeyValueObservation?
 
   public static let showedInitialAlertKey = "showedInitialAlertVersion"
-  public static var alwaysShowInstructions: Bool = false
+
+  // This is only used for testing
+  nonisolated(unsafe) public static var alwaysShowInstructions: Bool = false
 
   private var showingInitialPrompt = false
 
@@ -69,7 +71,9 @@ public final class HostViewManager: NSObject {
 
     NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil,
                                            queue: nil) { _ in
-      self.audioUnitLoader.save()
+      DispatchQueue.main.async {
+        self.audioUnitLoader.save()
+      }
     }
   }
 }

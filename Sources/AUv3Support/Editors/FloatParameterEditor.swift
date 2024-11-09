@@ -243,7 +243,9 @@ private extension FloatParameterEditor {
   func restoreName() {
     restoreNameTimer?.invalidate()
     restoreNameTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
-      self.transitionToDisplayName()
+      DispatchQueue.main.async {
+        self.transitionToDisplayName()
+      }
     }
   }
 

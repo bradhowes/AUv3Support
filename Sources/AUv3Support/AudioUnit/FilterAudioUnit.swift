@@ -24,8 +24,9 @@ public final class FilterAudioUnit: AUAudioUnit {
   /// Default channel layout to use in each audio bus
   static private let audioBusChannelLayout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_Stereo)!
   /// Default audio format to use in each audio bus
-  static private let audioBusFormat = AVAudioFormat(standardFormatWithSampleRate: defaultSampleRate,
-                                                    channelLayout: audioBusChannelLayout)
+  static private var audioBusFormat: AVAudioFormat {
+    .init(standardFormatWithSampleRate: defaultSampleRate, channelLayout: audioBusChannelLayout)
+  }
   /// Create an AUAudioUnitBus using the default audio format
   static func makeAudioBus() throws -> AUAudioUnitBus {
     let bus = try AUAudioUnitBus(format: audioBusFormat)

@@ -126,10 +126,16 @@ private extension SimplePlayEngine {
   private func beginLoop() {
     player.scheduleFile(file, at: nil) {
       self.stateChangeQueue.async {
-        if self.player.isPlaying {
-          self.beginLoop()
+        DispatchQueue.main.async {
+          self.loopIfPlaying()
         }
       }
+    }
+  }
+
+  private func loopIfPlaying() {
+    if self.player.isPlaying {
+      self.beginLoop()
     }
   }
 }

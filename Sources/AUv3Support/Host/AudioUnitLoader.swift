@@ -102,10 +102,16 @@ public final class AudioUnitLoader: NSObject {
 
     let name = AVAudioUnitComponentManager.registrationsChangedNotification
     notificationRegistration = NotificationCenter.default.addObserver(forName: name, object: nil, queue: nil) { _ in
-      self.hasUpdates = true
+      DispatchQueue.main.async {
+        self.registrationsChanged()
+      }
     }
 
     self.locate()
+  }
+
+  private func registrationsChanged() {
+    self.hasUpdates = true
   }
 
   /**
@@ -138,12 +144,18 @@ public final class AudioUnitLoader: NSObject {
     }
 
     Timer.scheduledTimer(withTimeInterval: delayBeforeNextLocateAttempt, repeats: false) { _ in
-      if self.hasUpdates {
-        self.hasUpdates = false
-        self.locate()
-      } else {
-        self.scheduleCheck()
+      DispatchQueue.main.async {
+        self.retryLocate();
       }
+    }
+  }
+
+  private func retryLocate() {
+    if self.hasUpdates {
+      self.hasUpdates = false
+      self.locate()
+    } else {
+      self.scheduleCheck()
     }
   }
 
