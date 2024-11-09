@@ -3,7 +3,7 @@
 #import <XCTest/XCTest.h>
 #import <vector>
 
-#import "DSPHeaders/Parameters/IntegralParameter.hpp"
+#import "DSPHeaders/Parameters/Integral.hpp"
 
 using namespace DSPHeaders::Parameters;
 

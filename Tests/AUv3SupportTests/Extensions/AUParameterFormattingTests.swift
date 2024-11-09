@@ -42,8 +42,4 @@ class AUParameterFormattingTests: XCTestCase {
   }
 }
 
-#if hasFeature(RetroactiveAttribute)
-extension AUParameter: @retroactive AUParameterFormatting {}
-#else
 extension AUParameter: AUParameterFormatting {}
-#endif
