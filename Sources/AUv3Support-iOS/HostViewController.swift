@@ -48,7 +48,8 @@ public final class HostViewController: UIViewController {
 
   public var showInstructions: Bool {
     let lastVersion = UserDefaults.standard.string(forKey: HostViewController.showedInitialAlertKey) ?? ""
-    let firstTime = lastVersion != config!.version || HostViewController.alwaysShowInstructions
+    UserDefaults.standard.set(config!.versionTag, forKey: Self.showedInitialAlertKey)
+    let firstTime = lastVersion != config!.versionTag || HostViewController.alwaysShowInstructions
     let takingSnapshots = CommandLine.arguments.first { $0 == "snaps" } != nil
     return firstTime && !takingSnapshots
   }
@@ -196,7 +197,6 @@ extension HostViewController {
 
   @IBAction public func dismissInstructions(_ sender: Any) {
     instructions.isHidden = true
-    UserDefaults.standard.set(true, forKey: Self.showedInitialAlertKey)
   }
 }
 

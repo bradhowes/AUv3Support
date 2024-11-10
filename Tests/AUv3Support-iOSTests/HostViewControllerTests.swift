@@ -13,9 +13,10 @@ class HostViewControllerTests: XCTestCase {
     let appDelegate: AppDelegate = .init()
     let tintColor: UIColor = .red
     let appStoreVisitor: (URL) -> Void = { _ in }
+    let version = "v1.2.3"
 
     let config = HostViewConfig(name: "componentName",
-                                version: "v1.2.3",
+                                version: version,
                                 appDelegate: appDelegate,
                                 appStoreId: "abcd",
                                 componentDescription: acd,
@@ -26,16 +27,18 @@ class HostViewControllerTests: XCTestCase {
     hostViewController.setConfig(config)
 
     let userDefaults = UserDefaults.standard
-    userDefaults.set("", forKey: HostViewController.showedInitialAlertKey)
+    userDefaults.removeObject(forKey: HostViewController.showedInitialAlertKey)
     XCTAssertTrue(hostViewController.showInstructions)
-    userDefaults.set("v1.2.3", forKey: HostViewController.showedInitialAlertKey)
     XCTAssertFalse(hostViewController.showInstructions)
 
+    XCTAssertEqual(userDefaults.string(forKey: HostViewController.showedInitialAlertKey), version)
+
     HostViewController.alwaysShowInstructions = true
-    userDefaults.set("", forKey: HostViewController.showedInitialAlertKey)
+    userDefaults.removeObject(forKey: HostViewController.showedInitialAlertKey)
     XCTAssertTrue(hostViewController.showInstructions)
-    userDefaults.set("v1.2.3", forKey: HostViewController.showedInitialAlertKey)
     XCTAssertTrue(hostViewController.showInstructions)
+
+    XCTAssertEqual(userDefaults.string(forKey: HostViewController.showedInitialAlertKey), version)
   }
 }
 
