@@ -1,23 +1,15 @@
-PLATFORM_IOS = iOS Simulator,name=iPad mini (6th generation)
+PLATFORM_IOS = iOS Simulator,name=iPad mini (A17 Pro)
 PLATFORM_MACOS = macOS
 XCCOV = xcrun xccov view --report --only-targets
 
 default: percentage
-
-build-iOS:
-	rm -rf "$(PWD)/.DerivedData-iOS"
-	xcodebuild build \
-		-scheme AUv3-Support-iOS \
-		-derivedDataPath "$(PWD)/.DerivedData-iOS" \
-		-destination platform="$(PLATFORM_IOS)"
-		-enableCodeCoverage YES
 
 test-iOS:
 	rm -rf "$(PWD)/.DerivedData-iOS"
 	xcodebuild test \
 		-scheme AUv3-Support-iOS \
 		-derivedDataPath "$(PWD)/.DerivedData-iOS" \
-		-destination platform="$(PLATFORM_IOS)"
+		-destination platform="$(PLATFORM_IOS)" \
 		-enableCodeCoverage YES
 
 coverage-iOS: test-iOS
