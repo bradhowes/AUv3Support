@@ -95,12 +95,11 @@ extension HostViewManager {
 
   public func showInitialPrompt(prompter: InstructionPrompter? = nil) {
     guard showInstructions else { return }
-    UserDefaults.standard.set(config.componentVersion, forKey: Self.showedInitialAlertKey)
     disablePlaying()
     showingInitialPrompt = true
 
     let text = """
-The AUv3 component '\(config.componentName)' (\(config.versionTag)) is now available on your device and can be \
+The AUv3 component '\(config.componentName)' (\(Bundle.main.versionTag)) is now available on your device and can be \
 used in other AUv3 host apps such as GarageBand and Logic.
 
 You can continue to use this app to experiment, but you do not need to have it running in order to access the AUv3 \

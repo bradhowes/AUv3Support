@@ -45,9 +45,10 @@ public final class HostViewController: UIViewController {
   public static let showedInitialAlertKey = "showedInitialAlertVersion"
 
   public var showInstructions: Bool {
+    let versionTag = Bundle.main.versionTag
     let lastVersion = config!.defaults.string(forKey: HostViewController.showedInitialAlertKey) ?? ""
-    config!.defaults.set(config!.versionTag, forKey: Self.showedInitialAlertKey)
-    let firstTime = lastVersion != config!.versionTag || config!.alwaysShowNotice
+    config!.defaults.set(versionTag, forKey: Self.showedInitialAlertKey)
+    let firstTime = config!.alwaysShowNotice || (lastVersion != versionTag && ("v" + lastVersion) != versionTag)
     let takingSnapshots = CommandLine.arguments.first { $0 == "snaps" } != nil
     return firstTime && !takingSnapshots
   }
@@ -88,6 +89,7 @@ extension HostViewController {
   override public func viewDidLoad() {
     super.viewDidLoad()
     guard let config = self.config else { fatalError() }
+    let versionTag = Bundle.main.versionTag
 
     playButton.isEnabled = false
     bypassButton.isEnabled = false
@@ -109,11 +111,11 @@ extension HostViewController {
 
     instructions.isHidden = true
 
-    reviewButton.setTitle(config.versionTag, for: .normal)
+    reviewButton.setTitle(versionTag, for: .normal)
 
     instructionsLabel.text =
           """
-The AUv3 component '\(config.name)' (\(config.versionTag)) is now available on your device and can be used in other \
+The AUv3 component '\(config.name)' (\(versionTag)) is now available on your device and can be used in other \
 AUv3 host apps such as GarageBand and AUM.
 
 You can continue to use this app to experiment, but you do not need to have it running in order to access the AUv3 \
