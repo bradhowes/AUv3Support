@@ -17,6 +17,8 @@ public struct HostViewConfig {
   public let sampleLoop: AudioUnitLoader.SampleLoop
   public let tintColor: UIColor
   public let appStoreVisitor: (URL) -> Void
+  public let alwaysShowNotice: Bool
+  public let defaults: UserDefaults
 
   public var versionTag: String {
     version.first == "v" ? version : "v\(version)"
@@ -33,9 +35,18 @@ public struct HostViewConfig {
    - parameter tintColor: color to use for control tinting
    - parameter appStoreVisitor: the closure to invoke to visit the app store and view the page for the audio unit
    */
-  public init(name: String, version: String, appDelegate: AppDelegate, appStoreId: String,
-              componentDescription: AudioComponentDescription, sampleLoop: AudioUnitLoader.SampleLoop,
-              tintColor: UIColor, appStoreVisitor: @escaping (URL) -> Void) {
+  public init(
+    name: String,
+    version: String,
+    appDelegate: AppDelegate,
+    appStoreId: String,
+    componentDescription: AudioComponentDescription,
+    sampleLoop: AudioUnitLoader.SampleLoop,
+    tintColor: UIColor,
+    appStoreVisitor: @escaping (URL) -> Void,
+    alwaysShowNotice: Bool = false,
+    defaults: UserDefaults = .standard
+  ) {
     self.name = name
     self.version = version
     self.appDelegate = appDelegate
@@ -44,6 +55,8 @@ public struct HostViewConfig {
     self.sampleLoop = sampleLoop
     self.tintColor = tintColor
     self.appStoreVisitor = appStoreVisitor
+    self.alwaysShowNotice = alwaysShowNotice
+    self.defaults = defaults
   }
 }
 

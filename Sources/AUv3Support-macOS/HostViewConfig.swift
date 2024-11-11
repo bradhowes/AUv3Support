@@ -20,6 +20,9 @@ public struct HostViewConfig {
   let bypassMenuItem: NSMenuItem
   let presetsMenu: NSMenu
 
+  let alwaysShowNotice: Bool
+  let defaults: UserDefaults
+
   var versionTag: String {
     componentVersion.first == "v" ? componentVersion : "v\(componentVersion)"
   }
@@ -27,10 +30,22 @@ public struct HostViewConfig {
   weak var viewController: NSViewController!
   weak var containerView: NSView!
 
-  public init(componentName: String, componentVersion: String, componentDescription: AudioComponentDescription,
-              sampleLoop: AudioUnitLoader.SampleLoop, playButton: NSButton, bypassButton: NSButton,
-              presetsButton: NSPopUpButton, playMenuItem: NSMenuItem, bypassMenuItem: NSMenuItem, presetsMenu: NSMenu,
-              viewController: NSViewController, containerView: NSView) {
+  public init(
+    componentName: String,
+    componentVersion: String,
+    componentDescription: AudioComponentDescription,
+    sampleLoop: AudioUnitLoader.SampleLoop,
+    playButton: NSButton,
+    bypassButton: NSButton,
+    presetsButton: NSPopUpButton,
+    playMenuItem: NSMenuItem,
+    bypassMenuItem: NSMenuItem,
+    presetsMenu: NSMenu,
+    viewController: NSViewController,
+    containerView: NSView,
+    alwaysShowNotice: Bool = false,
+    defaults: UserDefaults = .standard
+  ) {
     self.componentName = componentName
     self.componentVersion = componentVersion
     self.componentDescription = componentDescription
@@ -43,6 +58,8 @@ public struct HostViewConfig {
     self.presetsMenu = presetsMenu
     self.viewController = viewController
     self.containerView = containerView
+    self.alwaysShowNotice = alwaysShowNotice
+    self.defaults = defaults
   }
 }
 

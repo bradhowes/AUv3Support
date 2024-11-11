@@ -33,9 +33,6 @@ public final class HostViewManager: NSObject {
 
   public static let showedInitialAlertKey = "showedInitialAlertVersion"
 
-  // This is only used for testing
-  nonisolated(unsafe) public static var alwaysShowInstructions: Bool = false
-
   private var showingInitialPrompt = false
 
   public weak var delegate: HostViewManagerDelegate? {
@@ -43,14 +40,16 @@ public final class HostViewManager: NSObject {
   }
 
   public var showInstructions: Bool {
-    let lastVersion = UserDefaults.standard.string(forKey: HostViewManager.showedInitialAlertKey) ?? ""
-    UserDefaults.standard.set(config.versionTag, forKey: Self.showedInitialAlertKey)
-    let firstTime = lastVersion != config.versionTag || HostViewManager.alwaysShowInstructions
+    let lastVersion = config.defaults.string(forKey: HostViewManager.showedInitialAlertKey) ?? ""
+    config.defaults.set(config.versionTag, forKey: Self.showedInitialAlertKey)
+    let firstTime = lastVersion != config.versionTag || config.alwaysShowNotice
     let takingSnapshots = CommandLine.arguments.first { $0 == "snaps" } != nil
     return firstTime && !takingSnapshots
   }
 
-  public init(config: HostViewConfig) {
+  public init(
+    config: HostViewConfig
+  ) {
     self.config = config
     self.audioUnitLoader = .init(name: config.componentName, componentDescription: config.componentDescription,
                                  loop: config.sampleLoop)

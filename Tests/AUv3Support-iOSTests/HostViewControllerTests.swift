@@ -6,40 +6,86 @@ import AVFoundation
 
 class HostViewControllerTests: XCTestCase {
   
-  func testShowInstructions() {
+  func makeConfig(version: String = "v1.2.3", alwaysShowNotice: Bool = false,
+                  defaults: UserDefaults = .standard) -> HostViewConfig {
     let acd: AudioComponentDescription = .init(componentType: .init("abcd"), componentSubType: .init("efgh"),
                                                componentManufacturer: .init("ijkl"), componentFlags: 0,
                                                componentFlagsMask: 0)
     let appDelegate: AppDelegate = .init()
     let tintColor: UIColor = .red
     let appStoreVisitor: (URL) -> Void = { _ in }
-    let version = "v1.2.3"
-
-    let config = HostViewConfig(name: "componentName",
-                                version: version,
-                                appDelegate: appDelegate,
-                                appStoreId: "abcd",
-                                componentDescription: acd,
-                                sampleLoop: .sample1,
-                                tintColor: tintColor,
-                                appStoreVisitor: appStoreVisitor)
-    let hostViewController = HostViewController()
-    hostViewController.setConfig(config)
-
-    let userDefaults = UserDefaults.standard
-    userDefaults.removeObject(forKey: HostViewController.showedInitialAlertKey)
-    XCTAssertTrue(hostViewController.showInstructions)
-    XCTAssertFalse(hostViewController.showInstructions)
-
-    XCTAssertEqual(userDefaults.string(forKey: HostViewController.showedInitialAlertKey), version)
-
-    HostViewController.alwaysShowInstructions = true
-    userDefaults.removeObject(forKey: HostViewController.showedInitialAlertKey)
-    XCTAssertTrue(hostViewController.showInstructions)
-    XCTAssertTrue(hostViewController.showInstructions)
-
-    XCTAssertEqual(userDefaults.string(forKey: HostViewController.showedInitialAlertKey), version)
+    return .init(name: "componentName",
+                 version: version,
+                 appDelegate: appDelegate,
+                 appStoreId: "abcd",
+                 componentDescription: acd,
+                 sampleLoop: .sample1,
+                 tintColor: tintColor,
+                 appStoreVisitor: appStoreVisitor,
+                 alwaysShowNotice: alwaysShowNotice,
+                 defaults: defaults
+    )
   }
+
+  func testShowInstructions() {
+    let defaults = UserDefaults(suiteName: "\(NSTemporaryDirectory())\(UUID())")!
+    var config = makeConfig(defaults: defaults)
+    let hvc = HostViewController()
+    hvc.setConfig(config)
+
+    XCTAssertTrue(hvc.showInstructions)
+    XCTAssertFalse(hvc.showInstructions)
+
+    config = makeConfig(alwaysShowNotice: true, defaults: defaults)
+    hvc.setConfig(config)
+    XCTAssertTrue(hvc.showInstructions)
+    XCTAssertTrue(hvc.showInstructions)
+  }
+
+  func testShowInstructionsOnce() {
+    let defaults = UserDefaults(suiteName: "\(NSTemporaryDirectory())\(UUID())")!
+    let config = makeConfig(defaults: defaults)
+    let hvc = HostViewController()
+    hvc.setConfig(config)
+    XCTAssertTrue(hvc.showInstructions)
+    XCTAssertFalse(hvc.showInstructions)
+  }
+
+  func testShowInstructionsWhenVersionChanges() {
+    let defaults = UserDefaults(suiteName: "\(NSTemporaryDirectory())\(UUID())")!
+    defaults.set("v1.2.3", forKey: HostViewController.showedInitialAlertKey)
+    do {
+      let config = makeConfig(version: "v1.2.4", defaults: defaults)
+      let hvc = HostViewController()
+      hvc.setConfig(config)
+      XCTAssertTrue(hvc.showInstructions)
+    }
+    do {
+      let config = makeConfig(version: "v1.2.4", defaults: defaults)
+      let hvc = HostViewController()
+      hvc.setConfig(config)
+      XCTAssertFalse(hvc.showInstructions)
+    }
+  }
+
+  func testAlwaysShowInstructions() {
+    let defaults = UserDefaults(suiteName: "\(NSTemporaryDirectory())\(UUID())")!
+    defaults.set("v1.2.3", forKey: HostViewController.showedInitialAlertKey)
+    do {
+      let config = makeConfig(alwaysShowNotice: true, defaults: defaults)
+      let hvc = HostViewController()
+      hvc.setConfig(config)
+      XCTAssertTrue(hvc.showInstructions)
+      XCTAssertTrue(hvc.showInstructions)
+    }
+    do {
+      let config = makeConfig(alwaysShowNotice: false, defaults: defaults)
+      let hvc = HostViewController()
+      hvc.setConfig(config)
+      XCTAssertFalse(hvc.showInstructions)
+    }
+  }
+
 }
 
 #endif

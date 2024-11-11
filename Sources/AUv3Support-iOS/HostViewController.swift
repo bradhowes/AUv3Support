@@ -44,12 +44,10 @@ public final class HostViewController: UIViewController {
 
   public static let showedInitialAlertKey = "showedInitialAlertVersion"
 
-  public static var alwaysShowInstructions: Bool = false
-
   public var showInstructions: Bool {
-    let lastVersion = UserDefaults.standard.string(forKey: HostViewController.showedInitialAlertKey) ?? ""
-    UserDefaults.standard.set(config!.versionTag, forKey: Self.showedInitialAlertKey)
-    let firstTime = lastVersion != config!.versionTag || HostViewController.alwaysShowInstructions
+    let lastVersion = config!.defaults.string(forKey: HostViewController.showedInitialAlertKey) ?? ""
+    config!.defaults.set(config!.versionTag, forKey: Self.showedInitialAlertKey)
+    let firstTime = lastVersion != config!.versionTag || config!.alwaysShowNotice
     let takingSnapshots = CommandLine.arguments.first { $0 == "snaps" } != nil
     return firstTime && !takingSnapshots
   }
