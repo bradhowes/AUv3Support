@@ -1,6 +1,7 @@
 // swift-tools-version:5.9
 
 import PackageDescription
+import Foundation
 
 let flags = [
   "-pedantic",
@@ -115,7 +116,10 @@ let flags = [
   "-x", "objective-c++", // treat source files as Obj-C++ files
 ]
 
-let unsafeFlags: CXXSetting = .unsafeFlags(flags, .when(configuration: .debug))
+let useUnsafeFlags: Bool = ProcessInfo.processInfo.environment["USE_UNSAFE_FLAGS"] != nil
+let cxxSettings: [CXXSetting] = [.unsafeFlags(flags, .when(configuration: .debug))]
+
+NSLog("--- compiling with UNSAFE C++ flags: %d", useUnsafeFlags)
 
 let package = Package(
   name: "AUv3Support",
@@ -130,7 +134,7 @@ let package = Package(
     .target(
       name: "DSPHeaders",
       exclude: ["README.md"],
-      cxxSettings: [unsafeFlags]
+      cxxSettings: cxxSettings
     ),
     .target(
       name: "AUv3Support",

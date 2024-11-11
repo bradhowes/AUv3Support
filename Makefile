@@ -6,7 +6,7 @@ default: report
 
 test-iOS:
 	rm -rf "$(PWD)/.DerivedData-iOS"
-	xcodebuild test \
+	USE_UNSAFE_FLAGS="1" xcodebuild test \
 		-scheme AUv3-Support-iOS \
 		-derivedDataPath "$(PWD)/.DerivedData-iOS" \
 		-destination platform="$(PLATFORM_IOS)" \
@@ -24,7 +24,7 @@ percentage-iOS: coverage-iOS
 
 test-macOS:
 	rm -rf "$(PWD)/.DerivedData-macOS"
-	xcodebuild test \
+	USE_UNSAFE_FLAGS="1" xcodebuild test \
 		-scheme AUv3-Support-macOS \
 		-derivedDataPath "$(PWD)/.DerivedData-macOS" \
 		-destination platform="$(PLATFORM_MACOS)" \

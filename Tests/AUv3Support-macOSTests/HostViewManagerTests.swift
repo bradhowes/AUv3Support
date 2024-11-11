@@ -73,12 +73,6 @@ class HostViewManagerTests: XCTestCase {
   }
 
   override func setUp() {
-    // let bundle = Bundle(for: AUv3Support_macOS.HostViewManager.self)
-    // let storyboard = Storyboard(name: "HostView", bundle: bundle)
-    // let windowController = NSWindowController(windowNibName: "HostView")
-    // windowController.loadWindow()
-    // viewController = windowController.contentViewController
-
     viewController = .init()
     containerView = .init()
 
