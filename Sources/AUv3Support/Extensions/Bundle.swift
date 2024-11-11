@@ -24,6 +24,12 @@ public extension AppExtensionBundleInfo {
   /// Obtain the release version number associated with the bundle or "" if none found
   var releaseVersionNumber: String { info(for: "CFBundleShortVersionString") }
 
+  /// Obtain a well-formed version tag that starts with a "v" before the `releaseVersionNumber`
+  var versionTag: String {
+    let version = releaseVersionNumber
+    return version.first == "v" ? version : "v" + version
+  }
+
   /// Obtain the build version number associated with the bundle or "" if none found
   var buildVersionNumber: String { info(for: "CFBundleVersion") }
 
