@@ -66,7 +66,7 @@ public:
 
    @return the current parameter value
    */
-  AUValue getImmediate() const noexcept { return value_; }
+  AUValue getImmediate() const noexcept { return transformOut_(value_); }
 
   /**
    Check if there is a new value to ramp to from the AUParameterTree.
@@ -100,8 +100,11 @@ public:
     return value;
   }
 
+  /// @return the parameter value after any ramping
+  AUValue finalValue() const noexcept { return value_; }
+
 protected:
-  
+
   /**
    Construct a new parameter.
 
@@ -118,8 +121,8 @@ private:
   void startRamp(AUValue pendingValue, AUAudioFrameCount duration) noexcept {
     if (canRamp_ && duration) {
       rampDelta_ = (frameValue(false) - pendingValue) / AUValue(duration);
-      rampRemaining_ = duration;
     }
+    rampRemaining_ = duration;
     value_ = pendingValue;
   }
 

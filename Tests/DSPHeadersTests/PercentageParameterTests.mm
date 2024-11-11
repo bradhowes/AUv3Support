@@ -27,17 +27,23 @@ using namespace DSPHeaders::Parameters;
   XCTAssertEqual(param1.getImmediate(), 0.0);
 
   auto param2 = Percentage(100.0);
-  XCTAssertEqualWithAccuracy(param2.getImmediate(), 1.0, epsilon);
+  XCTAssertEqualWithAccuracy(param2.getImmediate(), 100.0, epsilon);
 }
 
 - (void)testRepresentation {
   auto param = Percentage(50.0);
-  XCTAssertEqual(param.getImmediate(), 0.5);
+  XCTAssertEqual(param.getImmediate(), 50.0);
   XCTAssertEqual(param.frameValue(), 0.5);
 
   param.setPending(25.0);
   XCTAssertEqual(param.getPending(), 25.0);
-  XCTAssertEqual(param.getImmediate(), 0.5);
+  XCTAssertEqual(param.getImmediate(), 50.0);
+  XCTAssertEqual(param.frameValue(), 0.5);
+
+  XCTAssertTrue(param.checkForPendingChange(4));
+  XCTAssertEqual(param.frameValue(), 0.437500);
+  XCTAssertEqual(param.frameValue(), 0.375000);
+
   param.setImmediate(16, 0);
   XCTAssertEqualWithAccuracy(param.frameValue(), 0.16, epsilon);
 }

@@ -14,7 +14,7 @@ public:
   using super = Base;
 
   explicit Percentage(AUValue value = 0.0, bool canRamp = true) noexcept
-  : super(Transformer::passthru(value), canRamp, Transformer::percentageIn, Transformer::percentageOut) {}
+  : super(value, canRamp, Transformer::percentageIn, Transformer::percentageOut) {}
 };
 
 } // end namespace DSPHeaders::Parameters
