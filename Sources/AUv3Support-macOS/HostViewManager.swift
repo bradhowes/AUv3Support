@@ -44,7 +44,8 @@ public final class HostViewManager: NSObject {
 
   public var showInstructions: Bool {
     let lastVersion = UserDefaults.standard.string(forKey: HostViewManager.showedInitialAlertKey) ?? ""
-    let firstTime = lastVersion != config.componentVersion || HostViewManager.alwaysShowInstructions
+    UserDefaults.standard.set(config.versionTag, forKey: Self.showedInitialAlertKey)
+    let firstTime = lastVersion != config.versionTag || HostViewManager.alwaysShowInstructions
     let takingSnapshots = CommandLine.arguments.first { $0 == "snaps" } != nil
     return firstTime && !takingSnapshots
   }

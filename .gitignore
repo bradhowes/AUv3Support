@@ -4,8 +4,12 @@
 /*.xcodeproj
 xcuserdata/
 # .swiftpm/xcode
+.derivedData/
 .DerivedData-iOS/
 .DerivedData-macOS/
 coverage_iOS.txt
 coverage_macOS.txt
 percentage.txt
+percentage_iOS.txt
+percentage_macOS.txt
+.dependencies/

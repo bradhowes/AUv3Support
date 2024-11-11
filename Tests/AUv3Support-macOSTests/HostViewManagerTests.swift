@@ -82,18 +82,18 @@ class HostViewManagerTests: XCTestCase {
                    viewController: viewController, containerView: containerView)
   }
 
-//  func testShowInstructions() {
-//    let userDefaults = UserDefaults.standard
-//    userDefaults.set(false, forKey: HostViewManager.showedInitialAlertKey)
-//    XCTAssertTrue(HostViewManager.showInstructions)
-//    userDefaults.set(true, forKey: HostViewManager.showedInitialAlertKey)
-//    XCTAssertFalse(HostViewManager.showInstructions)
-//    HostViewManager.alwaysShowInstructions = true
-//    userDefaults.set(false, forKey: HostViewManager.showedInitialAlertKey)
-//    XCTAssertTrue(HostViewManager.showInstructions)
-//    userDefaults.set(true, forKey: HostViewManager.showedInitialAlertKey)
-//    XCTAssertTrue(HostViewManager.showInstructions)
-//  }
+  func testShowInstructions() {
+    let hvm: HostViewManager = .init(config: config)
+    let userDefaults = UserDefaults.standard
+    userDefaults.removeObject(forKey: HostViewManager.showedInitialAlertKey)
+    XCTAssertTrue(hvm.showInstructions)
+    XCTAssertFalse(hvm.showInstructions)
+
+    HostViewManager.alwaysShowInstructions = true
+    XCTAssertTrue(hvm.showInstructions)
+    userDefaults.removeObject(forKey: HostViewManager.showedInitialAlertKey)
+    XCTAssertTrue(hvm.showInstructions)
+  }
 
   func testInit() {
     let hvm: HostViewManager = .init(config: config)
@@ -102,7 +102,7 @@ class HostViewManagerTests: XCTestCase {
 
   func testShowInitialPromptOnlyOnce() {
     let userDefaults = UserDefaults.standard
-    userDefaults.set(false, forKey: HostViewManager.showedInitialAlertKey)
+    userDefaults.removeObject(forKey: HostViewManager.showedInitialAlertKey)
 
     var showedPrompt = false
     let prompter: HostViewManager.InstructionPrompter = {(viewController: NSViewController, prompt: String,
