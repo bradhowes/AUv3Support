@@ -117,7 +117,7 @@ let flags = [
 ]
 
 let useUnsafeFlags: Bool = ProcessInfo.processInfo.environment["USE_UNSAFE_FLAGS"] != nil
-let cxxSettings: [CXXSetting] = [.unsafeFlags(flags, .when(configuration: .debug))]
+let cxxSettings: [CXXSetting] = useUnsafeFlags ? [.unsafeFlags(flags, .when(configuration: .debug))] : []
 
 NSLog("--- compiling with UNSAFE C++ flags: %d", useUnsafeFlags)
 
