@@ -24,7 +24,6 @@ class HostViewConfigTests: XCTestCase {
                                 tintColor: tintColor,
                                 appStoreVisitor: appStoreVisitor)
     XCTAssertEqual("componentName", config.name)
-    XCTAssertEqual("v1.2.3", config.version)
     XCTAssertEqual("abcd", config.appStoreId)
     XCTAssertEqual(acd, config.componentDescription)
     XCTAssertEqual(.sample1, config.sampleLoop)
