@@ -110,7 +110,7 @@ final class MainViewController: UIViewController {
   }
 }
 ```
-4. Profit!
+4. That's all!
 
 The `Actions` folder contains flows for managing user presets such as creating, deleting and renaming. The `HostView`
 storyboard holds a set of UI elements that are useful for a AUv3 demonstration app.
