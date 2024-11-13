@@ -22,11 +22,15 @@ Swift package containing useful code for AUv3 app extensions. There are four pro
   specifically for use in a audio unit render thread, so there should be no memory allocations done once a render thread
   is started.
 
-These libraries are now being used by my 
-[SoundFonts](https://github.com/bradhowes/SoundFonts),
-[SimplyFlange](https://github.com/bradhowes/SimplyFlange),
-[SimplyPhaser](https://github.com/bradhowes/SimplyPhaser), and
-[AUv3Template](https://github.com/bradhowes/AUv3Template) projects.
+The [AUv3Template](https://github.com/bradhowes/AUv3Template) project showcases all of this and is setup to deliver a working macOS and an iOS app and app extension out of the box.
+
+This repo is also being used by my other AUv3 projects:
+
+* [SoundFonts](https://github.com/bradhowes/SoundFonts)
+* [SimplyLowPass](https://github.com/bradhowes/LPF)
+* [SimplyFlange](https://github.com/bradhowes/SimplyFlange)
+* [SimplyPhaser](https://github.com/bradhowes/SimplyPhaser)
+* [SimplyTremolo](https://github.com/bradhowes/SimplyTremolo)
 
 # Credits
 
@@ -168,61 +172,3 @@ on first-time launch.
 Not great, but not too cumbersome to use now. And it is nice to have abstracted out all of the common functionality my
 audio unit apps share.
 
-# Usage Notes [Deprecated?]
-
-The packages here build just fine, and they work as-is when they direct dependencies to either other Swift packages or
-targets in an Xcode project that are *not* frameworks. When they *are* linked to a framework, there may be issues that
-crop up which will break the build (not clear on the exact conditions). In my particular case with AUv3 app extensions,
-the result was that the common framework that is shared between the app extension and the host app will embed within it
-a Swift package dependency that is also present at the top-level of the host app. Apple rightly flags the duplication
-(plus some other issues) and refuses to upload the archive artifacts.
-
-The solution that works _for me_ was to have a Bash script run after the build step that deletes the embedded
-frameworks. Sounds scary, but it works and Apple likes what it sees. More importantly, the apps run just fine on iOS
-and macOS after this framework culling. Note again and well: if you use these directly with an app extension or app
-target then you should not have any issues.
-
-Here is the script I use; it works for both macOS and iOS
-projects: (`post-build.sh`):
-
-```bash
-#!/bin/bash
-set -eu
-
-echo "-- BEGIN post-build.sh"
-
-function process # TOP EMBED
-{
-    local TOP="${1}" EMBED="${2}"
-
-    cd "${CODESIGNING_FOLDER_PATH}/${TOP}"
-    ls -l
-
-    for DIR in *; do
-        BAD="${DIR}${EMBED}"
-        if [[ -d "${BAD}" ]]; then
-            echo "-- deleting '${BAD}'"
-            rm -rf "${BAD}"
-        fi
-    done
-}
-
-if [[ -d "${CODESIGNING_FOLDER_PATH}/Contents/Frameworks" ]]; then
-    # macOS paths
-    process "/Contents/Frameworks" "/Versions/A/Frameworks"
-elif [[ -d "${CODESIGNING_FOLDER_PATH}/Frameworks" ]]; then
-    # iOS paths
-    process "/Frameworks" "/Frameworks"
-fi
-
-echo "-- END post-build.sh"
-```
-
-To use, edit the Xcode scheme that builds your application (iOS or macOS). Click on the disclosure arrow (>) for
-the __Build__ activity and then click on "Post-actions". Create a new action by clicking on the "+" at the bottom of
-the panel window. Make it look like below:
-
-![Capto_Capture 2022-01-27_05-02-44_PM](https://user-images.githubusercontent.com/686946/151396388-225a8fb0-a47e-4f07-984f-f32843b31835.png)
-
-Be sure to add the script above to a "scripts" directory in your project folder, or just make sure that the path to the
-script is correct for your situation.
