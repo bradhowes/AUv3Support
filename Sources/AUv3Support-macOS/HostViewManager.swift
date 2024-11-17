@@ -16,6 +16,7 @@ public protocol HostViewManagerDelegate: AnyObject {
   func failed(error: AudioUnitLoaderError)
 }
 
+@MainActor
 public final class HostViewManager: NSObject {
   private let log = Shared.logger("HostViewManager")
   private let config: HostViewConfig

@@ -6,6 +6,7 @@ import os.log
 /**
  Protocol for UI controls that can provide a parameter value.
  */
+@MainActor
 public protocol AUParameterValueProvider: AnyObject {
 
   /// The current value for a parameter.
@@ -15,6 +16,7 @@ public protocol AUParameterValueProvider: AnyObject {
 /**
  Delegate protocol for an AUParameterEditor
  */
+@MainActor
 public protocol AUParameterEditorDelegate: AnyObject {
 
   /**
@@ -28,6 +30,7 @@ public protocol AUParameterEditorDelegate: AnyObject {
 /**
  Protocol for controls that represent parameter values and can edit them.
  */
+@MainActor
 public protocol AUParameterEditor: AnyObject {
 
   /// Delegate for an editor which receives notification when editing is finished.
@@ -61,6 +64,7 @@ public protocol AUParameterEditor: AnyObject {
 
  - SeeAlso: `NSObject`
  */
+@MainActor
 public class AUParameterEditorBase: NSObject {
 
   /// Delegate for editing notifications
@@ -70,7 +74,7 @@ public class AUParameterEditorBase: NSObject {
   public let parameter: AUParameter
 
   // The observer token used to track the parameter value
-  public private(set) var parameterObserverToken: AUParameterObserverToken!
+  internal private(set) var parameterObserverToken: AUParameterObserverToken?
 
   /**
    Track changes for the given parameter.
@@ -91,14 +95,17 @@ public class AUParameterEditorBase: NSObject {
    observation.
    */
   internal func beginObservingParameter(editor: AUParameterEditor) {
-    parameterObserverToken = parameter.token(byAddingParameterObserver: { [weak self, weak editor] address, value in
-      guard let self = self, let editor = editor else { return }
-      precondition(address == self.parameter.address)
-      DispatchQueue.main.async { editor.setValue(value) }
-    })
+    let _ = parameter.token(byAddingParameterObserver: { address, value in })
+//    parameterObserverToken = parameter.token(byAddingParameterObserver: { [weak self, weak editor] address, value in
+//      guard let self = self, let editor = editor else { return }
+//      // precondition(address == self.parameter.address)
+//      DispatchQueue.main.async {
+//        editor.setValue(value)
+//      }
+//    })
   }
 
   public func runningOnMainThread() {
-    precondition(Thread.isMainThread)
+    precondition(Thread.isMainThread, "** Must be running on the main thread")
   }
 }

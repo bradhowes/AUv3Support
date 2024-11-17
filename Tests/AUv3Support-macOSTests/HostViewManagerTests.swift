@@ -22,7 +22,8 @@ class MockViewController: NSViewController {
   @IBOutlet weak var loadingText: NSTextField!
 }
 
-class HostViewManagerTests: XCTestCase {
+@MainActor
+private final class Context {
   let componentName = "ComponentName"
   let componentDescription = AudioComponentDescription(componentType: .init("dely"),
                                                        componentSubType: .init("samp"),
@@ -43,6 +44,16 @@ class HostViewManagerTests: XCTestCase {
   var containerView: NSView!
   var config: HostViewConfig!
 
+  init() {
+    viewController = .init()
+    containerView = .init()
+
+    appMenu = makeAppMenu()
+    presetsButton = .init()
+    presetsButton.menu = makeButtonMenu()
+    config = makeConfig()
+  }
+
   func makeAppMenu() -> NSMenu {
     let menu = NSMenu()
     let userItem = menu.addItem(withTitle: "User", action: nil, keyEquivalent: "")
@@ -62,71 +73,74 @@ class HostViewManagerTests: XCTestCase {
     return menu
   }
 
-  func makeConfig(version: String = "v1.2.3", alwaysShowNotice: Bool = false,
+  func makeConfig(alwaysShowNotice: Bool = false,
                   defaults: UserDefaults = .standard) -> HostViewConfig {
-    return .init(componentName: componentName, componentVersion: version,
+    return .init(componentName: componentName,
                  componentDescription: componentDescription, sampleLoop: sampleLoop,
                  playButton: playButton, bypassButton: bypassButton, presetsButton: presetsButton,
                  playMenuItem: playMenuItem, bypassMenuItem: bypassMenuItem, presetsMenu: appMenu,
                  viewController: viewController, containerView: containerView,
                  alwaysShowNotice: alwaysShowNotice, defaults: defaults)
   }
+}
 
-  override func setUp() {
-    viewController = .init()
-    containerView = .init()
+class HostViewManagerTests: XCTestCase {
 
-    appMenu = makeAppMenu()
-    presetsButton = .init()
-    presetsButton.menu = makeButtonMenu()
-    config = makeConfig()
-  }
-
+  @MainActor
   func testShowInstructionsOnce() {
+    let ctx = Context()
     let defaults = UserDefaults(suiteName: "\(NSTemporaryDirectory())\(UUID())")!
-    let config = makeConfig(defaults: defaults)
+    let config = ctx.makeConfig(defaults: defaults)
     let hvm = HostViewManager(config: config)
     XCTAssertTrue(hvm.showInstructions)
     XCTAssertFalse(hvm.showInstructions)
   }
 
+  @MainActor
   func testShowInstructionsWhenVersionChanges() {
+    let ctx = Context()
     let defaults = UserDefaults(suiteName: "\(NSTemporaryDirectory())\(UUID())")!
     defaults.set("v1.2.3", forKey: HostViewManager.showedInitialAlertKey)
     do {
-      let config = makeConfig(version: "v1.2.4", defaults: defaults)
+      let config = ctx.makeConfig(defaults: defaults)
       let hvm = HostViewManager(config: config)
       XCTAssertTrue(hvm.showInstructions)
     }
     do {
-      let config = makeConfig(version: "v1.2.4", defaults: defaults)
+      let config = ctx.makeConfig(defaults: defaults)
       let hvm = HostViewManager(config: config)
       XCTAssertFalse(hvm.showInstructions)
     }
   }
 
+  @MainActor
   func testAlwaysShowInstructions() {
+    let ctx = Context()
     let defaults = UserDefaults(suiteName: "\(NSTemporaryDirectory())\(UUID())")!
     defaults.set("v1.2.3", forKey: HostViewManager.showedInitialAlertKey)
     do {
-      let config = makeConfig(alwaysShowNotice: true, defaults: defaults)
+      let config = ctx.makeConfig(alwaysShowNotice: true, defaults: defaults)
       let hvm = HostViewManager(config: config)
       XCTAssertTrue(hvm.showInstructions)
       XCTAssertTrue(hvm.showInstructions)
     }
     do {
-      let config = makeConfig(alwaysShowNotice: false, defaults: defaults)
+      let config = ctx.makeConfig(alwaysShowNotice: false, defaults: defaults)
       let hvm = HostViewManager(config: config)
       XCTAssertFalse(hvm.showInstructions)
     }
   }
 
+  @MainActor
   func testInit() {
-    let hvm: HostViewManager = .init(config: config)
+    let ctx = Context()
+    let hvm: HostViewManager = .init(config: ctx.config)
     XCTAssertNil(hvm.delegate)
   }
 
+  @MainActor
   func testShowInitialPromptOnlyOnce() {
+    let ctx = Context()
     let defaults = UserDefaults(suiteName: "\(NSTemporaryDirectory())\(UUID())")!
 
     var showedPrompt = false
@@ -136,7 +150,7 @@ class HostViewManagerTests: XCTestCase {
       DispatchQueue.main.async { closure() }
     }
 
-    let hvm: HostViewManager = .init(config: makeConfig(defaults: defaults))
+    let hvm: HostViewManager = .init(config: ctx.makeConfig(defaults: defaults))
     hvm.showInitialPrompt(prompter: prompter)
     XCTAssertTrue(showedPrompt)
 
@@ -146,7 +160,9 @@ class HostViewManagerTests: XCTestCase {
     XCTAssertFalse(showedPrompt)
   }
 
+  @MainActor
   func skip_testAccessAudioUnit() {
+    let ctx = Context()
     class MockHostViewManagerDelegate: HostViewManagerDelegate {
       let expectation: XCTestExpectation
 
@@ -164,7 +180,7 @@ class HostViewManagerTests: XCTestCase {
 
     let expectation = XCTestExpectation()
     let delegate = MockHostViewManagerDelegate(expectation: expectation)
-    let hvm: HostViewManager = .init(config: config)
+    let hvm: HostViewManager = .init(config: ctx.config)
     hvm.delegate = delegate
 
     wait(for: [expectation], timeout: 60)

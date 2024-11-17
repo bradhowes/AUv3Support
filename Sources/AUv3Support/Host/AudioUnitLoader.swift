@@ -6,6 +6,7 @@ import os.log
 /**
  Errors that can come from AudioUnitLoader.
  */
+@MainActor
 public enum AudioUnitLoaderError: Error {
   /// Unexpected nil AUAudioUnit (most likely never can happen)
   case nilAudioUnit
@@ -29,6 +30,7 @@ public enum AudioUnitLoaderError: Error {
 /**
  Delegation protocol for AudioUnitLoader class.
  */
+@MainActor
 public protocol AudioUnitLoaderDelegate: AnyObject {
   /**
    Notification that the view controller in the AudioUnitHost has a wired AUAudioUnit
@@ -49,6 +51,7 @@ public protocol AudioUnitLoaderDelegate: AnyObject {
  send audio samples to the AudioUnit. Note that this class has no knowledge of any classes other than what Apple
  provides.
  */
+@MainActor
 public final class AudioUnitLoader: NSObject {
   private static let lastStateKey = "lastStateKey"
 

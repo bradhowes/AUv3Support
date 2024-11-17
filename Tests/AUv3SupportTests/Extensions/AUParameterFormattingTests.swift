@@ -10,8 +10,10 @@ private struct formatter: AUParameterFormatting, ParameterAddressProvider {
   var parameterAddress: AUParameterAddress { 123 }
 }
 
-private let paramDef = ParameterDefinition.defPercent("def", localized: "def", address: formatter())
-private let param = paramDef.parameter
+private struct Context {
+  let paramDef = ParameterDefinition.defPercent("def", localized: "def", address: formatter())
+  lazy var param = paramDef.parameter
+}
 
 extension AUParameter {
   public var suffix: String { makeFormattingSuffix(from: unitName) }
@@ -36,6 +38,8 @@ class AUParameterFormattingTests: XCTestCase {
   }
 
   func testParamFormatting() throws {
+    let paramDef = ParameterDefinition.defPercent("def", localized: "def", address: formatter())
+    let param = paramDef.parameter
     param.value = 3.14159
     XCTAssertEqual(param.displayValueFormatter(param.value), "3.14 %")
     XCTAssertEqual(param.editingValueFormatter(param.value), "3.142")

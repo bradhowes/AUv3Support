@@ -6,6 +6,7 @@ import os.log
 /**
  Wrapper around AVAudioEngine that manages its wiring with an AVAudioUnit instance.
  */
+@MainActor
 public final class SimplePlayEngine {
   static let bundle = Bundle(for: SimplePlayEngine.self)
   static let bundleIdentifier = bundle.bundleIdentifier ?? "unknown"
