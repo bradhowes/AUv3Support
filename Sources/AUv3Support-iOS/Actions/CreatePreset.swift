@@ -8,6 +8,7 @@ import UIKit
 
 extension HostViewController {
 
+  @MainActor
   struct CreatePreset {
     unowned let actionSupporter: ActionSupporter // The action never outlives this
     let presetsManager: UserPresetsManager

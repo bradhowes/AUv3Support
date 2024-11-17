@@ -10,6 +10,7 @@ import os.log
 extension Shared {
 
   /// Access the storyboard that defines the HostUIView for the AUv3 host app
+  @MainActor
   public static let hostViewStoryboard = Storyboard(name: "HostView", bundle: .module)
 
   /**
@@ -19,6 +20,7 @@ extension Shared {
    - parameter config: the configuration to use
    - returns: the HostUIViewController of the view that was embedded
    */
+  @MainActor
   public static func embedHostView(into parent: ViewController, config: HostViewConfig) -> HostViewController {
 
     let hostViewController = hostViewStoryboard.instantiateInitialViewController() as! HostViewController
@@ -39,6 +41,7 @@ extension Shared {
  to process audio, and it has controls for selecting and managing presets. All bits that are specific to a particular
  AudioUnit are specified in the `HostViewConfig` struct.
  */
+@MainActor
 public final class HostViewController: UIViewController {
   private var log: OSLog!
 

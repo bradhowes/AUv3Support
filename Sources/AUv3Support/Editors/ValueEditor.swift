@@ -10,6 +10,7 @@ import AudioToolbox
  Manages editing of an AUParameter float value. There is no need to have more than one of these instances since editing
  can only take place on one parameter at a time.
  */
+@MainActor
 public class ValueEditor: NSObject {
   private let log = Shared.logger("ValueEditor")
 

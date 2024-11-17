@@ -5,7 +5,8 @@ import XCTest
 import AVFoundation
 
 class HostViewControllerTests: XCTestCase {
-  
+
+  @MainActor
   func makeConfig(version: String = "v1.2.3", alwaysShowNotice: Bool = false,
                   defaults: UserDefaults = .standard) -> HostViewConfig {
     let acd: AudioComponentDescription = .init(componentType: .init("abcd"), componentSubType: .init("efgh"),
@@ -27,6 +28,7 @@ class HostViewControllerTests: XCTestCase {
     )
   }
 
+  @MainActor
   func testShowInstructions() {
     let defaults = UserDefaults(suiteName: "\(NSTemporaryDirectory())\(UUID())")!
     var config = makeConfig(defaults: defaults)
@@ -42,6 +44,7 @@ class HostViewControllerTests: XCTestCase {
     XCTAssertTrue(hvc.showInstructions)
   }
 
+  @MainActor
   func testShowInstructionsOnce() {
     let defaults = UserDefaults(suiteName: "\(NSTemporaryDirectory())\(UUID())")!
     let config = makeConfig(defaults: defaults)
@@ -51,6 +54,7 @@ class HostViewControllerTests: XCTestCase {
     XCTAssertFalse(hvc.showInstructions)
   }
 
+  @MainActor
   func testShowInstructionsWhenVersionChanges() {
     let defaults = UserDefaults(suiteName: "\(NSTemporaryDirectory())\(UUID())")!
     defaults.set("v1.2.3", forKey: HostViewController.showedInitialAlertKey)
@@ -68,6 +72,7 @@ class HostViewControllerTests: XCTestCase {
     }
   }
 
+  @MainActor
   func testAlwaysShowInstructions() {
     let defaults = UserDefaults(suiteName: "\(NSTemporaryDirectory())\(UUID())")!
     defaults.set("v1.2.3", forKey: HostViewController.showedInitialAlertKey)
