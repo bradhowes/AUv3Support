@@ -16,7 +16,6 @@ class HostViewControllerTests: XCTestCase {
     let tintColor: UIColor = .red
     let appStoreVisitor: (URL) -> Void = { _ in }
     return .init(name: "componentName",
-                 version: version,
                  appDelegate: appDelegate,
                  appStoreId: "abcd",
                  componentDescription: acd,

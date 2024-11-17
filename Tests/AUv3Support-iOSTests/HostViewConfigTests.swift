@@ -17,7 +17,6 @@ class HostViewConfigTests: XCTestCase {
     let appStoreVisitor: (URL) -> Void = { _ in }
 
     let config = HostViewConfig(name: "componentName",
-                                version: "v1.2.3",
                                 appDelegate: appDelegate,
                                 appStoreId: "abcd",
                                 componentDescription: acd,
