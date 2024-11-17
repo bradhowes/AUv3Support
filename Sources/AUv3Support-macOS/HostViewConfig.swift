@@ -6,6 +6,7 @@ import CoreAudioKit
 import AUv3Support
 import AppKit
 
+@MainActor
 public struct HostViewConfig {
   let componentName: String
   let componentDescription: AudioComponentDescription

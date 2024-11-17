@@ -8,6 +8,7 @@ import AudioUnit
  parameters. There are setters for various types, but there are no custom getters defined here. The expectation is that
  `ParameterAddressHolder` will be extended to support whatever custom type a `ParameterAddressHolder` should return.
  */
+@MainActor
 public protocol ParameterAddressHolder: NSObject {
   var parameterAddress: AUParameterAddress { get set }
 }

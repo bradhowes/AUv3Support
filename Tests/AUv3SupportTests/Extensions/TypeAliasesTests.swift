@@ -15,6 +15,7 @@ class StringTests: XCTestCase {
   }
 
 #if os(macOS)
+  @MainActor
   func testNSTextField() throws {
     let z = NSTextField()
     XCTAssertEqual(z.text, "")
@@ -24,6 +25,7 @@ class StringTests: XCTestCase {
     XCTAssertEqual(z.text, "blah")
   }
 
+  @MainActor
   func testNSSwitch() throws {
     let z = NSSwitch()
     XCTAssertFalse(z.booleanState)

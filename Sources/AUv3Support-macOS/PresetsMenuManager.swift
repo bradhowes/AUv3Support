@@ -27,6 +27,7 @@ public enum UserMenuItem: Int {
  - Rename -- change the name of the active user preset
  - Delete -- delete the active user preset
  */
+@MainActor
 public class PresetsMenuManager: NSObject {
   private let log = Shared.logger("PresetsMenuManager")
   private let noCurrentPreset = Int.max
@@ -220,6 +221,7 @@ extension Array where Element == NSMenuItem {
   }
 }
 
+@MainActor
 public protocol PresetsMenuManagerSupport {
   func askForName(title: String, placeholder: String, activity: String, closure: @escaping (String) -> Void)
   func confirmAction(title: String, message: String, confirmed: @escaping () -> Void)

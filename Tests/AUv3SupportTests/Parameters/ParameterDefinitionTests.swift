@@ -8,6 +8,7 @@ fileprivate enum ParameterAddress: UInt64, ParameterAddressProvider {
   case two
 }
 
+@MainActor
 fileprivate class Blob: NSObject, ParameterAddressHolder {
   var parameterAddress: AUParameterAddress = 0
 }
@@ -30,6 +31,7 @@ final class ParameterDefinitionTests: XCTestCase {
     XCTAssertFalse(param.flags.contains(.flag_DisplayLogarithmic))
   }
 
+  @MainActor
   func testParameterAddressHolder() throws {
     let blob = Blob()
     blob.setParameterAddress(ParameterAddress.one)

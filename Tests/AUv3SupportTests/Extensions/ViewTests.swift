@@ -10,6 +10,7 @@ class ViewTests: XCTestCase {
   override func setUp() {}
   override func tearDown() {}
 
+  @MainActor
   func testPinToSuperviewEdges() throws {
     let parent = View(frame: .init(x: 0, y: 0, width: 100, height: 200))
     parent.addConstraint(.init(item: parent, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 100))

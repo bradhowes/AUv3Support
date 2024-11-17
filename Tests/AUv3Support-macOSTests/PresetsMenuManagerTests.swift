@@ -73,7 +73,8 @@ class MockPresetsMenuManagerSupport: PresetsMenuManagerSupport {
   }
 }
 
-class PresetsMenuManagerTests: XCTestCase {
+@MainActor
+private final class Context {
   fileprivate var audioUnit: MockAudioUnit!
   var pmm: PresetsMenuManager!
   var upm: UserPresetsManager!
@@ -100,7 +101,7 @@ class PresetsMenuManagerTests: XCTestCase {
     return menu
   }
 
-  override func setUp() {
+  init() {
     audioUnit = MockAudioUnit()
     button = .init()
     support = .init()
@@ -111,112 +112,132 @@ class PresetsMenuManagerTests: XCTestCase {
     pmm = PresetsMenuManager(button: button, appMenu: appMenu, userPresetsManager: upm, support: support)
     pmm.build()
   }
+}
 
+class PresetsMenuManagerTests: XCTestCase {
+
+  @MainActor
   func testBuild() {
-    XCTAssertEqual(appMenu.items.count, 2)
-    XCTAssertEqual(appMenu.items[0].title, "User")
-    XCTAssertEqual(appMenu.items[0].submenu!.items.count, 8)
-    XCTAssertEqual(appMenu.items[0].submenu!.items[.new].title, "New")
-    XCTAssertTrue(appMenu.items[0].submenu!.items[.new].isEnabled)
-    XCTAssertEqual(appMenu.items[0].submenu!.items[.save].title, "Save")
-    XCTAssertFalse(appMenu.items[0].submenu!.items[.save].isEnabled)
-    XCTAssertEqual(appMenu.items[0].submenu!.items[.rename].title, "Rename")
-    XCTAssertFalse(appMenu.items[0].submenu!.items[.rename].isEnabled)
-    XCTAssertEqual(appMenu.items[0].submenu!.items[.delete].title, "Delete")
-    XCTAssertFalse(appMenu.items[0].submenu!.items[.delete].isEnabled)
-    XCTAssertTrue(appMenu.items[0].submenu!.items[4].isSeparatorItem)
-    XCTAssertEqual(appMenu.items[0].submenu!.items[5].title, "A User 2")
-    XCTAssertTrue(appMenu.items[0].submenu!.items[5].isEnabled)
-    XCTAssertEqual(appMenu.items[0].submenu!.items[6].title, "Blah User 3")
-    XCTAssertTrue(appMenu.items[0].submenu!.items[6].isEnabled)
-    XCTAssertEqual(appMenu.items[0].submenu!.items[7].title, "The User 1")
-    XCTAssertTrue(appMenu.items[0].submenu!.items[7].isEnabled)
+    let ctx = Context()
 
-    XCTAssertEqual(appMenu.items[1].title, "Factory")
-    XCTAssertEqual(appMenu.items[1].submenu!.items.count, 2)
-    XCTAssertEqual(appMenu.items[1].submenu!.items[0].title, "Zero")
-    XCTAssertTrue(appMenu.items[1].submenu!.items[0].isEnabled)
-    XCTAssertEqual(appMenu.items[1].submenu!.items[1].title, "One")
-    XCTAssertTrue(appMenu.items[1].submenu!.items[1].isEnabled)
+    XCTAssertEqual(ctx.appMenu.items.count, 2)
+    XCTAssertEqual(ctx.appMenu.items[0].title, "User")
+    XCTAssertEqual(ctx.appMenu.items[0].submenu!.items.count, 8)
+    XCTAssertEqual(ctx.appMenu.items[0].submenu!.items[.new].title, "New")
+    XCTAssertTrue(ctx.appMenu.items[0].submenu!.items[.new].isEnabled)
+    XCTAssertEqual(ctx.appMenu.items[0].submenu!.items[.save].title, "Save")
+    XCTAssertFalse(ctx.appMenu.items[0].submenu!.items[.save].isEnabled)
+    XCTAssertEqual(ctx.appMenu.items[0].submenu!.items[.rename].title, "Rename")
+    XCTAssertFalse(ctx.appMenu.items[0].submenu!.items[.rename].isEnabled)
+    XCTAssertEqual(ctx.appMenu.items[0].submenu!.items[.delete].title, "Delete")
+    XCTAssertFalse(ctx.appMenu.items[0].submenu!.items[.delete].isEnabled)
+    XCTAssertTrue(ctx.appMenu.items[0].submenu!.items[4].isSeparatorItem)
+    XCTAssertEqual(ctx.appMenu.items[0].submenu!.items[5].title, "A User 2")
+    XCTAssertTrue(ctx.appMenu.items[0].submenu!.items[5].isEnabled)
+    XCTAssertEqual(ctx.appMenu.items[0].submenu!.items[6].title, "Blah User 3")
+    XCTAssertTrue(ctx.appMenu.items[0].submenu!.items[6].isEnabled)
+    XCTAssertEqual(ctx.appMenu.items[0].submenu!.items[7].title, "The User 1")
+    XCTAssertTrue(ctx.appMenu.items[0].submenu!.items[7].isEnabled)
 
-    XCTAssertEqual(button.menu!.items[1].submenu!.items.count, 8)
-    XCTAssertEqual(button.menu!.items[2].submenu!.items.count, 2)
+    XCTAssertEqual(ctx.appMenu.items[1].title, "Factory")
+    XCTAssertEqual(ctx.appMenu.items[1].submenu!.items.count, 2)
+    XCTAssertEqual(ctx.appMenu.items[1].submenu!.items[0].title, "Zero")
+    XCTAssertTrue(ctx.appMenu.items[1].submenu!.items[0].isEnabled)
+    XCTAssertEqual(ctx.appMenu.items[1].submenu!.items[1].title, "One")
+    XCTAssertTrue(ctx.appMenu.items[1].submenu!.items[1].isEnabled)
+
+    XCTAssertEqual(ctx.button.menu!.items[1].submenu!.items.count, 8)
+    XCTAssertEqual(ctx.button.menu!.items[2].submenu!.items.count, 2)
   }
 
+  @MainActor
   func testSelectUserPreset() {
-    XCTAssertEqual(appMenu.items[0].submenu!.items[5].state, .off)
-    pmm.handlePresetMenuSelection(appMenu.items[0].submenu!.items[5])
-    XCTAssertEqual(appMenu.items[0].submenu!.items[5].state, .on)
+    let ctx = Context()
 
-    XCTAssertEqual(button.menu!.items[1].submenu!.items[5].state, .off)
-    pmm.selectActive()
-    XCTAssertEqual(button.menu!.items[1].submenu!.items[5].state, .on)
+    XCTAssertEqual(ctx.appMenu.items[0].submenu!.items[5].state, .off)
+    ctx.pmm.handlePresetMenuSelection(ctx.appMenu.items[0].submenu!.items[5])
+    XCTAssertEqual(ctx.appMenu.items[0].submenu!.items[5].state, .on)
 
-    XCTAssertTrue(appMenu.items[0].submenu!.items[.new].isEnabled)
-    XCTAssertTrue(appMenu.items[0].submenu!.items[.save].isEnabled)
-    XCTAssertTrue(appMenu.items[0].submenu!.items[.rename].isEnabled)
-    XCTAssertTrue(appMenu.items[0].submenu!.items[.delete].isEnabled)
+    XCTAssertEqual(ctx.button.menu!.items[1].submenu!.items[5].state, .off)
+    ctx.pmm.selectActive()
+    XCTAssertEqual(ctx.button.menu!.items[1].submenu!.items[5].state, .on)
+
+    XCTAssertTrue(ctx.appMenu.items[0].submenu!.items[.new].isEnabled)
+    XCTAssertTrue(ctx.appMenu.items[0].submenu!.items[.save].isEnabled)
+    XCTAssertTrue(ctx.appMenu.items[0].submenu!.items[.rename].isEnabled)
+    XCTAssertTrue(ctx.appMenu.items[0].submenu!.items[.delete].isEnabled)
   }
 
+  @MainActor
   func testSelectFactoryPreset() {
+    let ctx = Context()
 
     // Select first factory preset
-    XCTAssertEqual(appMenu.items[1].submenu!.items[0].state, .off)
-    pmm.handlePresetMenuSelection(appMenu.items[1].submenu!.items[0])
-    XCTAssertEqual(appMenu.items[1].submenu!.items[0].state, .on)
+    XCTAssertEqual(ctx.appMenu.items[1].submenu!.items[0].state, .off)
+    ctx.pmm.handlePresetMenuSelection(ctx.appMenu.items[1].submenu!.items[0])
+    XCTAssertEqual(ctx.appMenu.items[1].submenu!.items[0].state, .on)
 
-    XCTAssertEqual(button.menu!.items[2].submenu!.items[0].state, .off)
-    pmm.selectActive()
-    XCTAssertEqual(button.menu!.items[2].submenu!.items[0].state, .on)
+    XCTAssertEqual(ctx.button.menu!.items[2].submenu!.items[0].state, .off)
+    ctx.pmm.selectActive()
+    XCTAssertEqual(ctx.button.menu!.items[2].submenu!.items[0].state, .on)
 
     // Select second factory preset
-    pmm.handlePresetMenuSelection(appMenu.items[1].submenu!.items[1])
-    pmm.selectActive()
+    ctx.pmm.handlePresetMenuSelection(ctx.appMenu.items[1].submenu!.items[1])
+    ctx.pmm.selectActive()
 
-    XCTAssertEqual(appMenu.items[1].submenu!.items[0].state, .off)
-    XCTAssertEqual(appMenu.items[1].submenu!.items[1].state, .on)
-    XCTAssertEqual(button.menu!.items[2].submenu!.items[0].state, .off)
-    XCTAssertEqual(button.menu!.items[2].submenu!.items[1].state, .on)
+    XCTAssertEqual(ctx.appMenu.items[1].submenu!.items[0].state, .off)
+    XCTAssertEqual(ctx.appMenu.items[1].submenu!.items[1].state, .on)
+    XCTAssertEqual(ctx.button.menu!.items[2].submenu!.items[0].state, .off)
+    XCTAssertEqual(ctx.button.menu!.items[2].submenu!.items[1].state, .on)
 
-    XCTAssertTrue(appMenu.items[0].submenu!.items[.new].isEnabled)
-    XCTAssertFalse(appMenu.items[0].submenu!.items[.save].isEnabled)
-    XCTAssertFalse(appMenu.items[0].submenu!.items[.rename].isEnabled)
-    XCTAssertFalse(appMenu.items[0].submenu!.items[.delete].isEnabled)
+    XCTAssertTrue(ctx.appMenu.items[0].submenu!.items[.new].isEnabled)
+    XCTAssertFalse(ctx.appMenu.items[0].submenu!.items[.save].isEnabled)
+    XCTAssertFalse(ctx.appMenu.items[0].submenu!.items[.rename].isEnabled)
+    XCTAssertFalse(ctx.appMenu.items[0].submenu!.items[.delete].isEnabled)
   }
 
+  @MainActor
   func testNewPreset() {
-    pmm.createPreset(appMenu.items[0].submenu!.items[.new])
-    pmm.build()
-    XCTAssertEqual(button.menu!.items[1].submenu!.items.count, 9)
-    XCTAssertEqual(button.menu!.items[1].submenu!.items[8].title, "Zaphod")
-    XCTAssertEqual(audioUnit.changes.count, 1)
-    XCTAssertEqual(audioUnit.changes[0].action, .new)
-    XCTAssertEqual(audioUnit.changes[0].preset.name, "Zaphod")
-    XCTAssertEqual(audioUnit.changes[0].preset.number, -1)
+    let ctx = Context()
+
+    ctx.pmm.createPreset(ctx.appMenu.items[0].submenu!.items[.new])
+    ctx.pmm.build()
+    XCTAssertEqual(ctx.button.menu!.items[1].submenu!.items.count, 9)
+    XCTAssertEqual(ctx.button.menu!.items[1].submenu!.items[8].title, "Zaphod")
+    XCTAssertEqual(ctx.audioUnit.changes.count, 1)
+    XCTAssertEqual(ctx.audioUnit.changes[0].action, .new)
+    XCTAssertEqual(ctx.audioUnit.changes[0].preset.name, "Zaphod")
+    XCTAssertEqual(ctx.audioUnit.changes[0].preset.number, -1)
   }
 
+  @MainActor
   func testUpdatePreset() {
-    pmm.createPreset(appMenu.items[0].submenu!.items[.new])
-    pmm.build()
-    pmm.updatePreset(appMenu.items[0].submenu!.items[.save])
-    XCTAssertEqual(button.menu!.items[1].submenu!.items.count, 9)
-    XCTAssertEqual(button.menu!.items[1].submenu!.items[8].title, "Zaphod")
-    XCTAssertEqual(audioUnit.changes.count, 2)
-    XCTAssertEqual(audioUnit.changes[1].action, .update)
-    XCTAssertEqual(audioUnit.changes[1].preset.name, "Zaphod")
-    XCTAssertEqual(audioUnit.changes[1].preset.number, -1)
+    let ctx = Context()
+
+    ctx.pmm.createPreset(ctx.appMenu.items[0].submenu!.items[.new])
+    ctx.pmm.build()
+    ctx.pmm.updatePreset(ctx.appMenu.items[0].submenu!.items[.save])
+    XCTAssertEqual(ctx.button.menu!.items[1].submenu!.items.count, 9)
+    XCTAssertEqual(ctx.button.menu!.items[1].submenu!.items[8].title, "Zaphod")
+    XCTAssertEqual(ctx.audioUnit.changes.count, 2)
+    XCTAssertEqual(ctx.audioUnit.changes[1].action, .update)
+    XCTAssertEqual(ctx.audioUnit.changes[1].preset.name, "Zaphod")
+    XCTAssertEqual(ctx.audioUnit.changes[1].preset.number, -1)
   }
 
+  @MainActor
   func testDeletePreset() {
-    pmm.createPreset(appMenu.items[0].submenu!.items[.new])
-    pmm.build()
-    pmm.deletePreset(appMenu.items[0].submenu!.items[.delete])
-    pmm.build()
-    XCTAssertEqual(button.menu!.items[1].submenu!.items.count, 8)
-    XCTAssertEqual(audioUnit.changes.count, 2)
-    XCTAssertEqual(audioUnit.changes[1].action, .delete)
-    XCTAssertEqual(audioUnit.changes[1].preset.name, "Zaphod")
-    XCTAssertEqual(audioUnit.changes[1].preset.number, -1)
+    let ctx = Context()
+
+    ctx.pmm.createPreset(ctx.appMenu.items[0].submenu!.items[.new])
+    ctx.pmm.build()
+    ctx.pmm.deletePreset(ctx.appMenu.items[0].submenu!.items[.delete])
+    ctx.pmm.build()
+    XCTAssertEqual(ctx.button.menu!.items[1].submenu!.items.count, 8)
+    XCTAssertEqual(ctx.audioUnit.changes.count, 2)
+    XCTAssertEqual(ctx.audioUnit.changes[1].action, .delete)
+    XCTAssertEqual(ctx.audioUnit.changes[1].preset.name, "Zaphod")
+    XCTAssertEqual(ctx.audioUnit.changes[1].preset.number, -1)
   }
 
 }

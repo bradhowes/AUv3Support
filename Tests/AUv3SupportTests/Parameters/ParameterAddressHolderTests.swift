@@ -18,6 +18,7 @@ fileprivate class SomeObject: NSObject, ParameterAddressHolder {
 
 final class ParameterAddressHolderTests: XCTestCase {
 
+  @MainActor
   func testAPI() throws {
     let a = SomeObject()
     XCTAssertEqual(a.parameterAddress, 0)
