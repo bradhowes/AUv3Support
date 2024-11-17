@@ -97,7 +97,7 @@ extension FloatParameterEditor: AUParameterEditor {
    */
   public func controlChanged(source: AUParameterValueProvider) {
     os_log(.debug, log: log, "controlChanged - %f", source.value)
-    runningOnMainThread()
+    Self.runningOnMainThread()
 
 #if os(macOS)
     NSApp?.keyWindow?.makeFirstResponder(nil)
@@ -118,7 +118,7 @@ extension FloatParameterEditor: AUParameterEditor {
    */
   public func setValue(_ value: AUValue) {
     os_log(.debug, log: log, "setValue - %f", value)
-    runningOnMainThread()
+    Self.runningOnMainThread()
     let newValue = value.clamped(to: parameter.minValue...parameter.maxValue)
     if newValue != parameter.value {
       parameter.setValue(newValue, originator: parameterObserverToken)

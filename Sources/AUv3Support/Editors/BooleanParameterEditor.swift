@@ -34,7 +34,7 @@ extension BooleanParameterEditor: AUParameterEditor {
    - parameter source: the control that caused the change
    */
   public func controlChanged(source: AUParameterValueProvider) {
-    runningOnMainThread()
+    Self.runningOnMainThread()
     let value = source.value
     if value != parameter.value {
       parameter.setValue(value, originator: parameterObserverToken)
@@ -48,7 +48,7 @@ extension BooleanParameterEditor: AUParameterEditor {
    - parameter value: the new value to use
    */
   public func setValue(_ value: AUValue) {
-    runningOnMainThread()
+    Self.runningOnMainThread()
     if value != parameter.value {
       parameter.setValue(value, originator: parameterObserverToken)
     }

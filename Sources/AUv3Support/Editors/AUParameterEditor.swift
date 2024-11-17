@@ -95,17 +95,18 @@ public class AUParameterEditorBase: NSObject {
    observation.
    */
   internal func beginObservingParameter(editor: AUParameterEditor) {
-    let _ = parameter.token(byAddingParameterObserver: { address, value in })
-//    parameterObserverToken = parameter.token(byAddingParameterObserver: { [weak self, weak editor] address, value in
-//      guard let self = self, let editor = editor else { return }
-//      // precondition(address == self.parameter.address)
-//      DispatchQueue.main.async {
-//        editor.setValue(value)
-//      }
-//    })
+    Self.runningOnMainThread()
+    parameterObserverToken = parameter.token(byAddingParameterObserver: { [weak self, weak editor] address, value in
+      Self.runningOnMainThread()
+      guard let self = self, let editor = editor else { return }
+      precondition(address == self.parameter.address)
+      DispatchQueue.main.async {
+        editor.setValue(value)
+      }
+    })
   }
 
-  public func runningOnMainThread() {
+  public static func runningOnMainThread() {
     precondition(Thread.isMainThread, "** Must be running on the main thread")
   }
 }
