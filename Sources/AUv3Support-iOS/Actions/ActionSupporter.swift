@@ -5,6 +5,7 @@
 /**
  Functionality required to support preset editing actions. Broken out here to remove dependency on UIViewController.
  */
+@MainActor
 public protocol ActionSupporter: AnyObject {
 
   /**

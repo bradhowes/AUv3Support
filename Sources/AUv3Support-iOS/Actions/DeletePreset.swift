@@ -7,6 +7,7 @@ import UIKit
 
 extension HostViewController {
 
+  @MainActor
   struct DeletePreset {
     unowned let actionSupporter: ActionSupporter
     let presetsManager: UserPresetsManager

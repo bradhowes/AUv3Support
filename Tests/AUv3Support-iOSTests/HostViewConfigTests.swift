@@ -7,6 +7,7 @@ import AVFoundation
 
 class HostViewConfigTests: XCTestCase {
 
+  @MainActor
   func testInit() {
     let acd: AudioComponentDescription = .init(componentType: .init("abcd"), componentSubType: .init("efgh"),
                                                componentManufacturer: .init("ijkl"), componentFlags: 0,
