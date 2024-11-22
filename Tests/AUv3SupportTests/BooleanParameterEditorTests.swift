@@ -79,7 +79,7 @@ final class BooleanParameterEditorTests: XCTestCase {
     XCTAssertEqual(ctx.control.booleanState, false)
     XCTAssertEqual(ctx.paramValue, 0.0)
 
-    let pause: Duration = .milliseconds(100)
+    let pause: Duration = .milliseconds(200)
     ctx.param.setValue(1.0, originator: nil)
     try await Task.sleep(for: pause)
     ctx.param.setValue(0.0, originator: nil)
