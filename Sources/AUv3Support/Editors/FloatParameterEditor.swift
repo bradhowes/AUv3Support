@@ -136,18 +136,14 @@ extension FloatParameterEditor: AUParameterEditor {
 extension FloatParameterEditor {
 
   private func setControlState(_ value: AUValue) {
-    if setRangedControlValue(useLogValues ? paramValueToControlLogValue(value) : value) {
-      showNewValue(value)
-    }
+    showNewValue(value)
+    setRangedControlValue(useLogValues ? paramValueToControlLogValue(value) : value)
   }
 
-  @discardableResult
-  private func setRangedControlValue(_ value: AUValue) -> Bool {
+  private func setRangedControlValue(_ value: AUValue) {
     if value != rangedControl.value {
       rangedControl.value = value
-      return true
     }
-    return false
   }
 
   private func configureRangedControl() {

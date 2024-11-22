@@ -16,7 +16,6 @@ public final class SimplePlayEngine {
   private let player = AVAudioPlayerNode()
   private var activeEffect: AVAudioUnit?
   private let file: AVAudioFile
-  private lazy var stateChangeQueue = DispatchQueue(label: Self.bundleIdentifier + ".StateChangeQueue")
 
   /// True if engine is currently playing the audio file.
   public var isPlaying: Bool { player.isPlaying }
@@ -71,29 +70,25 @@ extension SimplePlayEngine {
    Start playback of the audio file player.
    */
   public func start() {
-    stateChangeQueue.sync {
-      guard !player.isPlaying else { return }
-      updateAudioSession(active: true)
-      beginLoop()
-      do {
-        try engine.start()
-      } catch {
-        fatalError("failed to start AVAudioEngine")
-      }
-      player.play()
+    guard !player.isPlaying else { return }
+    updateAudioSession(active: true)
+    beginLoop()
+    do {
+      try engine.start()
+    } catch {
+      fatalError("failed to start AVAudioEngine")
     }
+    player.play()
   }
 
   /**
    Stop playback of the audio file player.
    */
   public func stop() {
-    stateChangeQueue.sync {
-      guard player.isPlaying else { return }
-      player.stop()
-      engine.stop()
-      updateAudioSession(active: false)
-    }
+    guard player.isPlaying else { return }
+    player.stop()
+    engine.stop()
+    updateAudioSession(active: false)
   }
 
   /**
@@ -126,11 +121,7 @@ private extension SimplePlayEngine {
    */
   private func beginLoop() {
     player.scheduleFile(file, at: nil) {
-      self.stateChangeQueue.async {
-        DispatchQueue.main.async {
-          self.loopIfPlaying()
-        }
-      }
+      self.loopIfPlaying()
     }
   }
 
