@@ -6,6 +6,7 @@ import os.log
 /**
  Interface for an object that maintains a value between a range of min and max values.
  */
+@MainActor
 public protocol RangedControl: ParameterAddressHolder {
 
   /// The minimum value that the control can represent
