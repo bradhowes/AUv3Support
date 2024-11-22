@@ -1,4 +1,4 @@
-// Copyright © 2020 Brad Howes. All rights reserved.
+// Copyright © 2020, 2024 Brad Howes. All rights reserved.
 
 import AudioToolbox
 
@@ -198,7 +198,7 @@ final class AUParameterTreeTests: XCTestCase {
       print("loop done")
     }
 
-    let pause: Duration = .milliseconds(60)
+    let pause: Duration = .milliseconds(100)
     ctx.tree.parameter(withAddress: 123)!.setValue(1.0, originator: nil)
     try await Task.sleep(for: pause)
     ctx.tree.parameter(withAddress: 123)!.setValue(2.0, originator: nil)
