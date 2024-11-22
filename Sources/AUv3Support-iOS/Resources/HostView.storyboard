@@ -178,6 +178,7 @@ However, if you later delete this app from your device, the AUv3 component will 
                         <outlet property="presetSelection" destination="nh4-Vf-lfu" id="bAk-SR-XT6"/>
                         <outlet property="reviewButton" destination="aBM-QG-hno" id="lzH-nO-OPI"/>
                         <outlet property="userPresetsMenuButton" destination="VAJ-jX-V2g" id="DxV-Jf-mnz"/>
+                        <outlet property="instructionsOKButton" destination="z2I-ka-15q" id="DxV-Jf-mnZ"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>

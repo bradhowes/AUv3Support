@@ -75,6 +75,7 @@ public final class HostViewController: UIViewController {
   @IBOutlet private var containerView: UIView!
   @IBOutlet private var instructions: UIView!
   @IBOutlet private var instructionsLabel: UILabel!
+  @IBOutlet private var instructionsOKButton: UIButton!
 
   private var currentPresetObserverToken: NSKeyValueObservation?
   private var userPresetsObserverToken: NSKeyValueObservation?
@@ -272,16 +273,19 @@ private extension HostViewController {
 
   func applyTheme() {
     guard let config = self.config else { fatalError() }
-    playButton.tintColor = config.tintColor
-    bypassButton.tintColor = config.tintColor
-    userPresetsMenuButton.tintColor = config.tintColor
-    presetName.textColor = config.tintColor
-    presetSelection.selectedSegmentTintColor = config.tintColor
+    let tintColor = config.tintColor
 
-    instructions.layer.borderColor = config.tintColor.cgColor
-    instructionsLabel.textColor = config.tintColor
+    playButton.tintColor = tintColor
+    bypassButton.tintColor = tintColor
+    userPresetsMenuButton.tintColor = tintColor
+    presetName.textColor = tintColor
+    presetSelection.selectedSegmentTintColor = tintColor
 
-    reviewButton.setTitleColor(config.tintColor, for: .normal)
+    instructions.layer.borderColor = tintColor.cgColor
+    instructionsLabel.textColor = tintColor
+    instructionsOKButton.setTitleColor(tintColor, for: .normal)
+
+    reviewButton.setTitleColor(tintColor, for: .normal)
   }
 
   func connectFilterView(_ audioUnit: AVAudioUnit, _ viewController: UIViewController) {
