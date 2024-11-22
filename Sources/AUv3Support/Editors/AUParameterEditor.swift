@@ -44,7 +44,8 @@ public protocol AUParameterEditor: AnyObject {
 
   /**
    Notification that the parameter should change due to a widget control change. A parameter can be controlled by more
-   than one UI control or value provider, so this provides a way to keep them in sync.
+   than one UI control / value provider, so this provides a way to keep them in sync. For instance, two sliders or
+   knobs could control the same parameter but in different views. Either could call this to supply a new value.
 
    - parameter source: the control that caused the change
    */
@@ -75,6 +76,7 @@ public class AUParameterEditorBase: NSObject {
 
   // The observer token used to track the parameter value
   internal private(set) var parameterObserverToken: AUParameterObserverToken?
+  private var task: Task<Void, Never>?
 
   /**
    Track changes for the given parameter.
@@ -94,19 +96,72 @@ public class AUParameterEditorBase: NSObject {
    it is not enforced. If it is *not* `self` then one must ensure it is properly retained during the lifetime of the
    observation.
    */
-  internal func beginObservingParameter(editor: AUParameterEditor) {
-    Self.runningOnMainThread()
-    parameterObserverToken = parameter.token(byAddingParameterObserver: { [weak self, weak editor] address, value in
-      Self.runningOnMainThread()
-      guard let self = self, let editor = editor else { return }
-      precondition(address == self.parameter.address)
-      DispatchQueue.main.async {
-        editor.setValue(value)
+  internal func startObservingParameter(closure: @escaping (AUValue) -> Void) {
+    precondition(task == nil)
+    let stream: AsyncStream<AUValue>
+    (parameterObserverToken, stream) = parameter.startObserving()
+    task = Task {
+      for await value in stream {
+        print("task new value: \(value)")
+        if Task.isCancelled {
+          break
+        }
+        closure(value)
       }
-    })
+    }
   }
 
-  public static func runningOnMainThread() {
-    precondition(Thread.isMainThread, "** Must be running on the main thread")
+  internal func stopObservingParameter() {
+    if let task {
+      task.cancel()
+      self.task = nil
+    }
+
+    if let parameterObserverToken {
+      self.parameter.removeParameterObserver(parameterObserverToken)
+      self.parameterObserverToken = nil
+    }
+  }
+}
+
+internal extension AUParameter {
+
+  /**
+   Obtain a stream of value changes from a parameter, presumably changed by another entity such as a MIDI
+   connection.
+
+   - returns: 2-tuple containing a token for cancelling the observation and an AsyncStream of observed values
+   */
+  func startObserving() -> (AUParameterObserverToken, AsyncStream<AUValue>) {
+    let (stream, continuation) = AsyncStream<AUValue>.makeStream()
+    let observerToken = self.token(byAddingParameterObserver: { address, value in
+      var lastSeen: AUValue?
+      if address == self.address && value != lastSeen {
+        lastSeen = value
+        continuation.yield(value)
+      }
+    })
+
+    continuation.onTermination = { _ in }
+    return (observerToken, stream)
+  }
+}
+
+internal extension AUParameterTree {
+
+  /**
+   Obtain a stream of value changes from a parameter, presumably changed by another entity such as a MIDI
+   connection.
+
+   - returns: 2-tuple containing a token for cancelling the observation and an AsyncStream of observed values
+   */
+  func startObserving() -> (AUParameterObserverToken, AsyncStream<(AUParameterAddress,AUValue)>) {
+    let (stream, continuation) = AsyncStream<(AUParameterAddress, AUValue)>.makeStream()
+    let observerToken = self.token(byAddingParameterObserver: { address, value in
+      continuation.yield((address, value))
+    })
+
+    continuation.onTermination = { _ in }
+    return (observerToken, stream)
   }
 }

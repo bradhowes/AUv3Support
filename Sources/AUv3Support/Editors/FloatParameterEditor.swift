@@ -41,7 +41,13 @@ public final class FloatParameterEditor: AUParameterEditorBase {
 #endif
 
   /**
-   Construct a new instance that links together a RangedControl and a label to an AUParameter value.
+   Construct a new instance that links together a RangedControl + label with an AUParameter value, keeping the two
+   in sync. It monitors for async changes in the AUParameter and sends updates to the control. When the control changes,
+   it is expected to call the editor's `controlChanged()` method so that the editor can update the parameter.
+   Note that the `controlChanged` method can be called by other controls, not just the one registered with this editor.
+   In this way, multiple views can keep each other up-to-date.
+
+   If the parameter has `flag_DisplayLogarithmic` value set.
 
    - parameter parameter: the parameter to control
    - parameter formatting: attributes and methods to format AUValue values to strings
@@ -60,7 +66,9 @@ public final class FloatParameterEditor: AUParameterEditorBase {
     }
 
     configureRangedControl()
-    beginObservingParameter(editor: self)
+    startObservingParameter {
+      self.parameterChanged($0)
+    }
   }
 }
 
@@ -97,28 +105,26 @@ extension FloatParameterEditor: AUParameterEditor {
    */
   public func controlChanged(source: AUParameterValueProvider) {
     os_log(.debug, log: log, "controlChanged - %f", source.value)
-    Self.runningOnMainThread()
 
 #if os(macOS)
     NSApp?.keyWindow?.makeFirstResponder(nil)
 #endif
 
     let value = useLogValues ? paramValueFromControlLogValue(source.value) : source.value
-    if value != parameter.value {
-      os_log(.debug, log: log, "controlChanged - parameter.setValue %f", value)
-      parameter.setValue(value, originator: parameterObserverToken)
-    }
+    setValue(value)
+  }
+
+  private func parameterChanged(_ value: AUValue) {
     setControlState(value)
   }
 
   /**
    Apply a new value to both the control and the parameter.
 
-   - parameter value: the new value to use
+   - parameter value: the new value to use in parameter units and scaling
    */
   public func setValue(_ value: AUValue) {
     os_log(.debug, log: log, "setValue - %f", value)
-    Self.runningOnMainThread()
     let newValue = value.clamped(to: parameter.minValue...parameter.maxValue)
     if newValue != parameter.value {
       parameter.setValue(newValue, originator: parameterObserverToken)
@@ -127,23 +133,38 @@ extension FloatParameterEditor: AUParameterEditor {
   }
 }
 
-private extension FloatParameterEditor {
+extension FloatParameterEditor {
 
-  func configureRangedControl() {
+  private func setControlState(_ value: AUValue) {
+    if setRangedControlValue(useLogValues ? paramValueToControlLogValue(value) : value) {
+      showNewValue(value)
+    }
+  }
+
+  @discardableResult
+  private func setRangedControlValue(_ value: AUValue) -> Bool {
+    if value != rangedControl.value {
+      rangedControl.value = value
+      return true
+    }
+    return false
+  }
+
+  private func configureRangedControl() {
     rangedControl.setParameterAddress(parameter.address)
     if useLogValues {
       rangedControl.minimumValue = logSliderMinValue
       rangedControl.maximumValue = logSliderMaxValue
-      rangedControl.value = paramValueToControlLogValue(parameter.value)
+      setRangedControlValue(paramValueToControlLogValue(parameter.value))
     }
     else {
       rangedControl.minimumValue = parameter.minValue
       rangedControl.maximumValue = parameter.maxValue
-      rangedControl.value = parameter.value
+      setRangedControlValue(parameter.value)
     }
   }
 
-  func configureLabel(_ label: Label) {
+  private func configureLabel(_ label: Label) {
     label.setParameterAddress(parameter.address)
     label.text = parameter.displayName
 
@@ -167,7 +188,7 @@ private extension FloatParameterEditor {
   }
 
 #if os(macOS)
-  func onLabelFocusChanged(hasFocus: Bool) {
+  private func onLabelFocusChanged(hasFocus: Bool) {
     os_log(.debug, log: log, "onFocusChanged - hasFocus: %d", hasFocus)
     guard let label = self.label else { fatalError("expected non-nil label") }
     if hasFocus {
@@ -196,7 +217,7 @@ private extension FloatParameterEditor {
    - parameter value: the value from a parameter
    - returns: the value to use in the control
    */
-  func paramValueToControlLogValue(_ value: Float) -> Float {
+  private func paramValueToControlLogValue(_ value: Float) -> Float {
     log2(((value - parameter.minValue) / (parameter.maxValue - parameter.minValue)) *
          logSliderMaxValuePower2Minus1 + 1.0)
   }
@@ -204,20 +225,15 @@ private extension FloatParameterEditor {
   /**
    Convert the indicator value of a control into an AUParameter value
 
-   - parameter knobValue: the value from a control
+   - parameter control: the value from a control
    - returns: the value to store in AUParameter
    */
-  func paramValueFromControlLogValue(_ knobValue: AUValue) -> AUValue {
-    ((pow(2, knobValue) - 1) / logSliderMaxValuePower2Minus1) * (parameter.maxValue - parameter.minValue) +
+  private func paramValueFromControlLogValue(_ control: AUValue) -> AUValue {
+    ((pow(2, control) - 1) / logSliderMaxValuePower2Minus1) * (parameter.maxValue - parameter.minValue) +
     parameter.minValue
   }
 
-  func setControlState(_ value: AUValue) {
-    showNewValue(value)
-    rangedControl.value = useLogValues ? paramValueToControlLogValue(value) : value
-  }
-
-  func showNewValue(_ value: AUValue) {
+  private func showNewValue(_ value: AUValue) {
     os_log(.debug, log: log, "showNewValue - %f", value)
     guard let label = self.label else { return }
 
@@ -240,7 +256,7 @@ private extension FloatParameterEditor {
     restoreName()
   }
 
-  func restoreName() {
+  private func restoreName() {
     restoreNameTimer?.invalidate()
     restoreNameTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
       DispatchQueue.main.async {
@@ -249,7 +265,7 @@ private extension FloatParameterEditor {
     }
   }
 
-  func transitionToDisplayName() {
+  private func transitionToDisplayName() {
     let displayName = parameter.displayName
     guard let label = label else { return }
 

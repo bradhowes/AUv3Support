@@ -3,17 +3,23 @@ import XCTest
 @testable import AUv3Support
 
 @MainActor
-fileprivate class MockControl: NSObject, BooleanControl, AUParameterValueProvider {
-  static let log = Shared.logger("foo", "bar")
-  let log = MockControl.log
+fileprivate class MockToggleControl: NSObject, BooleanControl, AUParameterValueProvider {
+  var value: AUValue { booleanState ? 1.0 : 0.0 }
   var parameterAddress: AUParameterAddress = 1001
-  var expectation: XCTestExpectation?
-  var value: AUValue = 0.0
-  var booleanState: Bool = false {
+  var editor: AUParameterEditor?
+
+  let expectation: XCTestExpectation?
+
+  var booleanState: Bool {
     didSet {
-      print("MockControl.isOn didSet - \(booleanState)")
-      // expectation?.fulfill()
+      expectation?.fulfill()
+      editor?.controlChanged(source: self)
     }
+  }
+
+  init(state: Bool, expectation: XCTestExpectation? = nil) {
+    booleanState = state
+    self.expectation = expectation
   }
 }
 
@@ -21,85 +27,106 @@ fileprivate class MockControl: NSObject, BooleanControl, AUParameterValueProvide
 private final class Context {
   let param: AUParameter
   let tree: AUParameterTree
-  let control: MockControl
+  let control: MockToggleControl
+  let editor: BooleanParameterEditor
+  var paramValue: AUValue = 0.0
 
-  var editor: BooleanParameterEditor!
-
-  nonisolated(unsafe) var value: AUValue = 0.0
-
-  init() throws {
-    try XCTSkipIf(true, "Broken")
+  init(state: Bool, expectation: XCTestExpectation? = nil) throws {
     param = AUParameterTree.createParameter(
       withIdentifier: "One", name: "One", address: 1001, min: 0.0, max: 1.0, unit: .boolean,
       unitName: nil, flags: [.flag_IsReadable, .flag_IsWritable], valueStrings: nil,
       dependentParameters: nil
     )
 
-    control = MockControl()
     tree = AUParameterTree.createTree(withChildren: [param])
+    control = MockToggleControl(state: state, expectation: expectation)
+    editor = BooleanParameterEditor(parameter: param, booleanControl: control)
+    control.editor = editor
 
     tree.implementorValueProvider = { parameter in
       if parameter.address == 1001 {
-        return self.value
+        return self.paramValue
       }
       return 0.0
     }
 
     tree.implementorValueObserver = { parameter, value in
       if parameter.address == 1001 {
-        self.value = value
+        self.paramValue = value
       }
     }
-
-    editor = BooleanParameterEditor(parameter: param, booleanControl: control)
   }
 }
 
 final class BooleanParameterEditorTests: XCTestCase {
 
-  private var param: AUParameter!
-  private var tree: AUParameterTree!
-  private var control: MockControl!
-  private var editor: BooleanParameterEditor!
-
   @MainActor
-  func testEditorParameterChanged() async throws {
-    let ctx = try Context()
-    let expectation = self.expectation(description: "control changed state via editing change")
-    XCTAssertEqual(ctx.control.booleanState, false)
-    // XCTAssertFalse(ctx.editor.differs)
-    XCTAssertEqual(ctx.control.value, 0.0)
-    // ctx.control.expectation = expectation
-    ctx.param.setValue(1.0, originator: nil)
-    XCTAssertEqual(ctx.control.booleanState, true)
+  func testEditorInitialization() async throws {
+    let expectation = self.expectation(description: "control changed state via initialization")
+    expectation.expectedFulfillmentCount = 1
+    let ctx = try Context(state: true, expectation: expectation)
     await fulfillment(of: [expectation], timeout: 2.0)
-  }
-
-  @MainActor
-  func testEditorSetEditedValue() throws {
-    let ctx = try Context()
-    let expectation = self.expectation(description: "control changed state via editing change")
     XCTAssertEqual(ctx.control.booleanState, false)
-    XCTAssertEqual(ctx.control.value, 0.0)
-    // ctx.control.expectation = expectation
-    ctx.editor.setValue(1.0)
     XCTAssertFalse(ctx.editor.differs)
-    wait(for: [expectation], timeout: 2.0)
-    XCTAssertEqual(ctx.control.booleanState, true)
-    XCTAssertEqual(ctx.control.value, 1.0)
+    XCTAssertEqual(ctx.paramValue, 0.0)
   }
 
   @MainActor
-  func testControlChanged() throws {
-    let ctx = try Context()
-    let expectation = self.expectation(description: "control changed state via control change")
+  func testParamChangedValue() async throws {
+    let expectation = self.expectation(description: "control changed state via param change")
+    expectation.expectedFulfillmentCount = 3
+    let ctx = try Context(state: false, expectation: expectation)
     XCTAssertEqual(ctx.control.booleanState, false)
-    XCTAssertEqual(ctx.control.value, 0.0)
-    // ctx.control.expectation = expectation
-    let otherControl = MockControl()
-    otherControl.value = 1.0
-    ctx.editor.controlChanged(source: otherControl)
-    wait(for: [expectation], timeout: 2.0)
-    XCTAssertEqual(ctx.control.value, 1.0)
+    XCTAssertEqual(ctx.paramValue, 0.0)
+
+    let pause: Duration = .milliseconds(60)
+    ctx.param.setValue(1.0, originator: nil)
+    try await Task.sleep(for: pause)
+    ctx.param.setValue(0.0, originator: nil)
+    try await Task.sleep(for: pause)
+    ctx.param.setValue(1.0, originator: nil)
+
+    await fulfillment(of: [expectation], timeout: 2.0)
+    XCTAssertEqual(ctx.control.booleanState, true)
+    XCTAssertEqual(ctx.paramValue, 1.0)
+    XCTAssertFalse(ctx.editor.differs)
+  }
+
+  @MainActor
+  func testEditorChangedValue() async throws {
+    let expectation = self.expectation(description: "control changed state via editing change")
+    expectation.expectedFulfillmentCount = 3
+    let ctx = try Context(state: false, expectation: expectation)
+    XCTAssertEqual(ctx.control.booleanState, false)
+    XCTAssertEqual(ctx.paramValue, 0.0)
+
+    let pause: Duration = .milliseconds(60)
+    ctx.editor.setValue(1.0)
+    try await Task.sleep(for: pause)
+    ctx.editor.setValue(0.8)
+    try await Task.sleep(for: pause)
+    ctx.editor.setValue(0.0)
+    try await Task.sleep(for: pause)
+    ctx.editor.setValue(0.6)
+    try await Task.sleep(for: pause)
+    ctx.editor.setValue(1.0)
+    try await Task.sleep(for: pause)
+
+    await fulfillment(of: [expectation], timeout: 2.0)
+    XCTAssertEqual(ctx.control.booleanState, true)
+    XCTAssertEqual(ctx.paramValue, 1.0)
+    XCTAssertFalse(ctx.editor.differs)
+  }
+
+  @MainActor
+  func testControlChangedValue() async throws {
+    let expectation = self.expectation(description: "control changed state via control change")
+    expectation.expectedFulfillmentCount = 2
+    let ctx = try Context(state: true, expectation: expectation)
+    XCTAssertEqual(ctx.control.booleanState, false)
+    XCTAssertEqual(ctx.paramValue, 0.0)
+    ctx.control.booleanState = true
+    await fulfillment(of: [expectation], timeout: 2.0)
+    XCTAssertEqual(ctx.paramValue, 1.0)
   }
 }

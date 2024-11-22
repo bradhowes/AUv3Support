@@ -19,14 +19,16 @@ public final class BooleanParameterEditor: AUParameterEditorBase {
     self.booleanControl = booleanControl
     super.init(parameter: parameter)
     booleanControl.setParameterAddress(parameter.address)
-    beginObservingParameter(editor: self)
     setControlState(parameter.value)
+    startObservingParameter {
+      self.parameterChanged($0)
+    }
   }
 }
 
 extension BooleanParameterEditor: AUParameterEditor {
 
-  public var differs: Bool { booleanControl.booleanState != stateFromValue(parameter.value) }
+  public var differs: Bool { booleanControl.booleanState != Self.stateFromValue(parameter.value) }
 
   /**
    Notification that the parameter should change due to a widget control change.
@@ -34,11 +36,10 @@ extension BooleanParameterEditor: AUParameterEditor {
    - parameter source: the control that caused the change
    */
   public func controlChanged(source: AUParameterValueProvider) {
-    Self.runningOnMainThread()
-    let value = source.value
-    if value != parameter.value {
-      parameter.setValue(value, originator: parameterObserverToken)
-    }
+    setValue(source.value)
+  }
+
+  private func parameterChanged(_ value: AUValue) {
     setControlState(value)
   }
 
@@ -48,7 +49,6 @@ extension BooleanParameterEditor: AUParameterEditor {
    - parameter value: the new value to use
    */
   public func setValue(_ value: AUValue) {
-    Self.runningOnMainThread()
     if value != parameter.value {
       parameter.setValue(value, originator: parameterObserverToken)
     }
@@ -59,8 +59,11 @@ extension BooleanParameterEditor: AUParameterEditor {
 private extension BooleanParameterEditor {
 
   func setControlState(_ value: AUValue) {
-    booleanControl.booleanState = stateFromValue(value)
+    let newValue = Self.stateFromValue(value)
+    if newValue != booleanControl.booleanState {
+      booleanControl.booleanState = newValue
+    }
   }
 
-  func stateFromValue(_ value: AUValue) -> Bool { value >= 0.5 }
+  static func stateFromValue(_ value: AUValue) -> Bool { value >= 0.5 }
 }
