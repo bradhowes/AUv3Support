@@ -2,22 +2,24 @@ import CoreAudioKit
 import XCTest
 @testable import AUv3Support
 
-fileprivate class MockParam: AUParameterValueProvider {
-  var value: AUValue = 0.0
-}
-
-fileprivate class MockControl: NSObject, RangedControl {
-  static let log = Shared.logger("foo", "bar")
-  let log = MockControl.log
-  var parameterAddress: UInt64 = 0
-  var value: AUValue = 0.0 {
+fileprivate class MockSliderControl: NSObject, RangedControl, AUParameterValueProvider {
+  var parameterAddress: UInt64 = 1001
+  var value: AUValue {
     didSet {
+      print("slider changed to \(value)")
       expectation?.fulfill()
+      editor?.controlChanged(source: self)
     }
   }
   var minimumValue: Float = 0.0
   var maximumValue: Float = 100.0
   var expectation: XCTestExpectation?
+  weak var editor: AUParameterEditor?
+
+  init(state: AUValue = 0.0, expectation: XCTestExpectation? = nil) {
+    value = state
+    self.expectation = expectation
+  }
 }
 
 private struct formatter: AUParameterFormatting {
@@ -28,52 +30,42 @@ private struct formatter: AUParameterFormatting {
 
 @MainActor
 private final class Context {
-  let param1: AUParameter
-  let param2: AUParameter
+  let param: AUParameter
   let tree: AUParameterTree
-  let control: MockControl!
-  let editor1: FloatParameterEditor!
-  let editor2: FloatParameterEditor!
-  let label1: Label!
-  var parameterValue1: AUValue = 0.0
-  var parameterValue2: AUValue = 0.0
+  let control: MockSliderControl
+  let altControl: MockSliderControl
+  let editor: FloatParameterEditor
+  let label: Label
+  var paramValue: AUValue = 0.0
+  var paramExpectation: XCTestExpectation?
 
-  init() throws {
-    try XCTSkipIf(true, "Broken")
-    param1 = AUParameterTree.createParameter(
+  init(state: AUValue = 0.0, controlExpectation: XCTestExpectation? = nil) throws {
+    param = AUParameterTree.createParameter(
       withIdentifier: "One", name: "One", address: 1001, min: 0.0, max: 100.0, unit: .percent,
       unitName: nil, flags: [.flag_IsReadable, .flag_IsWritable], valueStrings: nil,
       dependentParameters: nil
     )
 
-    param2 = AUParameterTree.createParameter(
-      withIdentifier: "Two", name: "Two", address: 1002, min: 0.0, max: 100.0, unit: .percent,
-      unitName: nil, flags: [.flag_IsReadable, .flag_IsWritable, .flag_DisplayLogarithmic], valueStrings: nil,
-      dependentParameters: nil
-    )
+    tree = AUParameterTree.createTree(withChildren: [param])
+    label = Label()
+    control = MockSliderControl(state: state, expectation: controlExpectation)
+    editor = FloatParameterEditor(parameter: param, formatting: formatter(), rangedControl: control, label: label)
+    control.editor = editor
 
-    label1 = Label()
-    control = MockControl()
-    parameterValue1 = 0.0
-    parameterValue2 = 0.0
-
-    tree = AUParameterTree.createTree(withChildren: [param1, param2])
-    editor1 = FloatParameterEditor(parameter: param1, formatting: formatter(), rangedControl: control, label: label1)
-    editor2 = FloatParameterEditor(parameter: param2, formatting: formatter(), rangedControl: control, label: nil)
+    altControl = MockSliderControl(state: state)
+    altControl.editor = editor
 
     tree.implementorValueProvider = { param in
-      switch param.address {
-      case 1001: return self.parameterValue1
-      case 1002: return self.parameterValue2
-      default: return 0.0
+      if param.address == 1001 {
+        return self.paramValue
       }
+      return 0.0
     }
 
     tree.implementorValueObserver = { param, value in
-      switch param.address {
-      case 1001: self.parameterValue1 = value
-      case 1002: self.parameterValue2 = value
-      default: break
+      if param.address == 1001 {
+        self.paramValue = value
+        self.paramExpectation?.fulfill()
       }
     }
   }
@@ -82,97 +74,123 @@ private final class Context {
 final class FloatParameterEditorTests: XCTestCase {
 
   @MainActor
-  func testEditor1ParameterChanged() throws {
-    let ctx = try Context()
+  func testEditorInitialization() async throws {
+    let expectation = self.expectation(description: "control changed state via initialization")
+    expectation.expectedFulfillmentCount = 1
+    let ctx = try Context(state: 1.0, controlExpectation: expectation)
+    await fulfillment(of: [expectation], timeout: 2.0)
+    XCTAssertEqual(ctx.control.value, 0.0)
+    XCTAssertFalse(ctx.editor.differs)
+    XCTAssertEqual(ctx.paramValue, 0.0)
+  }
+
+  @MainActor
+  func testParamChangedValue() async throws {
     let expectation = self.expectation(description: "control changed state via param change")
+    expectation.expectedFulfillmentCount = 3
+    let ctx = try Context(controlExpectation: expectation)
     XCTAssertEqual(ctx.control.value, 0.0)
-    ctx.control.expectation = expectation
-    XCTAssertFalse(ctx.editor1.differs)
-    ctx.param1.setValue(35.0, originator: nil)
-    XCTAssertTrue(ctx.editor1.differs)
-    wait(for: [expectation], timeout: 2.0)
-    XCTAssertEqual(ctx.control.value, 35.0)
-    XCTAssertEqual(ctx.parameterValue1, 35.0)
+    XCTAssertEqual(ctx.paramValue, 0.0)
+
+    let pause: Duration = .milliseconds(60)
+    ctx.param.setValue(10.0, originator: nil)
+    try await Task.sleep(for: pause)
+    ctx.param.setValue(20.0, originator: nil)
+    try await Task.sleep(for: pause)
+    ctx.param.setValue(30.0, originator: nil)
+
+    await fulfillment(of: [expectation], timeout: 5.0)
+    XCTAssertEqual(ctx.control.value, 30.0)
+    XCTAssertEqual(ctx.paramValue, 30.0)
+    XCTAssertFalse(ctx.editor.differs)
   }
 
   @MainActor
-  func testEditor2ParameterChanged() throws {
-    let ctx = try Context()
-    let expectation = self.expectation(description: "control changed state via param change")
-    XCTAssertEqual(ctx.control.value, 0.0)
-    ctx.control.expectation = expectation
-    XCTAssertFalse(ctx.editor2.differs)
-    ctx.param2.setValue(35.0, originator: nil)
-    XCTAssertTrue(ctx.editor2.differs)
-    wait(for: [expectation], timeout: 2.0)
-    XCTAssertEqual(ctx.control.value, 7.49065)
-    XCTAssertEqual(ctx.parameterValue2, 35.0)
-  }
-
-  @MainActor
-  func testEditor1SetEditedValue() throws {
-    let ctx = try Context()
+  func testEditorChangedValue() async throws {
     let expectation = self.expectation(description: "control changed state via editing change")
-    expectation.expectedFulfillmentCount = 1
+    expectation.expectedFulfillmentCount = 5
+    let ctx = try Context(controlExpectation: expectation)
     XCTAssertEqual(ctx.control.value, 0.0)
-    ctx.control.expectation = expectation
-    ctx.editor1.setValue(78.3)
-    wait(for: [expectation], timeout: 2.0)
-    XCTAssertEqual(ctx.control.value, 78.3)
-    XCTAssertEqual(ctx.parameterValue1, 78.3)
+    XCTAssertEqual(ctx.paramValue, 0.0)
+
+    let pause: Duration = .milliseconds(60)
+    ctx.editor.setValue(10.0)
+    try await Task.sleep(for: pause)
+    ctx.editor.setValue(0.5)
+    try await Task.sleep(for: pause)
+    ctx.editor.setValue(98.123)
+    try await Task.sleep(for: pause)
+    ctx.editor.setValue(12.9)
+    try await Task.sleep(for: pause)
+    ctx.editor.setValue(50.0)
+    try await Task.sleep(for: pause)
+
+    await fulfillment(of: [expectation], timeout: 2.0)
+    XCTAssertEqual(ctx.control.value, 50.0)
+    XCTAssertEqual(ctx.paramValue, 50.0)
+    XCTAssertFalse(ctx.editor.differs)
   }
 
   @MainActor
-  func testEditor2SetEditedValue() throws {
+  func testControlChangedValue() async throws {
+    let expectation = self.expectation(description: "control changed state")
+    expectation.expectedFulfillmentCount = 5
     let ctx = try Context()
-    let expectation = self.expectation(description: "control changed state via editing change")
-    expectation.expectedFulfillmentCount = 1
+    ctx.paramExpectation = expectation
     XCTAssertEqual(ctx.control.value, 0.0)
-    ctx.control.expectation = expectation
-    ctx.editor2.setValue(78.3)
-    wait(for: [expectation], timeout: 2.0)
-    XCTAssertEqual(ctx.control.value, 8.647865)
-    XCTAssertEqual(ctx.parameterValue2, 78.3)
+    XCTAssertEqual(ctx.paramValue, 0.0)
+
+    let pause: Duration = .milliseconds(60)
+    ctx.control.value = 10.0
+    try await Task.sleep(for: pause)
+    ctx.control.value = 20.0
+    try await Task.sleep(for: pause)
+    ctx.control.value = 30.0
+    try await Task.sleep(for: pause)
+    ctx.control.value = 40.0
+    try await Task.sleep(for: pause)
+    ctx.control.value = 50.0
+    try await Task.sleep(for: pause)
+
+    await fulfillment(of: [expectation], timeout: 2.0)
+    XCTAssertEqual(ctx.paramValue, 50.0)
+    XCTAssertFalse(ctx.editor.differs)
   }
 
   @MainActor
-  func testControl1Changed() throws {
+  func testTwoControlsChangedValues() async throws {
+    let expectation = self.expectation(description: "control changed state")
+    expectation.expectedFulfillmentCount = 5
     let ctx = try Context()
-    let expectation = self.expectation(description: "control changed state via control change")
-    expectation.expectedFulfillmentCount = 1
+    ctx.paramExpectation = expectation
     XCTAssertEqual(ctx.control.value, 0.0)
-    ctx.control.expectation = expectation
-    let otherControl = MockParam()
-    otherControl.value = 15.12
-    ctx.editor1.controlChanged(source: otherControl)
-    wait(for: [expectation], timeout: 2.0)
-    XCTAssertEqual(ctx.control.value, 15.12)
-    XCTAssertEqual(ctx.parameterValue1, 15.12)
-  }
+    XCTAssertEqual(ctx.paramValue, 0.0)
 
-  @MainActor
-  func testControl2Changed() throws {
-    let ctx = try Context()
-    let expectation = self.expectation(description: "control changed state via control change")
-    expectation.expectedFulfillmentCount = 1
-    XCTAssertEqual(ctx.control.value, 0.0)
-    ctx.control.expectation = expectation
-    let otherControl = MockParam()
-    otherControl.value = 8.647865
-    ctx.editor2.controlChanged(source: otherControl)
-    wait(for: [expectation], timeout: 2.0)
-    XCTAssertEqual(ctx.control.value, 8.647865)
-    XCTAssertEqual(ctx.parameterValue2, 78.30002)
+    let pause: Duration = .milliseconds(60)
+    ctx.control.value = 10.0
+    try await Task.sleep(for: pause)
+    ctx.control.value = 20.0
+    try await Task.sleep(for: pause)
+    ctx.altControl.value = 30.0
+    try await Task.sleep(for: pause)
+    ctx.control.value = 40.0
+    try await Task.sleep(for: pause)
+    ctx.altControl.value = 50.0
+    try await Task.sleep(for: pause)
+
+    await fulfillment(of: [expectation], timeout: 2.0)
+    XCTAssertEqual(ctx.paramValue, 50.0)
+    XCTAssertFalse(ctx.editor.differs)
   }
 
 #if os(macOS)
   @MainActor
   func testLabelIsHiddenWAfterValueChange() throws {
     let ctx = try Context()
-    XCTAssertEqual(ctx.label1.text, "One")
-    XCTAssertFalse(ctx.label1.isHidden)
-    ctx.editor1.setValue(8.3)
-    XCTAssertTrue(ctx.label1.isHidden)
+    XCTAssertEqual(ctx.label.text, "One")
+    XCTAssertFalse(ctx.label.isHidden)
+    ctx.editor.setValue(8.3)
+    XCTAssertTrue(ctx.label.isHidden)
   }
 #endif
 }

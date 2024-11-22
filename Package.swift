@@ -1,4 +1,4 @@
-// swift-tools-version:6.0
+// swift-tools-version:5.9
 
 import PackageDescription
 import Foundation
@@ -123,7 +123,7 @@ NSLog("--- compiling with UNSAFE C++ flags: %d", useUnsafeFlags)
 
 let package = Package(
   name: "AUv3Support",
-  platforms: [.iOS(.v13), .macOS(.v10_15)],
+  platforms: [.iOS(.v16), .macOS(.v14)],
   products: [
     .library(name: "AUv3-Support", targets: ["AUv3Support"]),
     .library(name: "AUv3-Support-iOS", targets: ["AUv3Support-iOS-only"]),
