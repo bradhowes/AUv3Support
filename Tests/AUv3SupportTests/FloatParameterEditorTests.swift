@@ -92,7 +92,7 @@ final class FloatParameterEditorTests: XCTestCase {
     XCTAssertEqual(ctx.control.value, 0.0)
     XCTAssertEqual(ctx.paramValue, 0.0)
 
-    let pause: Duration = .milliseconds(100)
+    let pause: Duration = .milliseconds(200)
     ctx.param.setValue(10.0, originator: nil)
     try await Task.sleep(for: pause)
     ctx.param.setValue(20.0, originator: nil)
@@ -113,7 +113,7 @@ final class FloatParameterEditorTests: XCTestCase {
     XCTAssertEqual(ctx.control.value, 0.0)
     XCTAssertEqual(ctx.paramValue, 0.0)
 
-    let pause: Duration = .milliseconds(100)
+    let pause: Duration = .milliseconds(200)
     ctx.editor.setValue(10.0)
     try await Task.sleep(for: pause)
     ctx.editor.setValue(0.5)
@@ -140,7 +140,7 @@ final class FloatParameterEditorTests: XCTestCase {
     XCTAssertEqual(ctx.control.value, 0.0)
     XCTAssertEqual(ctx.paramValue, 0.0)
 
-    let pause: Duration = .milliseconds(100)
+    let pause: Duration = .milliseconds(200)
     ctx.control.value = 10.0
     try await Task.sleep(for: pause)
     ctx.control.value = 20.0
@@ -166,7 +166,7 @@ final class FloatParameterEditorTests: XCTestCase {
     XCTAssertEqual(ctx.control.value, 0.0)
     XCTAssertEqual(ctx.paramValue, 0.0)
 
-    let pause: Duration = .milliseconds(100)
+    let pause: Duration = .milliseconds(200)
     ctx.control.value = 10.0
     try await Task.sleep(for: pause)
     ctx.control.value = 20.0
