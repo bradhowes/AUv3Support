@@ -64,6 +64,11 @@ extension SimplePlayEngine {
     engine.attach(audioUnit)
     engine.connect(player, to: audioUnit, format: file.processingFormat)
     engine.connect(audioUnit, to: engine.mainMixerNode, format: file.processingFormat)
+    do {
+      try engine.start()
+    } catch {
+      fatalError("failed to start AVAudioEngine")
+    }
   }
 
   /**
@@ -73,11 +78,6 @@ extension SimplePlayEngine {
     guard !player.isPlaying else { return }
     updateAudioSession(active: true)
     beginLoop()
-    do {
-      try engine.start()
-    } catch {
-      fatalError("failed to start AVAudioEngine")
-    }
     player.play()
   }
 
@@ -87,7 +87,6 @@ extension SimplePlayEngine {
   public func stop() {
     guard player.isPlaying else { return }
     player.stop()
-    engine.stop()
     updateAudioSession(active: false)
   }
 
@@ -97,7 +96,11 @@ extension SimplePlayEngine {
    - returns: state of the player
    */
   public func startStop() -> Bool {
-    if player.isPlaying { stop() } else { start() }
+    if player.isPlaying {
+      stop()
+    } else {
+      start()
+    }
     return player.isPlaying
   }
 }
