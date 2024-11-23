@@ -7,6 +7,7 @@
 #import <atomic>
 #import <cassert>
 #import <functional>
+#import <initializer_list>
 #import <string>
 #import <unordered_map>
 
@@ -38,7 +39,6 @@ namespace DSPHeaders {
 template <typename KernelType>
 class EventProcessor {
 public:
-  using ParameterVector = std::vector<std::reference_wrapper<DSPHeaders::Parameters::Base>>;
   using ParameterMap = std::unordered_map<AUParameterAddress, std::reference_wrapper<DSPHeaders::Parameters::Base>>;
 
   /**
@@ -134,7 +134,7 @@ public:
    @returns `true` if the parameter is valid
    */
   bool setParameterValue(AUParameterAddress address, AUValue value) noexcept {
-    return isRendering() // && false
+    return isRendering()
     ? setPendingParameterValue(address, value)
     : setImmediateParameterValue(address, value, 0);
   }
@@ -147,7 +147,7 @@ public:
    @returns the value for the parameter
    */
   AUValue getParameterValue(AUParameterAddress address) noexcept {
-    return isRendering() // && false
+    return isRendering()
     ? getPendingParameterValue(address)
     : getImmediateParameterValue(address);
   }
@@ -230,7 +230,18 @@ protected:
   }
 
   /**
-   Register one parameter for ramping tracking.
+   Register one or more parameters.
+
+   @param params the collection of parameters to register
+   */
+  void registerParameters(std::initializer_list<std::reference_wrapper<Parameters::Base>> params) noexcept {
+    for (auto param : params) {
+      registerParameter(param);
+    }
+  }
+
+  /**
+   Register one parameter.
 
    @param parameter the parameter to register
    */
