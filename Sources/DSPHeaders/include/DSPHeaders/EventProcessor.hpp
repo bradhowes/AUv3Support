@@ -8,33 +8,16 @@
 #import <cassert>
 #import <functional>
 #import <string>
-#import <vector>
+#import <unordered_map>
 
 #import <AudioToolbox/AudioToolbox.h>
 
 #import "DSPHeaders/SampleBuffer.hpp"
 #import "DSPHeaders/BusBuffers.hpp"
 #import "DSPHeaders/Parameters/Base.hpp"
+#import "DSPHeaders/Concepts.hpp"
 
 namespace DSPHeaders {
-
-/**
- Concept definition for a Kernel class with an optional `doRenderingStateChanged` method.
- */
-template<typename T>
-concept HasRenderingStateChangedT = requires(T a)
-{
-  { a.doRenderingStateChanged(false) } -> std::convertible_to<void>;
-};
-
-/**
- Concept definition for a Kernel class with an optional `doMIDIEvent` method.
- */
-template<typename T>
-concept HasMIDIEventV1 = requires(T a, const AUMIDIEvent& midi)
-{
-  { a.doMIDIEvent(midi) } -> std::convertible_to<void>;
-};
 
 /**
  Base template class for DSP kernels that provides common functionality. It uses the "Curiously Recurring Template
@@ -56,6 +39,7 @@ template <typename KernelType>
 class EventProcessor {
 public:
   using ParameterVector = std::vector<std::reference_wrapper<DSPHeaders::Parameters::Base>>;
+  using ParameterMap = std::unordered_map<AUParameterAddress, std::reference_wrapper<DSPHeaders::Parameters::Base>>;
 
   /**
    Construct new instance.
@@ -142,30 +126,31 @@ public:
   }
 
   /**
-   Process an AU parameter value change from the parameter tree.
+   Process an AU parameter value change from the parameter tree. This is only called from the KernelBridge class to
+   handle UI component changes.
 
    @param address the address of the parameter that changed
    @param value the new value for the parameter
+   @returns `true` if the parameter is valid
    */
   bool setParameterValue(AUParameterAddress address, AUValue value) noexcept {
-    return isRendering() && false
-    ? derived_.doSetPendingParameterValue(address, value) // NOTE: any ramp duration is sent later
-    : derived_.doSetImmediateParameterValue(address, value, 0);
-  }
-
-  AUValue getParameterValue(AUParameterAddress address) noexcept {
-    return isRendering() && false
-    ? derived_.doGetPendingParameterValue(address)
-    : derived_.doGetImmediateParameterValue(address);
+    return isRendering() // && false
+    ? setPendingParameterValue(address, value)
+    : setImmediateParameterValue(address, value, 0);
   }
 
   /**
-   Obtain from the kernel the current value of an AU parameter.
+   Process an AU parameter value request from the parameter tree. This is only called from the KernelBridge class to
+   handle UI component requests for values.
 
-   @param address the address of the parameter to return
-   @returns current parameter value
+   @param address the address of the parameter
+   @returns the value for the parameter
    */
-  AUValue getPendingParameterValue(AUParameterAddress address) const noexcept;
+  AUValue getParameterValue(AUParameterAddress address) noexcept {
+    return isRendering() // && false
+    ? getPendingParameterValue(address)
+    : getImmediateParameterValue(address);
+  }
 
   /**
    Process events and render a given number of frames. Events and rendering are interleaved if necessary so that
@@ -240,20 +225,8 @@ protected:
   void setRendering(bool rendering) noexcept {
     if (rendering != rendering_) {
       rendering_.store(rendering, std::memory_order_relaxed);
-      /// @returns the ramp duration to use for UI changes
       renderingStateChanged();
     }
-  }
-
-  /**
-   Register one or more parameters for ramping tracking. While rendering, the EventProcessor will check to see if there
-   are any parameter changes that have been made, and it will update the rampRemaining\_ counter if there are any. Also,
-   when rendering stops, it will clear any active ramps.
-
-   @param collection the group of parameters to register.
-   */
-  void registerParameters(ParameterVector&& collection) {
-    parameters_ = collection;
   }
 
   /**
@@ -261,7 +234,10 @@ protected:
 
    @param parameter the parameter to register
    */
-  void registerParameter(Parameters::Base& parameter) { parameters_.push_back(parameter); }
+  void registerParameter(Parameters::Base& parameter) {
+    auto result = parameters_.emplace(parameter.address(), parameter);
+    assert(result.second);
+  }
 
   /**
    Obtain a `busBuffer` for the given bus.
@@ -277,7 +253,7 @@ protected:
   void checkForTreeBasedParameterChanges() noexcept {
     auto changed = false;
     for (auto param : parameters_) {
-      changed |= param.get().checkForPendingChange(treeBasedRampDuration_);
+      changed |= param.second.get().checkForPendingChange(treeBasedRampDuration_);
     }
 
     if (changed && treeBasedRampDuration_ > rampRemaining_) {
@@ -287,9 +263,45 @@ protected:
 
 private:
 
+  bool setPendingParameterValue(AUParameterAddress address, AUValue value) noexcept {
+    if constexpr (HasSetPendingParameterValue<KernelType>) {
+      return derived_.doSetPendingParameterValue(address, value);
+    } else {
+      auto pos = parameters_.find(address);
+      return pos != parameters_.end() ? pos->second.get().setPending(value), true : false;
+    }
+  }
+
+  bool setImmediateParameterValue(AUParameterAddress address, AUValue value, AUAudioFrameCount duration) noexcept {
+    if constexpr (HasSetImmediateParameterValue<KernelType>) {
+      return derived_.doSetImmediateParameterValue(address, value, duration);
+    } else {
+      auto pos = parameters_.find(address);
+      return pos != parameters_.end() ? pos->second.get().setImmediate(value, duration), true : false;
+    }
+  }
+
+  AUValue getPendingParameterValue(AUParameterAddress address) const noexcept {
+    if constexpr (HasGetPendingParameterValue<KernelType>) {
+      return derived_.doGetPendingParameterValue(address);
+    } else {
+      auto pos = parameters_.find(address);
+      return pos != parameters_.end() ? pos->second.get().getPending() : 0.0;
+    }
+  }
+
+  AUValue getImmediateParameterValue(AUParameterAddress address) const noexcept {
+    if constexpr (HasGetImmediateParameterValue<KernelType>) {
+      return derived_.doGetImmediateParameterValue(address);
+    } else {
+      auto pos = parameters_.find(address);
+      return pos != parameters_.end() ? pos->second.get().getPending() : 0.0;
+    }
+  }
+
   void renderingStateChanged() noexcept {
     for (auto param : parameters_) {
-      param.get().stopRamping();
+      param.second.get().stopRamping();
     }
     rampRemaining_ = 0;
 
@@ -327,7 +339,7 @@ private:
   }
 
   void processEventParameterChange(const AUParameterEvent& event, AUAudioFrameCount duration) noexcept {
-    if (derived_.doSetImmediateParameterValue(event.parameterAddress, event.value, duration)) {
+    if (setImmediateParameterValue(event.parameterAddress, event.value, duration)) {
       rampRemaining_ = std::max(duration, rampRemaining_);
     }
   }
@@ -416,22 +428,7 @@ private:
 
   double sampleRate_{};
 
-  ParameterVector parameters_{};
-};
-
-/**
- Concept definition for a valid Kernel class, one that provides method definitions for the functions
- used by the EventProcessor template.
- */
-template<typename T>
-concept IsViableKernelType = requires(T a, const AUParameterEvent& param, const AUMIDIEvent& midi, BusBuffers bb)
-{
-  { a.doRendering(NSInteger(1), bb, bb, AUAudioFrameCount(1) ) } -> std::convertible_to<void>;
-  { a.doGetPendingParameterValue(param.parameterAddress)} -> std::convertible_to<AUValue>;
-  { a.doGetImmediateParameterValue(param.parameterAddress)} -> std::convertible_to<AUValue>;
-  { a.doSetPendingParameterValue(param.parameterAddress, AUValue(1.0))} -> std::convertible_to<bool>;
-  { a.doSetImmediateParameterValue(param.parameterAddress, AUValue(1.0),
-                                   AUAudioFrameCount(1))} -> std::convertible_to<bool>;
+  ParameterMap parameters_{};
 };
 
 /**

@@ -7,6 +7,7 @@
 
 #import "DSP.hpp"
 #import "DSPHeaders/Parameters/Float.hpp"
+#import "DSPHeaders/PhaseIncrement.hpp"
 
 enum class LFOWaveform { sinusoid, triangle, sawtooth, square};
 
@@ -34,26 +35,30 @@ public:
   /**
    Create a new instance.
 
-   @param sampleRate number of samples per second
    @param frequency the frequency of the oscillator
+   @param sampleRate number of samples per second
    @param waveform the waveform to emit
    */
-  LFO(ValueType sampleRate, ValueType frequency, LFOWaveform waveform) noexcept
-  : valueGenerator_{WaveformGenerator(waveform)}, waveform_{waveform}, sampleRate_{sampleRate} {
-    setFrequency(frequency, 0);
+  LFO(Parameters::Float& frequency, ValueType sampleRate, LFOWaveform waveform) noexcept
+  : valueGenerator_{WaveformGenerator(waveform)}, waveform_{waveform}, sampleRate_{sampleRate},
+  phaseIncrement_ {frequency, sampleRate} {
     reset();
   }
 
   /**
    Create a new instance.
 
+   @param frequency the frequency of the oscillator
    @param sampleRate number of samples per second
+   */
+  LFO(Parameters::Float& frequency, ValueType sampleRate) noexcept
+  : LFO(frequency, sampleRate, frequency, LFOWaveform::sinusoid) {}
+
+  /** Create a new instance.
+
    @param frequency the frequency of the oscillator
    */
-  LFO(ValueType sampleRate, ValueType frequency) noexcept : LFO(sampleRate, frequency, LFOWaveform::sinusoid) {}
-
-  /// Create a new instance.
-  LFO() noexcept : LFO(44100.0, 1.0, LFOWaveform::sinusoid) {}
+  LFO(Parameters::Float& frequency) noexcept : LFO(frequency, 44100.0, LFOWaveform::sinusoid) {}
 
   /**
    Set the sample rate to use.
@@ -61,17 +66,9 @@ public:
    @param sampleRate number of samples per second
    */
   void setSampleRate(ValueType sampleRate) noexcept {
-
-    // We don't keep around the LFO frequency. It can be recalculated but that depends on existing sampleRate_ value.
-    // Save the current frequency value and then reapply it after changing sampleRate_.
-    auto tmp = frequencyPending();
-    sampleRate_ = sampleRate;
-    setFrequency(tmp, 0);
+    phaseIncrement_.setSampleRate(sampleRate);
   }
 
-  bool checkForPendingChange(AUAudioFrameCount duration) noexcept {
-    return phaseIncrement_.checkForPendingChange(duration);
-  }
   /**
    Set the waveform to use
    
@@ -80,26 +77,6 @@ public:
   void setWaveform(LFOWaveform waveform) noexcept {
     waveform_ = waveform;
     valueGenerator_ = WaveformGenerator(waveform);
-  }
-
-  /**
-   Set the frequency of the oscillator.
-   
-   @param frequency the frequency to operate at
-   @param rampingDuration number of samples to ramp over
-   */
-  void setFrequencyPending(ValueType frequency) noexcept {
-    phaseIncrement_.setPending(frequency / sampleRate_);
-  }
-
-  /**
-   Set the frequency of the oscillator.
-
-   @param frequency the frequency to operate at
-   @param rampingDuration number of samples to ramp over
-   */
-  void setFrequency(ValueType frequency, AUAudioFrameCount rampingDuration) noexcept {
-    phaseIncrement_.setImmediate(frequency / sampleRate_, rampingDuration);
   }
 
   /**
@@ -131,34 +108,15 @@ public:
    Increment the oscillator to the next value.
    */
   void increment() noexcept {
-    phase_ = wrappedModuloCounter(phase_ + phaseIncrement_.frameValue());
+    phase_ = wrappedModuloCounter(phase_ + phaseIncrement_.value());
   }
-
-  /// @returns current frequency in Hz
-  ValueType frequencyPending() const noexcept { return phaseIncrement_.getPending() * sampleRate_; }
-
-   /// @returns current frequency in Hz
-  ValueType frequency() const noexcept { return phaseIncrement_.getImmediate() * sampleRate_; }
 
   /// @returns the current waveform in effect for the LFO
   LFOWaveform waveform() const noexcept { return waveform_; }
 
-  /**
-   Stop any ramping that is active for the LFO frequency.
-   */
-  void stopRamping() noexcept { phaseIncrement_.stopRamping(); }
-
-  /**
-   Obtain the ramping parameter instance that controls the LFO frequency. NOTE: this is only exposed to
-   allow for general management of ramping state. This should not be used to set new values.
-
-   @returns frequency ramping parameter
-   */
-  Parameters::Float& frequencyParameter() noexcept { return phaseIncrement_; }
-
 private:
   using ValueGenerator = ValueType (*)(ValueType);
-  
+
   static ValueGenerator WaveformGenerator(LFOWaveform waveform) noexcept {
     switch (waveform) {
       case LFOWaveform::sinusoid: return sineValue;
@@ -184,7 +142,7 @@ private:
   LFOWaveform waveform_;
   ValueGenerator valueGenerator_;
   ValueType phase_ = {0.0};
-  Parameters::Float phaseIncrement_;
+  PhaseIncrement<ValueType> phaseIncrement_;
 };
 
 } // end namespace DSPHeaders

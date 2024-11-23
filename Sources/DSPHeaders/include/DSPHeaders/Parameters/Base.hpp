@@ -20,6 +20,8 @@ class Base {
 public:
   using ValueTransformer = AUValue (*)(AUValue);
 
+  AUParameterAddress address() const noexcept { return address_; }
+
   bool canRamp() const noexcept { return canRamp_; }
 
   /**
@@ -28,6 +30,9 @@ public:
    Note: this should only be invoked when the render thread is not running.
    */
   void stopRamping() noexcept { rampRemaining_ = 0; }
+
+  /// @returns true if ramping is in effect
+  bool isRamping() const noexcept { return rampRemaining_ > 0; }
 
   /**
    Set a new value that comes from outside render thread. It will be seen at the start of the next
@@ -51,8 +56,6 @@ public:
 
    @param value the new value to use
    @param duration the number of frames to transition over
-
-   @todo Need to signal the AUParameterTree that this has happened
    */
   void setImmediate(AUValue value, AUAudioFrameCount duration) noexcept {
     value = transformIn_(value);
@@ -100,7 +103,7 @@ public:
     return value;
   }
 
-  /// @return the parameter value after any ramping
+  /// @return the parameter value after any ramping that might be in effect (render thread)
   AUValue finalValue() const noexcept { return value_; }
 
 protected:
@@ -110,8 +113,9 @@ protected:
 
    @param value the starting value for the parameter
    */
-  Base(AUValue value, bool canRamp, ValueTransformer forward, ValueTransformer reverse) noexcept :
-  value_{forward(value)}, transformIn_{forward}, transformOut_{reverse}, canRamp_{canRamp} {
+  Base(AUParameterAddress address, AUValue value, bool canRamp, ValueTransformer forward,
+       ValueTransformer reverse) noexcept :
+  address_{address}, value_{forward(value)}, transformIn_{forward}, transformOut_{reverse}, canRamp_{canRamp} {
     assert(transformIn_ && transformOut_);
     pendingValue_.store(value_, std::memory_order_relaxed);
   }
@@ -125,6 +129,9 @@ private:
     rampRemaining_ = duration;
     value_ = pendingValue;
   }
+
+  /// The address of the parameter.
+  AUParameterAddress address_;
 
   /// The value of the parameter, regardless of any ramping that may be taking place. This should only be manipulated
   /// by the rendering thread or when there is no rendering being done.

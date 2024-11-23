@@ -18,8 +18,8 @@ public:
 
    @param value the starting value for the parameter
    */
-  explicit Float(AUValue value = 0.0, bool canRamp = true) noexcept
-  : super(Transformer::passthru(value), canRamp, Transformer::passthru, Transformer::passthru) {}
+  explicit Float(AUParameterAddress address, AUValue value = 0.0, bool canRamp = true) noexcept
+  : super(address, value, canRamp, Transformer::passthru, Transformer::passthru) {}
 };
 
 } // end namespace DSPHeaders::Parameters

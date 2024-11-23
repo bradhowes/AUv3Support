@@ -17,8 +17,8 @@ class Integral : public Base {
 public:
   using super = Base;
 
-  explicit Integral(AUValue init = 0.0) noexcept
-  : super(Transformer::rounded(init), false, Transformer::rounded, Transformer::rounded) {}
+  explicit Integral(AUParameterAddress address, AUValue init = 0.0) noexcept
+  : super(address, init, false, Transformer::rounded, Transformer::rounded) {}
 };
 
 } // end namespace DSPHeaders::Parameters

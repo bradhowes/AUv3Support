@@ -18,8 +18,8 @@ public:
 
    @param init the value to hold
    */
-  explicit Bool(bool init = false) noexcept
-  : super(Transformer::boolIn(init), false, Transformer::boolIn, Transformer::passthru) {}
+  explicit Bool(AUParameterAddress address, bool init = false) noexcept
+  : super(address, init, false, Transformer::boolIn, Transformer::passthru) {}
 
   /// @returns the boolean state of the parameter
   operator bool() const noexcept { return super::getImmediate(); }

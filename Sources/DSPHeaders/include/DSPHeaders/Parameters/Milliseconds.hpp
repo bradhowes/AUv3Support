@@ -14,8 +14,8 @@ class Milliseconds : public Base {
 public:
   using super = Base;
 
-  explicit Milliseconds(AUValue milliseconds = 0.0, bool canRamp = true) noexcept
-  : super(milliseconds, canRamp, Transformer::passthru, Transformer::passthru) {}
+  explicit Milliseconds(AUParameterAddress address, AUValue milliseconds = 0.0, bool canRamp = true) noexcept
+  : super(address, milliseconds, canRamp, Transformer::passthru, Transformer::passthru) {}
 };
 
 } // end namespace DSPHeaders::Parameters
