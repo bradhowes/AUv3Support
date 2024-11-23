@@ -28,7 +28,7 @@ using namespace DSPHeaders;
 
 - (void)testPhaseShifters {
   double sampleRate = 44100.0;
-  double lfoFrequency = 0.2;
+  AUValue lfoFrequency = 0.2;
   Pirkle::PhaseShifter phaseShifterOld;
   phaseShifterOld.reset(sampleRate);
 
@@ -39,7 +39,8 @@ using namespace DSPHeaders;
   params.quadPhaseLFO = false;
   phaseShifterOld.setParameters(params);
 
-  LFO<double> lfo(sampleRate, lfoFrequency, LFOWaveform::triangle);
+  Parameters::Float freq{1, lfoFrequency};
+  LFO<double> lfo(freq, sampleRate, LFOWaveform::triangle);
   PhaseShifter<double> phaseShifterNew{PhaseShifter<double>::ideal, sampleRate, 1.0, 1};
 
   // Generate a 440 Hz (A4) note:
@@ -61,9 +62,9 @@ using namespace DSPHeaders;
 - (void)testPhaseShifterThroughput {
   [self measureMetrics: XCTestCase.defaultPerformanceMetrics automaticallyStartMeasuring:false forBlock:^{
     double sampleRate = 44100.0;
-    double lfoFrequency = 0.2;
 
-    LFO<double> lfo(sampleRate, lfoFrequency, LFOWaveform::triangle);
+    Parameters::Float freq{1, 0.2};
+    LFO<double> lfo(freq, sampleRate, LFOWaveform::triangle);
     PhaseShifter<double> phaseShifterNew{PhaseShifter<double>::ideal, sampleRate, 1.0, 1};
 
     // Generate a 440 Hz (A4) note:

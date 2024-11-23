@@ -23,15 +23,16 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testInit {
-  auto param1 = Float();
+  auto param1 = Float(1);
   XCTAssertEqual(param1.getImmediate(), 0.0);
-
-  auto param2 = Float(AUValue(12.34));
+  XCTAssertEqual(param1.address(), 1);
+  auto param2 = Float(2, AUValue(12.34));
   XCTAssertEqualWithAccuracy(param2.getImmediate(), 12.34, 1.0e-6);
+  XCTAssertEqual(param2.address(), 2);
 }
 
 - (void)testRamping {
-  auto param = Float();
+  auto param = Float(2);
   param.setImmediate(1.0, 4);
   XCTAssertEqual(param.getImmediate(), 1.0);
   XCTAssertEqual(param.frameValue(), 0.25);
@@ -43,7 +44,7 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testReRamping {
-  auto param = Float();
+  auto param = Float(3);
   param.setImmediate(1.0, 4);
   XCTAssertEqual(param.frameValue(), 0.25);
   XCTAssertEqual(param.frameValue(), 0.50);
@@ -56,7 +57,7 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testStopRamping {
-  auto param = Float();
+  auto param = Float(4);
   param.setImmediate(1.0, 4);
   XCTAssertEqual(param.getImmediate(), 1.0);
   XCTAssertEqual(param.frameValue(), 0.25);
@@ -67,7 +68,7 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testAdvanceControl {
-  auto param = Float();
+  auto param = Float(5);
   param.setImmediate(1.0, 4);
   XCTAssertEqual(param.frameValue(), 0.25);
   XCTAssertEqual(param.frameValue(false), 0.25);
@@ -78,7 +79,7 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testPending {
-  auto param = Float();
+  auto param = Float(6);
   param.setPending(124.0);
   XCTAssertEqualWithAccuracy(param.getPending(), 124.0, epsilon);
   XCTAssertEqualWithAccuracy(param.getImmediate(), 0.0, epsilon);

@@ -19,18 +19,18 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testInit {
-  XCTAssertEqual(Integral().getImmediate(), 0.0);
-  XCTAssertEqual(Integral(0.0).getImmediate(), 0.0);
-  XCTAssertEqual(Integral(0.25).getImmediate(), 0.0);
-  XCTAssertEqual(Integral(0.5).getImmediate(), 1.0);
-  XCTAssertEqual(Integral(0.9).getImmediate(), 1.0);
-  XCTAssertEqual(Integral(1.0).getImmediate(), 1.0);
-  XCTAssertEqual(Integral(-0.25).getImmediate(), 0.0);
-  XCTAssertEqual(Integral(-0.5).getImmediate(), -1.0);
+  XCTAssertEqual(Integral(1).getImmediate(), 0.0);
+  XCTAssertEqual(Integral(2, 0.0).getImmediate(), 0.0);
+  XCTAssertEqual(Integral(3, 0.25).getImmediate(), 0.0);
+  XCTAssertEqual(Integral(4, 0.5).getImmediate(), 1.0);
+  XCTAssertEqual(Integral(5, 0.9).getImmediate(), 1.0);
+  XCTAssertEqual(Integral(6, 1.0).getImmediate(), 1.0);
+  XCTAssertEqual(Integral(7, -0.25).getImmediate(), 0.0);
+  XCTAssertEqual(Integral(8, -0.5).getImmediate(), -1.0);
 }
 
 - (void)testSetting {
-  auto param = Integral();
+  auto param = Integral(1);
 
   param.setImmediate(-1.0, 0);
   XCTAssertEqual(param.getImmediate(), -1.0);

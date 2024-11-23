@@ -22,19 +22,19 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testInit {
-  auto param1 = Bool();
+  auto param1 = Bool(1);
   XCTAssertEqual(param1.getImmediate(), 0.0);
   XCTAssertEqual(param1.getPending(), 0.0);
   XCTAssertFalse(param1);
 
-  auto param2 = Bool(true);
+  auto param2 = Bool(2, true);
   XCTAssertEqual(param2.getImmediate(), 1.0);
   XCTAssertEqual(param2.getPending(), 1.0);
   XCTAssertTrue(param2);
 }
 
 - (void)testSetting {
-  auto param = Bool();
+  auto param = Bool(3);
 
   param.setPending(-1.0);
   XCTAssertEqual(param.getImmediate(), 0.0);

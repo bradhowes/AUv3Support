@@ -23,15 +23,15 @@ using namespace DSPHeaders::Parameters;
 }
 
 - (void)testInit {
-  auto param1 = Percentage();
+  auto param1 = Percentage(1);
   XCTAssertEqual(param1.getImmediate(), 0.0);
 
-  auto param2 = Percentage(100.0);
+  auto param2 = Percentage(2, 100.0);
   XCTAssertEqualWithAccuracy(param2.getImmediate(), 100.0, epsilon);
 }
 
 - (void)testRepresentation {
-  auto param = Percentage(50.0);
+  auto param = Percentage(3, 50.0);
   XCTAssertEqual(param.getImmediate(), 50.0);
   XCTAssertEqual(param.frameValue(), 0.5);
 

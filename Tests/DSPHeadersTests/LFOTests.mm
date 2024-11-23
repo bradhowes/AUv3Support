@@ -24,7 +24,9 @@ using namespace DSPHeaders;
 }
 
 - (void)testSinusoidSamples {
-  LFO<float> osc(4.0, 1.0, LFOWaveform::sinusoid);
+  AUValue sampleRate{4.0};
+  Parameters::Float freq{1, 1.0};
+  LFO<AUValue> osc(freq, sampleRate, LFOWaveform::sinusoid);
   XCTAssertEqual(LFOWaveform::sinusoid, osc.waveform());
 
   SamplesEqual(osc.value(),  0.0);
@@ -45,7 +47,8 @@ using namespace DSPHeaders;
 }
 
 - (void)testSawtoothSamples {
-  LFO<float> osc(8.0, 1.0, LFOWaveform::sawtooth);
+  Parameters::Float freq{1, 1.0};
+  LFO<float> osc(freq, 8.0, LFOWaveform::sawtooth);
   XCTAssertEqual(LFOWaveform::sawtooth, osc.waveform());
 
   SamplesEqual(osc.value(), -1.00);
@@ -68,7 +71,8 @@ using namespace DSPHeaders;
 }
 
 - (void)testTriangleSamples {
-  LFO<float> osc(8.0, 1.0, LFOWaveform::triangle);
+  Parameters::Float freq{1, 1.0};
+  LFO<float> osc(freq, 8.0, LFOWaveform::triangle);
   XCTAssertEqual(LFOWaveform::triangle, osc.waveform());
 
   SamplesEqual(osc.value(),  1.0);
@@ -91,7 +95,8 @@ using namespace DSPHeaders;
 }
 
 - (void)testQuadPhaseSamples {
-  LFO<float> osc(8.0, 1.0, LFOWaveform::sawtooth);
+  Parameters::Float freq{1, 1.0};
+  LFO<float> osc(freq, 8.0, LFOWaveform::sawtooth);
   XCTAssertEqual(LFOWaveform::sawtooth, osc.waveform());
 
   SamplesEqual(osc.value(), -1.00);
@@ -125,7 +130,8 @@ using namespace DSPHeaders;
 }
 
 - (void)testSquareSamples {
-  LFO<float> osc(8.0, 1.0, LFOWaveform::square);
+  Parameters::Float freq{1, 1.0};
+  LFO<float> osc(freq, 8.0, LFOWaveform::square);
   XCTAssertEqual(LFOWaveform::square, osc.waveform());
 
   SamplesEqual(osc.value(), -1.0);
@@ -153,7 +159,8 @@ using namespace DSPHeaders;
 }
 
 - (void)testSetSinePhase {
-  LFO<float> osc(4.0, 1.0, LFOWaveform::sinusoid);
+  Parameters::Float freq{1, 1.0};
+  LFO<float> osc(freq, 4.0, LFOWaveform::sinusoid);
   SamplesEqual(osc.value(),  0.0);
   osc.setPhase(0.25);
   SamplesEqual(osc.value(),  1.0);
@@ -164,7 +171,8 @@ using namespace DSPHeaders;
 }
 
 - (void)testSetSawtoothPhase {
-  LFO<float> osc(4.0, 1.0, LFOWaveform::sawtooth);
+  Parameters::Float freq{1, 1.0};
+  LFO<float> osc(freq, 4.0, LFOWaveform::sawtooth);
   SamplesEqual(osc.value(), -1.0);
   osc.setPhase(0.25);
   SamplesEqual(osc.value(), -0.5);
@@ -175,7 +183,8 @@ using namespace DSPHeaders;
 }
 
 - (void)testSetTrianglePhase {
-  LFO<float> osc(4.0, 1.0, LFOWaveform::triangle);
+  Parameters::Float freq{1, 1.0};
+  LFO<float> osc(freq, 4.0, LFOWaveform::triangle);
   SamplesEqual(osc.value(),  1.0);
   osc.setPhase(0.25);
   SamplesEqual(osc.value(),  0.0);
@@ -186,7 +195,8 @@ using namespace DSPHeaders;
 }
 
 - (void)testSetSquarePhase {
-  LFO<float> osc(4.0, 1.0, LFOWaveform::square);
+  Parameters::Float freq{1, 1.0};
+  LFO<float> osc(freq, 4.0, LFOWaveform::square);
   SamplesEqual(osc.value(), -1.0);
   osc.setPhase(0.25);
   SamplesEqual(osc.value(), -1.0);
@@ -197,7 +207,8 @@ using namespace DSPHeaders;
 }
 
 - (void)testSaveRestorePhase {
-  LFO<float> osc(16.0, 1.0, LFOWaveform::triangle);
+  Parameters::Float freq{1, 1.0};
+  LFO<float> osc(freq, 16.0, LFOWaveform::triangle);
   SamplesEqual(osc.value(),  1.0);
   osc.increment();
   SamplesEqual(osc.value(),  0.75);
@@ -213,5 +224,44 @@ using namespace DSPHeaders;
   osc.increment();
   SamplesEqual(osc.value(),  0.50);
 }
+
+- (void)testFrequencyChangeRamping {
+  AUValue sampleRate{16.0};
+  Parameters::Float freq{1, 1.0};
+  LFO<AUValue> osc(freq, sampleRate, LFOWaveform::sinusoid);
+  XCTAssertEqual(LFOWaveform::sinusoid, osc.waveform());
+
+  SamplesEqual(osc.value(), 0.0);
+  osc.increment();
+  SamplesEqual(osc.value(), 0.382683);
+  osc.increment();
+  SamplesEqual(osc.value(), 0.707107);
+  osc.increment();
+  SamplesEqual(osc.value(), 0.923889);
+  osc.increment();
+  SamplesEqual(osc.value(), 1.000000);
+  osc.increment();
+  SamplesEqual(osc.value(), 0.923880);
+  osc.increment();
+  SamplesEqual(osc.value(), 0.707107);
+  osc.increment();
+  SamplesEqual(osc.value(), 0.382683);
+  osc.increment();
+  SamplesEqual(osc.value(),  0.0);
+  freq.setImmediate(2.0, 4);
+  osc.increment();
+  SamplesEqual(osc.value(), -0.471397);
+  osc.increment();
+  SamplesEqual(osc.value(), -0.881921);
+  osc.increment();
+  SamplesEqual(osc.value(), -0.980785);
+  osc.increment();
+  SamplesEqual(osc.value(), -0.555570);
+  osc.increment();
+  SamplesEqual(osc.value(),  0.195090);
+  osc.increment();
+  SamplesEqual(osc.value(),  0.831470);
+}
+
 
 @end

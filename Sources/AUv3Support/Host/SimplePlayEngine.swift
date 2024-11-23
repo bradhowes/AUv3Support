@@ -76,6 +76,13 @@ extension SimplePlayEngine {
    */
   public func start() {
     guard !player.isPlaying else { return }
+    if !engine.isRunning {
+      do {
+        try engine.start()
+      } catch {
+        fatalError("failed to start AVAudioEngine")
+      }
+    }
     updateAudioSession(active: true)
     beginLoop()
     player.play()
