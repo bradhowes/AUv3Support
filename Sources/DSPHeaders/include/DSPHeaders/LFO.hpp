@@ -52,7 +52,7 @@ public:
    @param sampleRate number of samples per second
    */
   LFO(Parameters::Float& frequency, ValueType sampleRate) noexcept
-  : LFO(frequency, sampleRate, frequency, LFOWaveform::sinusoid) {}
+  : LFO(frequency, sampleRate, LFOWaveform::sinusoid) {}
 
   /** Create a new instance.
 
