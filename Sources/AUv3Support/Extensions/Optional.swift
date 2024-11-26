@@ -1,4 +1,4 @@
-// Copyright © 2022 Brad Howes. All rights reserved.
+// Copyright © 2022-2024 Brad Howes. All rights reserved.
 
 extension Optional where Wrapped: CustomStringConvertible {
   

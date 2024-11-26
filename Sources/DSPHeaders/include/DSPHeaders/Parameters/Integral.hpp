@@ -1,4 +1,4 @@
-// Copyright © 2022 Brad Howes. All rights reserved.
+// Copyright © 2022-2024 Brad Howes. All rights reserved.
 
 #pragma once
 
@@ -17,8 +17,14 @@ class Integral : public Base {
 public:
   using super = Base;
 
-  explicit Integral(AUParameterAddress address, AUValue init = 0.0) noexcept
-  : super(address, init, false, Transformer::rounded, Transformer::rounded) {}
+  /**
+   Construct a new parameter.
+
+   @param address the AUParameterAddress for the parameter
+   @param value the starting value for the parameter
+   */
+  explicit Integral(AUParameterAddress address, AUValue value = 0.0) noexcept
+  : super(address, value, false, Transformer::rounded, Transformer::rounded) {}
 };
 
 } // end namespace DSPHeaders::Parameters

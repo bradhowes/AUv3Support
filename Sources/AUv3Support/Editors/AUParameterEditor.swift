@@ -1,31 +1,7 @@
-// Copyright © 2021 Brad Howes. All rights reserved.
+// Copyright © 2021-2024 Brad Howes. All rights reserved.
 
 import AudioToolbox
 import os.log
-
-/**
- Protocol for UI controls that can provide a parameter value.
- */
-@MainActor
-public protocol AUParameterValueProvider: AnyObject {
-
-  /// The current value for a parameter.
-  var value: AUValue { get }
-}
-
-/**
- Delegate protocol for an AUParameterEditor
- */
-@MainActor
-public protocol AUParameterEditorDelegate: AnyObject {
-
-  /**
-   Notification when the editor finishes editing of a value.
-
-   - parameter changed: true if the value changed
-   */
-  func parameterEditorEditingDone(changed: Bool)
-}
 
 /**
  Protocol for controls that represent parameter values and can edit them.

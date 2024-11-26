@@ -1,4 +1,4 @@
-// Copyright © 2022 Brad Howes. All rights reserved.
+// Copyright © 2022-2024 Brad Howes. All rights reserved.
 
 #pragma once
 
@@ -16,10 +16,11 @@ public:
   /**
    Construct new instance from POD value.
 
-   @param init the value to hold
+   @param address the AUParameterAddress for the parameter
+   @param value the value to hold
    */
-  explicit Bool(AUParameterAddress address, bool init = false) noexcept
-  : super(address, init, false, Transformer::boolIn, Transformer::passthru) {}
+  explicit Bool(AUParameterAddress address, bool value = false) noexcept
+  : super(address, value, false, Transformer::boolIn, Transformer::passthru) {}
 
   /// @returns the boolean state of the parameter
   operator bool() const noexcept { return super::getImmediate(); }

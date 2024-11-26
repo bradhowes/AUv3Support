@@ -1,4 +1,4 @@
-// Copyright © 2022 Brad Howes. All rights reserved.
+// Copyright © 2022-2024 Brad Howes. All rights reserved.
 
 #pragma once
 
@@ -14,6 +14,13 @@ class Milliseconds : public Base {
 public:
   using super = Base;
 
+  /**
+   Construct a new parameter.
+
+   @param address the AUParameterAddress for the parameter
+   @param value the starting value for the parameter
+   @param canRamp if `true` then a parameter change will happen over some number of rendered samples
+   */
   explicit Milliseconds(AUParameterAddress address, AUValue milliseconds = 0.0, bool canRamp = true) noexcept
   : super(address, milliseconds, canRamp, Transformer::passthru, Transformer::passthru) {}
 };

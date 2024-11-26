@@ -1,4 +1,4 @@
-// Copyright © 2022 Brad Howes. All rights reserved.
+// Copyright © 2022-2024 Brad Howes. All rights reserved.
 
 #pragma once
 
@@ -13,6 +13,13 @@ class Percentage : public Base {
 public:
   using super = Base;
 
+  /**
+   Construct a new parameter.
+
+   @param address the AUParameterAddress for the parameter
+   @param value the starting value for the parameter
+   @param canRamp if `true` then a parameter change will happen over some number of rendered samples
+   */
   explicit Percentage(AUParameterAddress address, AUValue value = 0.0, bool canRamp = true) noexcept
   : super(address, value, canRamp, Transformer::percentageIn, Transformer::percentageOut) {}
 };

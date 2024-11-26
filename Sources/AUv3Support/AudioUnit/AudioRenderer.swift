@@ -1,3 +1,5 @@
+// Copyright © 2022-2024 Brad Howes. All rights reserved.
+
 import CoreAudioKit
 import AVKit
 

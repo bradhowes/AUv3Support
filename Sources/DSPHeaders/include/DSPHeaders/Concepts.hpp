@@ -1,3 +1,5 @@
+// Copyright © 2024 Brad Howes. All rights reserved.
+
 #import <AVFoundation/AVFoundation.h>
 
 namespace DSPHeaders {

@@ -1,4 +1,4 @@
-// Copyright © 2021 Brad Howes. All rights reserved.
+// Copyright © 2021-2024 Brad Howes. All rights reserved.
 
 #pragma once
 
@@ -26,13 +26,14 @@ namespace DSPHeaders {
  class without the need for virtual dispatching.
 
  It is expected that the template parameter class T defines the following methods which this class will
- invoke at the appropriate times but without any virtual dispatching.
+ invoke at the appropriate times but without any virtual dispatching. The only one that is required is
+ the `doRendering` method.
 
- - doSetImmediateParameterValue -- set a parameter value from within the render loop
- - doSetPendingParameterValue -- set a paramete value from outside render loop (AUParameterTree)
- - doGetImmediateParameterValue -- read parameter value set by render loop
- - doGetPendingParameterValue -- read parameter value set outside render loop (AUParameterTree)
  - doRendering -- perform rendering of samples
+ - doSetImmediateParameterValue [optional] -- set a parameter value from within the render loop
+ - doSetPendingParameterValue [optional] -- set a paramete value from outside render loop (AUParameterTree)
+ - doGetImmediateParameterValue [optional] -- read parameter value set by render loop
+ - doGetPendingParameterValue [optional] -- read parameter value set outside render loop (AUParameterTree)
  - doMIDIEvent [optional] -- process MIDI v1 message
  - doRenderingStateChanged [optional] -- notification that the rendering state has changed
  */

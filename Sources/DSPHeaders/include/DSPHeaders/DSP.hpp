@@ -1,4 +1,4 @@
-// Copyright © 2021 Brad Howes. All rights reserved.
+// Copyright © 2021-2024 Brad Howes. All rights reserved.
 
 #pragma once
 

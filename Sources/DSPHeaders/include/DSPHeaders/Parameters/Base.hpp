@@ -1,4 +1,4 @@
-// Copyright © 2022 Brad Howes. All rights reserved.
+// Copyright © 2022-2024 Brad Howes. All rights reserved.
 
 #pragma once
 
@@ -15,6 +15,10 @@ namespace DSPHeaders::Parameters {
  Base class that manages a parameter value that can transition from one value to another over some number of frames.
  It does so in a thread-safe manner so that changes coming from AUParameterTree notifications (presumably from UI
  activity) does not modify state that may be in use in a rendering thread.
+
+ A parameter can have an internal representation that differs from an external (UI) one. The parameter holds two
+ attributes, `transformIn_` and `transformOut_`, that perform the conversion from external representation to internal
+ one (`transformIn`) and the opposite (`transformOut`) for making an external value from the internal representation.
  */
 class Base {
 public:
@@ -111,7 +115,11 @@ protected:
   /**
    Construct a new parameter.
 
+   @param address the AUParameterAddress for the parameter
    @param value the starting value for the parameter
+   @param canRamp if `true` then a parameter change will happen over some number of rendered samples
+   @param forward a transformation to apply to incoming values before storing in the parameter
+   @param reverse a transformation to apply to a held value before it is returned to a caller
    */
   Base(AUParameterAddress address, AUValue value, bool canRamp, ValueTransformer forward,
        ValueTransformer reverse) noexcept :
@@ -154,6 +162,7 @@ private:
   /// How to transform kernel values to external representation.
   ValueTransformer transformOut_;
 
+  /// Holds `true` if the parameter supports ramping. Boolean values do not, for instance.
   bool canRamp_;
 };
 
