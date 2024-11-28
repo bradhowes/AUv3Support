@@ -1,21 +1,19 @@
 // Copyright © 2022-2024 Brad Howes. All rights reserved.
 
 import AVFoundation
-import os.log
 
 /**
  Wrapper around AVAudioEngine that manages its wiring with an AVAudioUnit instance.
  */
-@MainActor
-public final class SimplePlayEngine {
+public final class SimplePlayEngine: @unchecked Sendable {
   static let bundle = Bundle(for: SimplePlayEngine.self)
   static let bundleIdentifier = bundle.bundleIdentifier ?? "unknown"
 
-  private let log: OSLog
   private let engine = AVAudioEngine()
   private let player = AVAudioPlayerNode()
   private var activeEffect: AVAudioUnit?
   private let file: AVAudioFile
+  private let stateChangeQueue = DispatchQueue(label: "SimplePlayEngine")
 
   /// True if engine is currently playing the audio file.
   public var isPlaying: Bool { player.isPlaying }
@@ -38,12 +36,9 @@ public final class SimplePlayEngine {
 
   /**
    Create new audio processing setup, with an audio file player for a signal source.
-
-   - parameter name: the name to log under
    - parameter audioFileName: the name of the audio resource to play
    */
   public init(name: String, audioFileName: String) {
-    self.log = .init(subsystem: name, category: "SimplePlayEngine")
     self.file = Self.audioFileResource(name: audioFileName)
     engine.attach(player)
     engine.connect(player, to: engine.mainMixerNode, format: file.processingFormat)
@@ -75,26 +70,22 @@ extension SimplePlayEngine {
    Start playback of the audio file player.
    */
   public func start() {
-    guard !player.isPlaying else { return }
-    if !engine.isRunning {
-      do {
-        try engine.start()
-      } catch {
-        fatalError("failed to start AVAudioEngine")
+    stateChangeQueue.sync {
+      if !player.isPlaying {
+        self.startPlaying()
       }
     }
-    updateAudioSession(active: true)
-    beginLoop()
-    player.play()
   }
 
   /**
    Stop playback of the audio file player.
    */
   public func stop() {
-    guard player.isPlaying else { return }
-    player.stop()
-    updateAudioSession(active: false)
+    stateChangeQueue.sync {
+      if player.isPlaying {
+        self.stopPlaying()
+      }
+    }
   }
 
   /**
@@ -112,7 +103,32 @@ extension SimplePlayEngine {
   }
 }
 
-private extension SimplePlayEngine {
+extension SimplePlayEngine {
+
+  private func startPlaying() {
+    updateAudioSession(active: true)
+
+    do {
+      try engine.start()
+    } catch {
+      stopPlaying()
+      fatalError("Could not start engine - error: \(error).")
+    }
+
+    beginLoop()
+    beginLoop()
+
+    player.play()
+  }
+
+  private func stopPlaying() {
+    player.stop()
+    engine.stop()
+    updateAudioSession(active: false)
+  }
+}
+
+extension SimplePlayEngine {
 
   private func updateAudioSession(active: Bool) {
     #if os(iOS)
@@ -131,13 +147,11 @@ private extension SimplePlayEngine {
    */
   private func beginLoop() {
     player.scheduleFile(file, at: nil) {
-      self.loopIfPlaying()
-    }
-  }
-
-  private func loopIfPlaying() {
-    if self.player.isPlaying {
-      self.beginLoop()
+      self.stateChangeQueue.async {
+        if self.player.isPlaying {
+          self.beginLoop()
+        }
+      }
     }
   }
 }

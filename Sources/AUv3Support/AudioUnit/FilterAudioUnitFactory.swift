@@ -4,10 +4,27 @@ import Foundation
 import CoreAudioKit.AUViewController
 import os.log
 
-/// Namespace for the `create` global function below.
-public enum FilterAudioUnitFactory {}
+public enum FilterAudioUnitFactory {
 
-public extension FilterAudioUnitFactory {
+  /**
+   Create a new FilterAudioUnit instance to run in an AUv3 container.
+   Note that one must call `configure` in order to supply the parameters and the kernel to use.
+
+   - parameter componentDescription: descriptions of the audio environment it will run in
+   - parameter viewConfigurationManager: optional delegate for view configuration management
+   - returns: new FilterAudioUnit
+   */
+  static func create(componentDescription: AudioComponentDescription,
+                     viewConfigurationManager: AudioUnitViewConfigurationManager? = nil) throws -> FilterAudioUnit {
+#if os(macOS)
+    let options: AudioComponentInstantiationOptions = .loadInProcess
+#else
+    let options: AudioComponentInstantiationOptions = .loadOutOfProcess
+#endif
+    let audioUnit = try FilterAudioUnit(componentDescription: componentDescription, options: options)
+    audioUnit.viewConfigurationManager = viewConfigurationManager
+    return audioUnit
+  }
 
   /**
    Create a new FilterAudioUnit instance to run in an AUv3 container.

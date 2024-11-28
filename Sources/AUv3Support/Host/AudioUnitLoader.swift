@@ -6,7 +6,6 @@ import os.log
 /**
  Errors that can come from AudioUnitLoader.
  */
-@MainActor
 public enum AudioUnitLoaderError: Error {
   /// Unexpected nil AUAudioUnit (most likely never can happen)
   case nilAudioUnit
@@ -51,8 +50,7 @@ public protocol AudioUnitLoaderDelegate: AnyObject {
  send audio samples to the AudioUnit. Note that this class has no knowledge of any classes other than what Apple
  provides.
  */
-@MainActor
-public final class AudioUnitLoader: NSObject {
+public final class AudioUnitLoader: @unchecked Sendable {
   private static let lastStateKey = "lastStateKey"
 
   private let log: OSLog
@@ -101,11 +99,10 @@ public final class AudioUnitLoader: NSObject {
                                                     componentManufacturer: 0,
                                                     componentFlags: 0,
                                                     componentFlagsMask: 0)
-    super.init()
 
     let name = AVAudioUnitComponentManager.registrationsChangedNotification
     notificationRegistration = NotificationCenter.default.addObserver(forName: name, object: nil, queue: nil) { _ in
-      DispatchQueue.main.async {
+      DispatchQueue.global(qos: .background).async {
         self.registrationsChanged()
       }
     }
@@ -129,7 +126,7 @@ public final class AudioUnitLoader: NSObject {
       if each.audioComponentDescription.componentManufacturer == self.componentDescription.componentManufacturer,
          each.audioComponentDescription.componentType == self.componentDescription.componentType,
          each.audioComponentDescription.componentSubType == self.componentDescription.componentSubType {
-        DispatchQueue.main.async {
+        DispatchQueue.global(qos: .background).async {
           self.createAudioUnit(each.audioComponentDescription)
         }
         return
@@ -147,7 +144,7 @@ public final class AudioUnitLoader: NSObject {
     }
 
     Timer.scheduledTimer(withTimeInterval: delayBeforeNextLocateAttempt, repeats: false) { _ in
-      DispatchQueue.main.async {
+      DispatchQueue.global(qos: .background).async {
         self.retryLocate();
       }
     }
@@ -268,7 +265,15 @@ public extension AudioUnitLoader {
    - returns: true if playing
    */
   @discardableResult
-  func togglePlayback() -> Bool { playEngine.startStop() }
+  func togglePlayback() -> Bool {
+    if playEngine.isPlaying {
+      playEngine.stop()
+      return false
+    } else {
+      playEngine.start()
+      return true
+    }
+  }
 
   /**
    The world is being torn apart. Stop any asynchronous eventing from happening in the future.
@@ -277,3 +282,6 @@ public extension AudioUnitLoader {
     playEngine.stop()
   }
 }
+
+extension AVAudioUnitComponent: @retroactive @unchecked Sendable {}
+extension AVAudioUnit: @retroactive @unchecked Sendable {}
