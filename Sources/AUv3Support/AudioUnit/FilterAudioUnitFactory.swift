@@ -14,8 +14,10 @@ public enum FilterAudioUnitFactory {
    - parameter viewConfigurationManager: optional delegate for view configuration management
    - returns: new FilterAudioUnit
    */
-  static func create(componentDescription: AudioComponentDescription,
-                     viewConfigurationManager: AudioUnitViewConfigurationManager? = nil) throws -> FilterAudioUnit {
+  static public func create(
+    componentDescription: AudioComponentDescription,
+    viewConfigurationManager: AudioUnitViewConfigurationManager? = nil
+  ) throws -> FilterAudioUnit {
 #if os(macOS)
     let options: AudioComponentInstantiationOptions = .loadInProcess
 #else
@@ -35,10 +37,12 @@ public enum FilterAudioUnitFactory {
    - parameter viewConfigurationManager: optional delegate for view configuration management
    - returns: new FilterAudioUnit
    */
-  static func create(componentDescription: AudioComponentDescription,
-                     parameters: ParameterSource,
-                     kernel: AudioRenderer,
-                     viewConfigurationManager: AudioUnitViewConfigurationManager? = nil) throws -> FilterAudioUnit {
+  static public func create(
+    componentDescription: AudioComponentDescription,
+    parameters: ParameterSource,
+    kernel: AudioRenderer,
+    viewConfigurationManager: AudioUnitViewConfigurationManager? = nil
+  ) throws -> FilterAudioUnit {
 #if os(macOS)
     let options: AudioComponentInstantiationOptions = .loadInProcess
 #else
