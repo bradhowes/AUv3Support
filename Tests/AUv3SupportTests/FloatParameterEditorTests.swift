@@ -237,5 +237,14 @@ final class FloatParameterEditorTests: XCTestCase {
     ctx.editor.setValue(8.3)
     XCTAssertTrue(ctx.label?.isHidden == true)
   }
+
+  @MainActor
+  func testLabelFocusChanged() throws {
+    let ctx = try Context()
+    ctx.label?.onFocusChange(true)
+    XCTAssertEqual(ctx.label?.text, "0.000")
+    ctx.label?.onFocusChange(false)
+    // There is a timer to revert back to the label. No way to test yet.
+  }
 #endif
 }
