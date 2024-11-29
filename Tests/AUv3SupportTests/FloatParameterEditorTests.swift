@@ -183,6 +183,7 @@ final class FloatParameterEditorTests: XCTestCase {
     XCTAssertFalse(ctx.editor.differs)
   }
 
+#if os(iOS)
   @MainActor
   func testValueEditorSetting() async throws {
     let ctx = try Context()
@@ -199,6 +200,7 @@ final class FloatParameterEditorTests: XCTestCase {
       tapToEdit: UIView()
     )
   }
+#endif
 
   @MainActor
   func testControlWithNoLabelChangedValue() async throws {
@@ -228,12 +230,12 @@ final class FloatParameterEditorTests: XCTestCase {
 
 #if os(macOS)
   @MainActor
-  func testLabelIsHiddenWAfterValueChange() throws {
+  func testLabelIsHiddenAfterValueChange() throws {
     let ctx = try Context()
-    XCTAssertEqual(ctx.label.text, "One")
-    XCTAssertFalse(ctx.label.isHidden)
+    XCTAssertEqual(ctx.label?.text, "One")
+    XCTAssertFalse(ctx.label?.isHidden == true)
     ctx.editor.setValue(8.3)
-    XCTAssertTrue(ctx.label.isHidden)
+    XCTAssertTrue(ctx.label?.isHidden == true)
   }
 #endif
 }
