@@ -78,24 +78,8 @@ public class AUParameterEditorBase: NSObject {
     (parameterObserverToken, stream) = parameter.startObserving()
     task = Task {
       for await value in stream {
-        print("task new value: \(value)")
-        if Task.isCancelled {
-          break
-        }
         closure(value)
       }
-    }
-  }
-
-  internal func stopObservingParameter() {
-    if let task {
-      task.cancel()
-      self.task = nil
-    }
-
-    if let parameterObserverToken {
-      self.parameter.removeParameterObserver(parameterObserverToken)
-      self.parameterObserverToken = nil
     }
   }
 }
@@ -118,26 +102,6 @@ internal extension AUParameter {
       }
     })
 
-    continuation.onTermination = { _ in }
-    return (observerToken, stream)
-  }
-}
-
-internal extension AUParameterTree {
-
-  /**
-   Obtain a stream of value changes from a parameter, presumably changed by another entity such as a MIDI
-   connection.
-
-   - returns: 2-tuple containing a token for cancelling the observation and an AsyncStream of observed values
-   */
-  func startObserving() -> (AUParameterObserverToken, AsyncStream<(AUParameterAddress,AUValue)>) {
-    let (stream, continuation) = AsyncStream<(AUParameterAddress, AUValue)>.makeStream()
-    let observerToken = self.token(byAddingParameterObserver: { address, value in
-      continuation.yield((address, value))
-    })
-
-    continuation.onTermination = { _ in }
     return (observerToken, stream)
   }
 }

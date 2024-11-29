@@ -21,7 +21,7 @@ public class ValueEditor: NSObject {
   private let containerViewTopConstraint: NSLayoutConstraint
   private let backgroundViewBottomConstraint: NSLayoutConstraint
   private let controlsView: UIView
-  private let parent: UIView
+  private let parent: UIView?
 
   private var editing: AUParameterEditor?
   private var keyboardIsVisible = false
@@ -36,7 +36,7 @@ public class ValueEditor: NSObject {
     self.containerViewTopConstraint = containerViewTopConstraint
     self.backgroundViewBottomConstraint = backgroundViewBottomConstraint
     self.controlsView = controlsView
-    self.parent = containerView.superview!
+    self.parent = containerView.superview
     super.init()
 
     containerViewTopConstraint.constant = 0
@@ -102,14 +102,14 @@ private extension ValueEditor {
     let keyboardInfo = KeyboardInfo(notification)
     let height = keyboardInfo.frameEnd.height
     backgroundViewBottomConstraint.constant = -backgroundView.frame.height
-    parent.layoutIfNeeded()
+    parent?.layoutIfNeeded()
 
     keyboardIsVisible = height >= 100
-    let goal = keyboardIsVisible ? height + 20 : parent.frame.midY
+    let goal = keyboardIsVisible ? height + 20 : (parent?.frame.midY ?? 0.0)
 
     animateWithKeyboard(keyboardInfo) { _ in
       self.backgroundViewBottomConstraint.constant = goal
-      self.parent.layoutIfNeeded()
+      self.parent?.layoutIfNeeded()
       self.controlsView.alpha = 0.40
     }
   }
@@ -118,11 +118,11 @@ private extension ValueEditor {
 
   @objc private func handleKeyboardDisappearing(_ notification: Notification) {
     let keyboardInfo = KeyboardInfo(notification)
-    parent.layoutIfNeeded()
+    parent?.layoutIfNeeded()
     keyboardIsVisible = false
 
     let doneEditing = editing == nil
-    let goal = doneEditing ? -backgroundView.frame.height : parent.frame.midY
+    let goal = doneEditing ? -backgroundView.frame.height : (parent?.frame.midY ?? 0.0)
 
     animateWithKeyboard(keyboardInfo) { _ in
       self.backgroundViewBottomConstraint.constant = goal
@@ -143,7 +143,7 @@ private extension ValueEditor {
     let animator = UIViewPropertyAnimator(duration: keyboardInfo.animationDuration, curve: keyboardInfo.animationCurve)
     animator.addAnimations {
       animations(keyboardInfo.frameEnd)
-      self.parent.layoutIfNeeded()
+      self.parent?.layoutIfNeeded()
     }
 
     if let completion = completion {

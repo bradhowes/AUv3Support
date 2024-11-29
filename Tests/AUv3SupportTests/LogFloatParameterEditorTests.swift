@@ -35,19 +35,19 @@ private final class Context {
   let control: MockSliderControl
   let altControl: MockSliderControl
   let editor: FloatParameterEditor
-  let label: Label?
+  let label: Label
   var paramValue: AUValue = 0.0
   var paramExpectation: XCTestExpectation?
 
-  init(state: AUValue = 0.0, withLabel: Bool = true, controlExpectation: XCTestExpectation? = nil) throws {
+  init(state: AUValue = 0.0, controlExpectation: XCTestExpectation? = nil) throws {
     param = AUParameterTree.createParameter(
-      withIdentifier: "One", name: "One", address: 1001, min: 0.0, max: 100.0, unit: .percent,
-      unitName: nil, flags: [.flag_IsReadable, .flag_IsWritable], valueStrings: nil,
+      withIdentifier: "One", name: "One", address: 1001, min: -80.0, max: 10.0, unit: .decibels,
+      unitName: nil, flags: [.flag_IsReadable, .flag_IsWritable, .flag_DisplayLogarithmic], valueStrings: nil,
       dependentParameters: nil
     )
 
     tree = AUParameterTree.createTree(withChildren: [param])
-    label = withLabel ? Label() : nil
+    label = Label()
     control = MockSliderControl(state: state, expectation: controlExpectation)
     editor = FloatParameterEditor(parameter: param, formatting: formatter(), rangedControl: control, label: label)
     control.editor = editor
@@ -71,7 +71,7 @@ private final class Context {
   }
 }
 
-final class FloatParameterEditorTests: XCTestCase {
+final class LogFloatParameterEditorTests: XCTestCase {
 
   @MainActor
   func testEditorInitialization() async throws {
@@ -79,7 +79,7 @@ final class FloatParameterEditorTests: XCTestCase {
     expectation.expectedFulfillmentCount = 1
     let ctx = try Context(state: 1.0, controlExpectation: expectation)
     await fulfillment(of: [expectation], timeout: 2.0)
-    XCTAssertEqual(ctx.control.value, 0.0)
+    XCTAssertEqual(ctx.control.value, 8.830427)
     XCTAssertFalse(ctx.editor.differs)
     XCTAssertEqual(ctx.paramValue, 0.0)
   }
@@ -87,9 +87,9 @@ final class FloatParameterEditorTests: XCTestCase {
   @MainActor
   func testParamChangedValue() async throws {
     let expectation = self.expectation(description: "control changed state via param change")
-    expectation.expectedFulfillmentCount = 3
+    expectation.expectedFulfillmentCount = 6
     let ctx = try Context(controlExpectation: expectation)
-    XCTAssertEqual(ctx.control.value, 0.0)
+    XCTAssertEqual(ctx.control.value, 8.830427)
     XCTAssertEqual(ctx.paramValue, 0.0)
 
     let pause: Duration = .milliseconds(200)
@@ -100,17 +100,17 @@ final class FloatParameterEditorTests: XCTestCase {
     ctx.param.setValue(30.0, originator: nil)
 
     await fulfillment(of: [expectation], timeout: 5.0)
-    XCTAssertEqual(ctx.control.value, 30.0)
-    XCTAssertEqual(ctx.paramValue, 30.0)
+    XCTAssertEqual(ctx.control.value, 9.0)
+    XCTAssertEqual(ctx.paramValue, 10.0)
     XCTAssertFalse(ctx.editor.differs)
   }
 
   @MainActor
   func testEditorChangedValue() async throws {
     let expectation = self.expectation(description: "control changed state via editing change")
-    expectation.expectedFulfillmentCount = 5
+    expectation.expectedFulfillmentCount = 4
     let ctx = try Context(controlExpectation: expectation)
-    XCTAssertEqual(ctx.control.value, 0.0)
+    XCTAssertEqual(ctx.control.value, 8.830427)
     XCTAssertEqual(ctx.paramValue, 0.0)
 
     let pause: Duration = .milliseconds(200)
@@ -126,18 +126,18 @@ final class FloatParameterEditorTests: XCTestCase {
     try await Task.sleep(for: pause)
 
     await fulfillment(of: [expectation], timeout: 2.0)
-    XCTAssertEqual(ctx.control.value, 50.0)
-    XCTAssertEqual(ctx.paramValue, 50.0)
+    XCTAssertEqual(ctx.control.value, 9.0)
+    XCTAssertEqual(ctx.paramValue, 10.0)
     XCTAssertFalse(ctx.editor.differs)
   }
 
   @MainActor
   func testControlChangedValue() async throws {
     let expectation = self.expectation(description: "control changed state")
-    expectation.expectedFulfillmentCount = 5
+    expectation.expectedFulfillmentCount = 1
     let ctx = try Context()
     ctx.paramExpectation = expectation
-    XCTAssertEqual(ctx.control.value, 0.0)
+    XCTAssertEqual(ctx.control.value, 8.830427)
     XCTAssertEqual(ctx.paramValue, 0.0)
 
     let pause: Duration = .milliseconds(200)
@@ -153,17 +153,17 @@ final class FloatParameterEditorTests: XCTestCase {
     try await Task.sleep(for: pause)
 
     await fulfillment(of: [expectation], timeout: 2.0)
-    XCTAssertEqual(ctx.paramValue, 50.0)
+    XCTAssertEqual(ctx.paramValue, 10)
     XCTAssertFalse(ctx.editor.differs)
   }
 
   @MainActor
   func testTwoControlsChangedValues() async throws {
     let expectation = self.expectation(description: "control changed state")
-    expectation.expectedFulfillmentCount = 5
+    expectation.expectedFulfillmentCount = 1
     let ctx = try Context()
     ctx.paramExpectation = expectation
-    XCTAssertEqual(ctx.control.value, 0.0)
+    XCTAssertEqual(ctx.control.value, 8.830427)
     XCTAssertEqual(ctx.paramValue, 0.0)
 
     let pause: Duration = .milliseconds(200)
@@ -179,50 +179,7 @@ final class FloatParameterEditorTests: XCTestCase {
     try await Task.sleep(for: pause)
 
     await fulfillment(of: [expectation], timeout: 2.0)
-    XCTAssertEqual(ctx.paramValue, 50.0)
-    XCTAssertFalse(ctx.editor.differs)
-  }
-
-  @MainActor
-  func testValueEditorSetting() async throws {
-    let ctx = try Context()
-    ctx.editor.setValueEditor(
-      valueEditor: ValueEditor(
-        containerView: UIView(),
-        backgroundView: UIView(),
-        parameterName: UILabel(),
-        parameterValue: UITextField(),
-        containerViewTopConstraint: .init(),
-        backgroundViewBottomConstraint: .init(),
-        controlsView: UIView()
-      ),
-      tapToEdit: UIView()
-    )
-  }
-
-  @MainActor
-  func testControlWithNoLabelChangedValue() async throws {
-    let expectation = self.expectation(description: "control changed state")
-    expectation.expectedFulfillmentCount = 5
-    let ctx = try Context(withLabel: false)
-    ctx.paramExpectation = expectation
-    XCTAssertEqual(ctx.control.value, 0.0)
-    XCTAssertEqual(ctx.paramValue, 0.0)
-
-    let pause: Duration = .milliseconds(200)
-    ctx.control.value = 10.0
-    try await Task.sleep(for: pause)
-    ctx.control.value = 20.0
-    try await Task.sleep(for: pause)
-    ctx.control.value = 30.0
-    try await Task.sleep(for: pause)
-    ctx.control.value = 40.0
-    try await Task.sleep(for: pause)
-    ctx.control.value = 50.0
-    try await Task.sleep(for: pause)
-
-    await fulfillment(of: [expectation], timeout: 2.0)
-    XCTAssertEqual(ctx.paramValue, 50.0)
+    XCTAssertEqual(ctx.paramValue, 10)
     XCTAssertFalse(ctx.editor.differs)
   }
 

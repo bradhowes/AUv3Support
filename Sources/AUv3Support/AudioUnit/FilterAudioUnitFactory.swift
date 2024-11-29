@@ -43,14 +43,8 @@ public enum FilterAudioUnitFactory {
     kernel: AudioRenderer,
     viewConfigurationManager: AudioUnitViewConfigurationManager? = nil
   ) throws -> FilterAudioUnit {
-#if os(macOS)
-    let options: AudioComponentInstantiationOptions = .loadInProcess
-#else
-    let options: AudioComponentInstantiationOptions = .loadOutOfProcess
-#endif
-    let audioUnit = try FilterAudioUnit(componentDescription: componentDescription, options: options)
+    let audioUnit = try create(componentDescription: componentDescription, viewConfigurationManager: viewConfigurationManager)
     audioUnit.configure(parameters: parameters, kernel: kernel)
-    audioUnit.viewConfigurationManager = viewConfigurationManager
     return audioUnit
   }
 }
