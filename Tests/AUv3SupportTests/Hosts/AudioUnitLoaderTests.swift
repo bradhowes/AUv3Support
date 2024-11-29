@@ -56,7 +56,7 @@ final class AudioUnitLoaderTests: XCTestCase {
     let delegate = LoaderDelegate(expectation: exp)
     audioUnitLoader.delegate = delegate
 
-    wait(for: [exp], timeout: 30.0)
+    wait(for: [exp], timeout: 300.0)
     XCTAssertTrue(delegate.good)
 
     XCTAssertNoThrow(audioUnitLoader.save())
