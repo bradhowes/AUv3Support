@@ -34,7 +34,7 @@ This repo is also being used by my other AUv3 projects:
 
 # Swift 6
 
-The latest version now builds with Swift 6 with full concurrency checking.
+The latest version now builds with Swift 6 and full concurrency checking.
 
 # Credits
 
