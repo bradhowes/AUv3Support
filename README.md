@@ -32,6 +32,10 @@ This repo is also being used by my other AUv3 projects:
 * [SimplyPhaser](https://github.com/bradhowes/SimplyPhaser)
 * [SimplyTremolo](https://github.com/bradhowes/SimplyTremolo)
 
+# Swift 6
+
+The latest version now builds with Swift 6 with full concurrency checking.
+
 # Credits
 
 All of the code has been written by myself over the course of several years working on AUv3 app extensions. There are a collection of
