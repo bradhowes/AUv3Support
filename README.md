@@ -43,7 +43,7 @@ Here are images showing my [SimplyFlange](https://github.com/bradhowes/SimplyFla
 simulator in landscape orientation. This app was based on [AUv3Template](https://github.com/bradhowes/AUv3Template) and
 so uses the AUv3Support package.
 
-[!](images/flange_ios.png)
+![Example on iOS](images/flange_ios.png)
 
 The controls at the top come from the AUv3Support-iOS package as part of the host application infrastructure it
 provides. There, you find:
@@ -53,7 +53,7 @@ provides. There, you find:
 - _presets bar_ to quickly choose from a factory preset from the AUv3 extension
 - _presets menu_ to show a menu of user and factory presets
 
-[!](images/presets_ios.png)
+![Presets on iOS](images/presets_ios.png)
 
 The hosting app supports creating and managing user presets for the extension. These should operate in the same way that
 they do in other hosting apps such as GarageBand, Logic, Cubasis, AUM. You can create your own presets. When a user
@@ -68,7 +68,7 @@ preset is active, you can then:
 Here is an image showing the macOS version of the same AUv3 plugin. This time the host controls are found in the app's
 title bar.
 
-[!](images/flange_macos.png)
+![Example on macOS](images/flange_macos.png)
 
 # Other Examples
 
