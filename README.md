@@ -8,21 +8,69 @@
 
 Swift package containing useful code for AUv3 app extensions. There are four products so far in this package:
 
-- AUv3-Support -- collection of extensions and classes for both the AudioUnit components that is packaged
+- [AUv3-Support](Sources/AUv3Support) -- collection of extensions and classes for both the AudioUnit components that is packaged
   as an AUv3 app extension and the host app that contains it. Because it will be linked to the AUv3 app
   extension, it must not link to or use any APIs that are forbidden by Apple for use by app extensions.
   This code works on both iOS and macOS platforms.
-- AUv3-Support-iOS -- classes that provide a simple AUv3 hosting environment for the AUv3 app extension.
+- [AUv3-Support-iOS](Sources/AUv3Support-iOS) -- classes that provide a simple AUv3 hosting environment for the AUv3 app extension.
   Provides an audio chain that sends a sample loop through the AUv3 audio unit and out to the speaker. Also
   provides for user preset management.
-- AUv3-Support-macOS -- similar to the above but for macOS. Unfortunately, the setup is not as straight-forward on macOS as it is for iOS. 
-  So far I have not been able to get a good load from a storyboard held in this package, where menu items are connected to delegate slots, 
-  and toolbar buttons connected to the main window. However, it does work when it everything is wired properly.
-- DSPHeaders -- collection of C++17 headers for classes that are useful when creating AUv3 kernels. These were written
-  specifically for use in a audio unit render thread, so there should be no memory allocations done once a render thread
-  is started.
+- [AUv3-Support-macOS](Sources/AUv3Support-macOS) -- similar to the above but for macOS. Unfortunately, the setup is not
+  as straight-forward on macOS as it is for iOS. So far I have not been able to get a good load from a storyboard held
+  in this package, where menu items are connected to delegate slots, and toolbar buttons connected to the main window.
+  However, it does work when it everything is wired properly.
+- [DSPHeaders](Sources/DSPHeaders) -- collection of C++17 headers for classes that are useful when creating AUv3
+  kernels. These were written specifically for use in a audio unit render thread, so there should be no memory
+  allocations done once a render thread is started.
+  
+The [EventProcessor](Sources/DSPHeaders/include/DSPHeaders/EventProcessor.hpp) template in the DSPHeaders product serves
+as the basis for all AUv3 filter _kernels_. You only need to define your own `doRendering` method to perform the sample
+rendering. Pretty much everything else is handled for you. You can define additional methods if you wish, but only the
+`doRendering` one is mandatory.
 
-The [AUv3Template](https://github.com/bradhowes/AUv3Template) project showcases all of this and is setup to deliver a working macOS and an iOS app and app extension out of the box.
+Instead of using C++ virtual functions to dispatch to functionality held in derived classes, `EventProcessor` relies on
+the derived class being given as the template parameter. This setup is known as the ["curiously recurring template
+pattern" (CRTP)](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern). The template also uses modern C++
+techniques to detect if methods are present in your class, and the compiler only generates code to call them when they
+are available.
+
+The [AUv3Template](https://github.com/bradhowes/AUv3Template) project showcases all of this and it is setup to deliver a
+working macOS and an iOS app and app extension out of the box with just the run of a command-line script.
+
+## iOS Example
+
+Here are images showing my [SimplyFlange](https://github.com/bradhowes/SimplyFlange) app running in the iPhone SE
+simulator in landscape orientation. This app was based on [AUv3Template](https://github.com/bradhowes/AUv3Template) and
+so uses the AUv3Support package.
+
+[!](images/flange_ios.png)
+
+The controls at the top come from the AUv3Support-iOS package as part of the host application infrastructure it
+provides. There, you find:
+
+- _play_ button to start/stop audio playing through the filter
+- _bypass_ button to disable the filter
+- _presets bar_ to quickly choose from a factory preset from the AUv3 extension
+- _presets menu_ to show a menu of user and factory presets
+
+[!](images/presets_ios.png)
+
+The hosting app supports creating and managing user presets for the extension. These should operate in the same way that
+they do in other hosting apps such as GarageBand, Logic, Cubasis, AUM. You can create your own presets. When a user
+preset is active, you can then:
+
+- _Update_ the preset by saving the current parameter settings under its name
+- _Rename_ the preset to give it a new name
+- _Delete_ the preset to remove it from the device
+
+## macOS Example
+
+Here is an image showing the macOS version of the same AUv3 plugin. This time the host controls are found in the app's
+title bar.
+
+[!](images/flange_macos.png)
+
+# Other Examples
 
 This repo is also being used by my other AUv3 projects:
 
