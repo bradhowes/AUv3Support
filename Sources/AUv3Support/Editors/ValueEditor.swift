@@ -82,7 +82,7 @@ extension ValueEditor {
     guard let editor = editing else { fatalError() }
 
     if let stringValue = parameterValueEditor.text, let value = AUValue(stringValue), value != editor.parameter.value {
-      editor.setValue(value)
+      editor.setValue(value, eventType: .value)
       editor.delegate?.parameterEditorEditingDone(changed: true)
     }
     else {
