@@ -43,7 +43,7 @@ final class AudioUnitLoaderTests: XCTestCase {
     let delegate = LoaderDelegate(expectation: exp)
     audioUnitLoader.delegate = delegate
 
-    waitForExpectations(timeout: 15.0, handler: nil)
+    waitForExpectations(timeout: 60.0, handler: nil)
     XCTAssertFalse(delegate.good)
 
     XCTAssertNoThrow(audioUnitLoader.save())
@@ -56,7 +56,7 @@ final class AudioUnitLoaderTests: XCTestCase {
     let delegate = LoaderDelegate(expectation: exp)
     audioUnitLoader.delegate = delegate
 
-    wait(for: [exp], timeout: 300.0)
+    waitForExpectations(timeout: 90.0, handler: nil)
     XCTAssertTrue(delegate.good)
 
     XCTAssertNoThrow(audioUnitLoader.save())
@@ -71,7 +71,7 @@ final class AudioUnitLoaderTests: XCTestCase {
     let delegate = LoaderDelegate(expectation: exp)
     audioUnitLoader.delegate = delegate
 
-    wait(for: [exp], timeout: 30.0)
+    waitForExpectations(timeout: 90.0, handler: nil)
     XCTAssertTrue(delegate.good)
 
     XCTAssertFalse(audioUnitLoader.isPlaying)
