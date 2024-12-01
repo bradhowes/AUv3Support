@@ -107,12 +107,13 @@ extension FloatParameterEditor: AUParameterEditor {
    Apply a new value to both the control and the parameter.
 
    - parameter value: the new value to use in parameter units and scaling
+   - parameter eventType: description of why the new value changed.
    */
-  public func setValue(_ value: AUValue) {
+  public func setValue(_ value: AUValue, eventType: AUParameterAutomationEventType = .value) {
     os_log(.debug, log: log, "setValue - %f", value)
     let newValue = value.clamped(to: parameter.minValue...parameter.maxValue)
-    if newValue != parameter.value {
-      parameter.setValue(newValue, originator: parameterObserverToken)
+    if newValue != parameter.value || eventType != .value {
+      parameter.setValue(newValue, originator: parameterObserverToken, atHostTime: 0, eventType: eventType)
     }
     setControlState(newValue)
   }

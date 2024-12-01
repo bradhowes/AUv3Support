@@ -42,7 +42,7 @@ extension BooleanParameterEditor: AUParameterEditor {
 
    - parameter value: the new value to use
    */
-  public func setValue(_ value: AUValue) {
+  public func setValue(_ value: AUValue, eventType: AUParameterAutomationEventType = .value) {
     if value != parameter.value {
       parameter.setValue(value, originator: parameterObserverToken)
     }

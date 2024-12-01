@@ -23,7 +23,6 @@ private final class Context {
                                               min: 10.0, max: 200.0, unit: .generic, unitName: nil,
                                               flags: [.flag_IsReadable], valueStrings: nil,
                                               dependentParameters: nil),
-
               AUParameterTree.createParameter(withIdentifier: "Squared", name: "Squared", address: 1,
                                               min: 10.0, max: 200.0, unit: .generic, unitName: nil,
                                               flags: [.flag_DisplaySquared], valueStrings: nil,
@@ -211,5 +210,111 @@ final class AUParameterTreeTests: XCTestCase {
 
     let values = await mac.getValues()
     XCTAssertEqual(values, [1.0, 2.0, 3.0])
+  }
+
+  func testDynamicMemberLookup() async throws {
+    let group1 = AUParameterTree.createGroup(
+      withIdentifier: "group1",
+      name: "Group 1",
+      children: [
+        AUParameterTree.createParameter(
+          withIdentifier: "first",
+          name: "First Name",
+          address: 1001,
+          min: 0.0,
+          max: 100.0,
+          unit: .generic,
+          unitName: nil,
+          flags: [.flag_IsReadable],
+          valueStrings: nil,
+          dependentParameters: nil
+        ),
+        AUParameterTree.createParameter(
+          withIdentifier: "second",
+          name: "Second Name",
+          address: 1002,
+          min: 10.0,
+          max: 200.0,
+          unit: .generic,
+          unitName: nil,
+          flags: [.flag_IsReadable],
+          valueStrings: nil,
+          dependentParameters: nil
+        ),
+      ]
+    )
+    let group2 = AUParameterTree.createGroup(
+      withIdentifier: "group2",
+      name: "Group 2",
+      children: [
+        AUParameterTree.createParameter(
+          withIdentifier: "third",
+          name: "Third Name",
+          address: 2001,
+          min: 0.0,
+          max: 100.0,
+          unit: .generic,
+          unitName: nil,
+          flags: [.flag_IsReadable],
+          valueStrings: nil,
+          dependentParameters: nil
+        ),
+        AUParameterTree.createParameter(
+          withIdentifier: "fourth",
+          name: "Fourth Name",
+          address: 2002,
+          min: 10.0,
+          max: 200.0,
+          unit: .generic,
+          unitName: nil,
+          flags: [.flag_IsReadable],
+          valueStrings: nil,
+          dependentParameters: nil
+        ),
+      ]
+    )
+    let root = AUParameterTree.createGroup(
+      withIdentifier: "root",
+      name: "Root",
+      children: [
+        group1,
+        group2
+      ]
+    )
+
+    let tree = AUParameterTree.createTree(withChildren: [root])
+    let group = tree.dynamicMemberLookup.root?.group1
+    XCTAssertNotNil(group?.group)
+    XCTAssertNil(group?.parameter)
+
+    let first = tree.dynamicMemberLookup.root?.group1?.first
+    XCTAssertNotNil(first)
+    var param = first?.parameter
+    XCTAssertNotNil(param)
+    XCTAssertEqual(param?.address, 1001)
+
+    let second = tree.dynamicMemberLookup.root?.group1?.second
+    XCTAssertNotNil(second)
+    param = second?.parameter
+    XCTAssertNotNil(param)
+    XCTAssertEqual(param?.address, 1002)
+
+    let third = tree.dynamicMemberLookup.root?.group2?.third
+    XCTAssertNotNil(third)
+    param = third?.parameter
+    XCTAssertNotNil(param)
+    XCTAssertEqual(param?.address, 2001)
+
+    let fourth = tree.dynamicMemberLookup.root?.group2?.fourth
+    XCTAssertNotNil(fourth)
+    param = fourth?.parameter
+    XCTAssertNotNil(param)
+    XCTAssertEqual(param?.address, 2002)
+
+    XCTAssertNil(fourth?.group)
+    XCTAssertNil(fourth?.blahblah)
+
+    let unknown = tree.dynamicMemberLookup.blah
+    XCTAssertNil(unknown)
   }
 }

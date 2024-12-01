@@ -32,7 +32,7 @@ public protocol AUParameterEditor: AnyObject {
 
    - parameter value: the value to assign to the parameter
    */
-  func setValue(_ value: AUValue)
+  func setValue(_ value: AUValue, eventType: AUParameterAutomationEventType)
 }
 
 /**
