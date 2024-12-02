@@ -13,7 +13,7 @@ import os.log
  The actual filtering logic resides in the Kernel C++ code which is abstracted away as an `AudioRenderer` entity.
  Similarly, parameters for controlling the filter are provided by an abstract `ParameterSource` entity.
  */
-public final class FilterAudioUnit: AUAudioUnit {
+public final class FilterAudioUnit: AUAudioUnit, @unchecked Sendable {
 
   private let log: OSLog = OSLog(subsystem: "com.braysoftware.AUv3Support", category: "FilterAudioUnit")
 
@@ -65,9 +65,11 @@ public final class FilterAudioUnit: AUAudioUnit {
    - parameter options: options for instantiation
    - parameter completionHandler: closure to invoke upon creation or error
    */
-  override public class func instantiate(with componentDescription: AudioComponentDescription,
-                                         options: AudioComponentInstantiationOptions = [],
-                                         completionHandler: @escaping (AUAudioUnit?, Error?) -> Void) {
+  override public class func instantiate(
+    with componentDescription: AudioComponentDescription,
+    options: AudioComponentInstantiationOptions = [],
+    completionHandler: @escaping (AUAudioUnit?, Error?) -> Void
+  ) {
     do {
       let auAudioUnit = try FilterAudioUnit(componentDescription: componentDescription, options: options)
       completionHandler(auAudioUnit, nil)
@@ -82,8 +84,10 @@ public final class FilterAudioUnit: AUAudioUnit {
    - parameter componentDescription: the component to instantiate
    - parameter options: options for instantiation
    */
-  override public init(componentDescription: AudioComponentDescription,
-                       options: AudioComponentInstantiationOptions = []) throws {
+  @objc override public init(
+    componentDescription: AudioComponentDescription,
+    options: AudioComponentInstantiationOptions = []
+  ) throws {
     os_log(.info, log: log, "init - BEGIN %ld", componentDescription.componentFlags)
 
     // Treat all 1s componentFlagsMask as error -- used for testing. NOTE: at least on macOS 13.0.1 this can be non-zero

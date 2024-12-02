@@ -22,6 +22,10 @@ public:
   explicit Bool(AUParameterAddress address, bool value = false) noexcept
   : super(address, value, false, Transformer::boolIn, Transformer::passthru) {}
 
+  template <EnumeratedType T>
+  explicit Bool(T address, bool value = false) noexcept
+  : Bool(DSPHeaders::valueOf(address), value) {}
+
   /// @returns the boolean state of the parameter
   operator bool() const noexcept { return super::getImmediate(); }
 };
