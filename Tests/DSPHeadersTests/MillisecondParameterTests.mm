@@ -28,6 +28,10 @@ using namespace DSPHeaders::Parameters;
 
   auto param2 = Milliseconds(2, 123.4);
   XCTAssertEqualWithAccuracy(param2.getImmediate(), 123.4, epsilon);
+
+  enum class Foo { bar = 0 };
+  auto param3 = Milliseconds(Foo::bar, 123.5);
+  XCTAssertEqual(param3.getImmediate(), 123.5);
 }
 
 @end

@@ -3,6 +3,8 @@
 #import <concepts>
 #import <AVFoundation/AVFoundation.h>
 
+#import "DSPHeaders/BusBuffers.hpp"
+
 namespace DSPHeaders {
 
 /// Concept that limits a type to a numeric type. NOTE: this might need to be refined.

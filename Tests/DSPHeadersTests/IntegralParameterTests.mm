@@ -27,6 +27,10 @@ using namespace DSPHeaders::Parameters;
   XCTAssertEqual(Integral(6, 1.0).getImmediate(), 1.0);
   XCTAssertEqual(Integral(7, -0.25).getImmediate(), 0.0);
   XCTAssertEqual(Integral(8, -0.5).getImmediate(), -1.0);
+
+  enum class Foo { bar = 0 };
+  auto param3 = Integral(Foo::bar, 123);
+  XCTAssertEqual(param3.getImmediate(), 123);
 }
 
 - (void)testSetting {

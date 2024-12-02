@@ -28,6 +28,10 @@ using namespace DSPHeaders::Parameters;
 
   auto param2 = Percentage(2, 100.0);
   XCTAssertEqualWithAccuracy(param2.getImmediate(), 100.0, epsilon);
+
+  enum class Foo { bar = 0 };
+  auto param3 = Percentage(Foo::bar, 12.5);
+  XCTAssertEqual(param3.getImmediate(), 12.5);
 }
 
 - (void)testRepresentation {
