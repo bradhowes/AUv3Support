@@ -23,6 +23,17 @@ public:
    */
   explicit Milliseconds(AUParameterAddress address, AUValue milliseconds = 0.0, bool canRamp = true) noexcept
   : super(address, milliseconds, canRamp, Transformer::passthru, Transformer::passthru) {}
+
+  /**
+   Construct a new parameter.
+
+   @param address enumeration that holds an AUParameterAddress value
+   @param value the starting value for the parameter
+   @param canRamp if `true` then a parameter change will happen over some number of rendered samples
+   */
+  template <EnumeratedType T>
+  explicit Milliseconds(T address, AUValue milliseconds = 0.0, bool canRamp = true) noexcept
+  : Milliseconds(DSPHeaders::valueOf(address), milliseconds, canRamp) {}
 };
 
 } // end namespace DSPHeaders::Parameters

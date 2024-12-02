@@ -7,7 +7,9 @@
 #import <cassert>
 
 #import <AVFoundation/AVFoundation.h>
+#import "DSPHeaders/Concepts.hpp"
 #import "DSPHeaders/Parameters/Transformer.hpp"
+#import "DSPHeaders/Types.hpp"
 
 namespace DSPHeaders::Parameters {
 
