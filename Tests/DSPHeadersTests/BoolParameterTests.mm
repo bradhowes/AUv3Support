@@ -31,6 +31,11 @@ using namespace DSPHeaders::Parameters;
   XCTAssertEqual(param2.getImmediate(), 1.0);
   XCTAssertEqual(param2.getPending(), 1.0);
   XCTAssertTrue(param2);
+
+  enum class Foo { bar = 0 };
+
+  auto param3 = Bool(Foo::bar, true);
+  XCTAssertTrue(param3);
 }
 
 - (void)testSetting {
