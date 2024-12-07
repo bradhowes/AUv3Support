@@ -1,8 +1,9 @@
 // Copyright © 2022-2024 Brad Howes. All rights reserved.
 
-import AudioToolbox
-import AVFoundation
-import CoreAudioKit
+import AudioToolbox.AUAudioUnit
+import AVFoundation.AVAudioFormat
+import CoreAudioKit.AUViewController
+
 import os.log
 
 /**
@@ -124,10 +125,10 @@ extension FilterAudioUnit {
     self.kernel = kernel
 
     // Install handler that provides a value for an AUParameter in the parameter tree.
-    parameters.parameterTree.implementorValueProvider = self.kernel.parameterValueProviderBlock()
+    parameters.parameterTree.implementorValueProvider = self.kernel.parameterValueProviderBlock
 
     // Install handler that updates an AUParameter in the parameter tree with a new value.
-    parameters.parameterTree.implementorValueObserver = self.kernel.parameterValueObserverBlock()
+    parameters.parameterTree.implementorValueObserver = self.kernel.parameterValueObserverBlock
 
     // At start, configure effect to do something interesting. Hosts can and should update the effect state after it is
     // initialized via `fullState` attribute.
@@ -262,7 +263,7 @@ extension FilterAudioUnit {
 
     // Acquire the sample rate and additional format parameter from the output bus we write output to. The host can
     // change the format at will before calling allocateRenderResources.
-    kernel.setRenderingFormat(outputBusses.count, format: outputBus.format, maxFramesToRender: maximumFramesToRender)
+    kernel.setRenderingFormat(outputBusses.count, outputBus.format, maximumFramesToRender)
 
     os_log(.info, log: log, "allocateRenderResources - END")
   }
@@ -280,7 +281,7 @@ extension FilterAudioUnit {
   override public var internalRenderBlock: AUInternalRenderBlock {
     os_log(.info, log: log, "internalRenderBlock - BEGIN")
     precondition(kernel != nil)
-    return kernel.internalRenderBlock()
+    return kernel.internalRenderBlock
   }
 }
 

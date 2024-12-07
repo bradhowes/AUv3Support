@@ -1,12 +1,12 @@
 // Copyright © 2022-2024 Brad Howes. All rights reserved.
 
-import CoreAudioKit
-import AVKit
+import AudioToolbox.AUAudioUnitImplementation
+import AVFoundation.AVAudioFormat
 
 /**
  Protocol for a Swift/Obj-C++ kernel that can perform audio sample rendering.
  */
-@objc public protocol AudioRenderer: AUParameterHandler {
+public protocol AudioRenderer: AUParameterHandler {
 
   /**
    Start processing.
@@ -15,7 +15,7 @@ import AVKit
    - parameter format: the audio format for the samples that will be processed
    - parameter maxFramesToRender: the maximum number of frames to render in one shot
    */
-  func setRenderingFormat(_ busCount: Int, format: AVAudioFormat, maxFramesToRender: AUAudioFrameCount)
+  func setRenderingFormat(_ busCount: Int, _ format: AVAudioFormat, _ maxFramesToRender: AUAudioFrameCount)
 
   /**
    Stopped audio processing due to resources being deallocated.
@@ -27,7 +27,7 @@ import AVKit
 
    - returns: the render block to use
    */
-  func internalRenderBlock() -> AUInternalRenderBlock
+  var internalRenderBlock: AUInternalRenderBlock { get }
 
   /**
    Set the bypass attribute. When enabled, audio is passed through unchanged by the filter.

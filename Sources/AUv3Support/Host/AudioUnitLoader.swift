@@ -74,25 +74,17 @@ public final class AudioUnitLoader: @unchecked Sendable {
   public var isPlaying: Bool { playEngine.isPlaying }
 
   /**
-   The loops that are available.
-   */
-  public enum SampleLoop: String {
-    case sample1 = "sample1.wav"
-    case sample2 = "sample2.caf"
-  }
-
-  /**
    Create a new instance that will hopefully create a new AUAudioUnit and a view controller for its control view.
 
    - parameter componentDescription: the definition of the AUAudioUnit to create
    - parameter loop: the loop to play when the engine is playing
    */
-  public init(name: String, componentDescription: AudioComponentDescription, loop: SampleLoop,
+  public init(name: String, componentDescription: AudioComponentDescription, loop: SimplePlayEngine.SampleLoop,
               delayBeforeNextLocateAttempt: Double = 0.2, maxLocateAttempts: Int = 50) {
     self.log = .init(subsystem: name, category: "AudioUnitLoader")
     self.delayBeforeNextLocateAttempt = delayBeforeNextLocateAttempt
     self.remainingLocateAttempts = maxLocateAttempts
-    self.playEngine = .init(name: name, audioFileName: loop.rawValue)
+    self.playEngine = .init(sampleLoop: loop)
     self.componentDescription = componentDescription
     self.searchCriteria = AudioComponentDescription(componentType: componentDescription.componentType,
                                                     componentSubType: 0,

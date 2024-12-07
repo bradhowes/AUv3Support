@@ -6,6 +6,15 @@ import AVFoundation
  Wrapper around AVAudioEngine that manages its wiring with an AVAudioUnit instance.
  */
 public final class SimplePlayEngine: @unchecked Sendable {
+
+  /**
+   The loops that are available.
+   */
+  public enum SampleLoop: String {
+    case sample1 = "sample1.wav"
+    case sample2 = "sample2.caf"
+  }
+
   static let bundle = Bundle(for: SimplePlayEngine.self)
   static let bundleIdentifier = bundle.bundleIdentifier ?? "unknown"
 
@@ -38,8 +47,8 @@ public final class SimplePlayEngine: @unchecked Sendable {
    Create new audio processing setup, with an audio file player for a signal source.
    - parameter audioFileName: the name of the audio resource to play
    */
-  public init(name: String, audioFileName: String) {
-    self.file = Self.audioFileResource(name: audioFileName)
+  public init(sampleLoop: SampleLoop) {
+    self.file = Self.audioFileResource(name: sampleLoop.rawValue)
     engine.attach(player)
     engine.connect(player, to: engine.mainMixerNode, format: file.processingFormat)
   }

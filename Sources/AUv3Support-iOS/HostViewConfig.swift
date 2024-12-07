@@ -13,7 +13,7 @@ public struct HostViewConfig {
   public let appDelegate: AppDelegate
   public let appStoreId: String
   public let componentDescription: AudioComponentDescription
-  public let sampleLoop: AudioUnitLoader.SampleLoop
+  public let sampleLoop: SimplePlayEngine.SampleLoop
   public let tintColor: UIColor
   public let appStoreVisitor: (URL) -> Void
   public let alwaysShowNotice: Bool
@@ -37,7 +37,7 @@ public struct HostViewConfig {
     appDelegate: AppDelegate,
     appStoreId: String,
     componentDescription: AudioComponentDescription,
-    sampleLoop: AudioUnitLoader.SampleLoop,
+    sampleLoop: SimplePlayEngine.SampleLoop,
     tintColor: UIColor,
     appStoreVisitor: @escaping (URL) -> Void,
     alwaysShowNotice: Bool = false,
@@ -70,7 +70,7 @@ public struct HostViewConfig {
     appDelegate: AppDelegate,
     appStoreId: String,
     componentDescription: AudioComponentDescription,
-    sampleLoop: AudioUnitLoader.SampleLoop,
+    sampleLoop: SimplePlayEngine.SampleLoop,
     tintColor: UIColor,
     appStoreVisitor: @escaping (URL) -> Void,
     alwaysShowNotice: Bool = false,
