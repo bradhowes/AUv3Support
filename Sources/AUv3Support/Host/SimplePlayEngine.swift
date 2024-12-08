@@ -25,7 +25,7 @@ public final class SimplePlayEngine: @unchecked Sendable {
   private let stateChangeQueue = DispatchQueue(label: "SimplePlayEngine")
 
   /// True if engine is currently playing the audio file.
-  public var isPlaying: Bool { player.isPlaying }
+  public var isPlaying: Bool { stateChangeQueue.sync { player.isPlaying } }
   public var maximumFramesToRender: AUAudioFrameCount { engine.mainMixerNode.auAudioUnit.maximumFramesToRender }
 
   static func audioFileResource(name: String) -> AVAudioFile {
@@ -48,6 +48,7 @@ public final class SimplePlayEngine: @unchecked Sendable {
    - parameter audioFileName: the name of the audio resource to play
    */
   public init(sampleLoop: SampleLoop) {
+    print("new SimplePlayEngine")
     self.file = Self.audioFileResource(name: sampleLoop.rawValue)
     engine.attach(player)
     engine.connect(player, to: engine.mainMixerNode, format: file.processingFormat)
@@ -80,9 +81,8 @@ extension SimplePlayEngine {
    */
   public func start() {
     stateChangeQueue.sync {
-      if !player.isPlaying {
-        self.startPlaying()
-      }
+      print("starting SimplePlayEngine")
+      self.startPlaying()
     }
   }
 
@@ -91,9 +91,8 @@ extension SimplePlayEngine {
    */
   public func stop() {
     stateChangeQueue.sync {
-      if player.isPlaying {
-        self.stopPlaying()
-      }
+      print("stopping SimplePlayEngine")
+      self.stopPlaying()
     }
   }
 
@@ -103,12 +102,12 @@ extension SimplePlayEngine {
    - returns: state of the player
    */
   public func startStop() -> Bool {
-    if player.isPlaying {
+    if isPlaying {
       stop()
     } else {
       start()
     }
-    return player.isPlaying
+    return isPlaying
   }
 }
 
@@ -125,8 +124,6 @@ extension SimplePlayEngine {
     }
 
     beginLoop()
-    beginLoop()
-
     player.play()
   }
 

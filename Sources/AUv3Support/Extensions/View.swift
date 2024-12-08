@@ -6,7 +6,7 @@ import AppKit
 import UIKit
 #endif
 
-public extension View {
+public extension AUv3View {
 
   /**
    Add constraints such that the edges of this view coincide with the edges of its parent.

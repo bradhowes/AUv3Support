@@ -34,7 +34,7 @@ public protocol AudioUnitLoaderDelegate: AnyObject {
   /**
    Notification that the view controller in the AudioUnitHost has a wired AUAudioUnit
    */
-  func connected(audioUnit: AVAudioUnit, viewController: ViewController)
+  func connected(audioUnit: AVAudioUnit, viewController: AUv3ViewController)
 
   /**
    Notification that there was a problem instantiating the audio unit or its view controller
@@ -53,15 +53,12 @@ public protocol AudioUnitLoaderDelegate: AnyObject {
 public final class AudioUnitLoader: @unchecked Sendable {
   private static let lastStateKey = "lastStateKey"
 
-  private let log: OSLog
-
   /// Delegate to signal when everything is wired up.
   public weak var delegate: AudioUnitLoaderDelegate? { didSet { notifyDelegate() } }
 
   private var avAudioUnit: AVAudioUnit?
   private var auAudioUnit: AUAudioUnit? { avAudioUnit?.auAudioUnit }
-  private var viewController: ViewController?
-  private let playEngine: SimplePlayEngine
+  private var viewController: AUv3ViewController?
   private let componentDescription: AudioComponentDescription
   private let searchCriteria: AudioComponentDescription
   private var creationError: AudioUnitLoaderError? { didSet { notifyDelegate() } }
@@ -71,7 +68,6 @@ public final class AudioUnitLoader: @unchecked Sendable {
   private var hasUpdates = false
 
   public let lastState = UserDefaults.standard.dictionary(forKey: lastStateKey)
-  public var isPlaying: Bool { playEngine.isPlaying }
 
   /**
    Create a new instance that will hopefully create a new AUAudioUnit and a view controller for its control view.
@@ -79,12 +75,10 @@ public final class AudioUnitLoader: @unchecked Sendable {
    - parameter componentDescription: the definition of the AUAudioUnit to create
    - parameter loop: the loop to play when the engine is playing
    */
-  public init(name: String, componentDescription: AudioComponentDescription, loop: SimplePlayEngine.SampleLoop,
+  public init(componentDescription: AudioComponentDescription,
               delayBeforeNextLocateAttempt: Double = 0.2, maxLocateAttempts: Int = 50) {
-    self.log = .init(subsystem: name, category: "AudioUnitLoader")
     self.delayBeforeNextLocateAttempt = delayBeforeNextLocateAttempt
     self.remainingLocateAttempts = maxLocateAttempts
-    self.playEngine = .init(sampleLoop: loop)
     self.componentDescription = componentDescription
     self.searchCriteria = AudioComponentDescription(componentType: componentDescription.componentType,
                                                     componentSubType: 0,
@@ -204,14 +198,9 @@ public final class AudioUnitLoader: @unchecked Sendable {
    - parameter avAudioUnit: the audio unit that was created
    - parameter viewController: the view controller that was created
    */
-  private func wireAudioUnit(_ avAudioUnit: AVAudioUnit, _ viewController: ViewController) {
+  private func wireAudioUnit(_ avAudioUnit: AVAudioUnit, _ viewController: AUv3ViewController) {
     self.avAudioUnit = avAudioUnit
     self.viewController = viewController
-    playEngine.connectEffect(audioUnit: avAudioUnit)
-
-    let maximumFramesToRender = playEngine.maximumFramesToRender
-    avAudioUnit.auAudioUnit.maximumFramesToRender = maximumFramesToRender
-
     notifyDelegate()
   }
 
@@ -247,31 +236,6 @@ public extension AudioUnitLoader {
     if let lastState = lastState {
       audioUnit.fullState = lastState
     }
-  }
-}
-
-public extension AudioUnitLoader {
-  /**
-   Start/stop audio engine
-
-   - returns: true if playing
-   */
-  @discardableResult
-  func togglePlayback() -> Bool {
-    if playEngine.isPlaying {
-      playEngine.stop()
-      return false
-    } else {
-      playEngine.start()
-      return true
-    }
-  }
-
-  /**
-   The world is being torn apart. Stop any asynchronous eventing from happening in the future.
-   */
-  func cleanup() {
-    playEngine.stop()
   }
 }
 

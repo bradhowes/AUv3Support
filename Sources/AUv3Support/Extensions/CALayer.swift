@@ -14,7 +14,7 @@ public extension CALayer {
    - parameter color: the color to use
    - parameter frame: the size and origin to use
    */
-  convenience init(color: Color, frame: CGRect) {
+  convenience init(color: AUv3Color, frame: CGRect) {
     self.init()
     self.backgroundColor = color.cgColor
     self.frame = frame

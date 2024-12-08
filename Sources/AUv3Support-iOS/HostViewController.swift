@@ -11,7 +11,7 @@ extension Shared {
 
   /// Access the storyboard that defines the HostUIView for the AUv3 host app
   @MainActor
-  public static let hostViewStoryboard = Storyboard(name: "HostView", bundle: .module)
+  public static let hostViewStoryboard = AUv3Storyboard(name: "HostView", bundle: .module)
 
   /**
    Instantiate a new HostUIView and embed it into the view of the given view controller.
@@ -21,7 +21,7 @@ extension Shared {
    - returns: the HostUIViewController of the view that was embedded
    */
   @MainActor
-  public static func embedHostView(into parent: ViewController, config: HostViewConfig) -> HostViewController {
+  public static func embedHostView(into parent: AUv3ViewController, config: HostViewConfig) -> HostViewController {
 
     let hostViewController = hostViewStoryboard.instantiateInitialViewController() as! HostViewController
     hostViewController.setConfig(config)
@@ -129,8 +129,7 @@ If you delete this app from your device, the AUv3 component will no longer be av
 applications.
 """
 
-    audioUnitLoader = .init(name: config.name, componentDescription: config.componentDescription,
-                            loop: config.sampleLoop)
+    audioUnitLoader = .init(componentDescription: config.componentDescription)
     audioUnitLoader?.delegate = self
 
     applyTheme()
@@ -160,7 +159,6 @@ applications.
     presetSelection.isEnabled = auAudioUnit != nil
 
     audioUnitLoader?.save()
-    audioUnitLoader?.cleanup()
   }
 }
 
@@ -169,11 +167,11 @@ applications.
 extension HostViewController {
 
   @IBAction public func togglePlay(_ sender: UIButton) {
-    let isPlaying = audioUnitLoader?.togglePlayback() ?? false
-    bypassButton.isEnabled = isPlaying
-    playButton.isSelected = isPlaying
-
-    setBypassState(false)
+//    let isPlaying = audioUnitLoader?.togglePlayback() ?? false
+//    bypassButton.isEnabled = isPlaying
+//    playButton.isSelected = isPlaying
+//
+//    setBypassState(false)
   }
 
   @IBAction public func toggleBypass(_ sender: UIButton) {

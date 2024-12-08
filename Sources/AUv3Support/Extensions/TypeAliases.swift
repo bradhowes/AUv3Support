@@ -6,14 +6,14 @@ import os.log
 #if os(iOS)
 
 import UIKit
-public typealias Color = UIColor
-public typealias Label = UILabel
-public typealias Slider = UISlider
-public typealias Storyboard = UIStoryboard
-public typealias Switch = UISwitch
-public typealias View = UIView
-public typealias Control = UIControl
-public typealias ViewController = UIViewController
+public typealias AUv3Color = UIColor
+public typealias AUv3Label = UILabel
+public typealias AUv3Slider = UISlider
+public typealias AUv3Storyboard = UIStoryboard
+public typealias AUv3Switch = UISwitch
+public typealias AUv3View = UIView
+public typealias AUv3Control = UIControl
+public typealias AUv3ViewController = UIViewController
 
 extension UIView: ParameterAddressHolder {
   public var parameterAddress: UInt64 {
@@ -39,14 +39,14 @@ extension UISwitch: AUParameterValueProvider {
 #elseif os(macOS)
 
 import AppKit
-public typealias Color = NSColor
-public typealias Label = FocusAwareTextField
-public typealias Slider = NSSlider
-public typealias Storyboard = NSStoryboard
-public typealias Switch = NSSwitch
-public typealias View = NSView
-public typealias Control = NSControl
-public typealias ViewController = NSViewController
+public typealias AUv3Color = NSColor
+public typealias AUv3Label = FocusAwareTextField
+public typealias AUv3Slider = NSSlider
+public typealias AUv3Storyboard = NSStoryboard
+public typealias AUv3Switch = NSSwitch
+public typealias AUv3View = NSView
+public typealias AUv3Control = NSControl
+public typealias AUv3ViewController = NSViewController
 
 public extension NSView {
 

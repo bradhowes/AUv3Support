@@ -12,7 +12,7 @@ public final class FloatParameterEditor: AUParameterEditorBase {
   private lazy var logSliderMaxValuePower2Minus1 = Float(pow(2, logSliderMaxValue) - 1)
   private let formatting: AUParameterFormatting
   private let rangedControl: RangedControl
-  private let label: Label?
+  private let label: AUv3Label?
   private let useLogValues: Bool
   private var restoreNameTimer: Timer?
   private var hasActiveLabel: Bool = false
@@ -39,7 +39,7 @@ public final class FloatParameterEditor: AUParameterEditorBase {
    - parameter rangedControl: the Knob instance to change value
    - parameter label: the Label to show the new value
    */
-  public init(parameter: AUParameter, formatting: AUParameterFormatting, rangedControl: RangedControl, label: Label?) {
+  public init(parameter: AUParameter, formatting: AUParameterFormatting, rangedControl: RangedControl, label: AUv3Label?) {
     self.formatting = formatting
     self.rangedControl = rangedControl
     self.label = label
@@ -146,7 +146,7 @@ extension FloatParameterEditor {
     }
   }
 
-  private func configureLabel(_ label: Label) {
+  private func configureLabel(_ label: AUv3Label) {
     label.setParameterAddress(parameter.address)
     label.text = parameter.displayName
 
