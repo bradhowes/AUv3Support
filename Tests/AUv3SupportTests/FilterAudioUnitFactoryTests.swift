@@ -31,8 +31,8 @@ fileprivate class Parameters: ParameterSource {
 
 fileprivate class Kernel: AudioRenderer {
 
-  func parameterValueObserverBlock() -> AUImplementorValueObserver { self.set }
-  func parameterValueProviderBlock() -> AUImplementorValueProvider { self.get }
+  var parameterValueObserverBlock: AUImplementorValueObserver { self.set }
+  var parameterValueProviderBlock: AUImplementorValueProvider { self.get }
 
   var bypassed: Bool = false
   var busCount: Int = 0
@@ -44,7 +44,7 @@ fileprivate class Kernel: AudioRenderer {
 
   var renderCount = 0
 
-  func setRenderingFormat(_ busCount: Int, format: AVAudioFormat, maxFramesToRender: AUAudioFrameCount) {
+  func setRenderingFormat(_ busCount: Int, _ format: AVAudioFormat, _ maxFramesToRender: AUAudioFrameCount) {
     self.busCount = busCount
     self.format = format
     self.maxFramesToRender = maxFramesToRender
@@ -54,7 +54,7 @@ fileprivate class Kernel: AudioRenderer {
     maxFramesToRender = 0
   }
 
-  func internalRenderBlock() -> AUInternalRenderBlock {
+  var internalRenderBlock: AUInternalRenderBlock {
     let kernel = self
     return { flags, timestamp, frameCount, outputBus, audioBuffer, eventsList, pullInputBlock in
       kernel.renderCount += 1

@@ -30,7 +30,7 @@ private final class Context {
                                                        componentManufacturer: .init("appl"),
                                                        componentFlags: 0,
                                                        componentFlagsMask: 0)
-  let sampleLoop: AudioUnitLoader.SampleLoop = .sample1
+  let sampleLoop: SimplePlayEngine.SampleLoop = .sample1
   let playButton: NSButton = .init(title: "Play", target: nil, action: nil)
   let bypassButton: NSButton = .init(title: "Bypass", target: nil, action: nil)
 

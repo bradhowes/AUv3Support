@@ -5,7 +5,7 @@ class SimplePlayEngineTests: XCTestCase {
 
   @MainActor
   func testStartStop() {
-    let spe = SimplePlayEngine(name: "testing", audioFileName: "sample1.wav")
+    let spe = SimplePlayEngine(sampleLoop: .sample1)
     XCTAssertFalse(spe.isPlaying)
     spe.start()
     XCTAssertTrue(spe.isPlaying)

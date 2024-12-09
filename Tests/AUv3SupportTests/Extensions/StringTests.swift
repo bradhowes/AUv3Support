@@ -8,7 +8,7 @@ class TypeAliasesTests: XCTestCase {
 
   @MainActor
   func testUIViewExtensions() {
-    let z = View()
+    let z = AUv3View()
     XCTAssertEqual(z.parameterAddress, 0)
     z.parameterAddress = AUParameterAddress(123)
     XCTAssertEqual(z.parameterAddress, 123)
@@ -34,7 +34,7 @@ class TypeAliasesTests: XCTestCase {
     XCTAssertNoThrow(z.setNeedsLayout())
     XCTAssertNoThrow(z.setNeedsDisplay())
     XCTAssertNil(z.backgroundColor)
-    z.backgroundColor = Color.red
+    z.backgroundColor = AUv3Color.red
     XCTAssertNotNil(z.backgroundColor)
   }
 
@@ -65,7 +65,7 @@ class TypeAliasesTests: XCTestCase {
 
     z.setTint(.red)
     XCTAssertNotNil(z.layer)
-    XCTAssertEqual(z.layer!.backgroundColor, Color.red.cgColor)
+    XCTAssertEqual(z.layer!.backgroundColor, AUv3Color.red.cgColor)
     XCTAssertTrue(z.layer!.masksToBounds)
     XCTAssertEqual(z.layer!.cornerRadius, 10)
   }

@@ -12,11 +12,11 @@ class ViewTests: XCTestCase {
 
   @MainActor
   func testPinToSuperviewEdges() throws {
-    let parent = View(frame: .init(x: 0, y: 0, width: 100, height: 200))
+    let parent = AUv3View(frame: .init(x: 0, y: 0, width: 100, height: 200))
     parent.addConstraint(.init(item: parent, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 100))
     parent.addConstraint(.init(item: parent, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: 200))
 
-    let child = View(frame: .init(x: 10, y: 10, width: 20, height: 20))
+    let child = AUv3View(frame: .init(x: 10, y: 10, width: 20, height: 20))
     child.pinToSuperviewEdges()
 
     parent.addSubview(child)

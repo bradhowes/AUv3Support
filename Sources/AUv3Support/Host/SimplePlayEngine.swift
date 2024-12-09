@@ -65,6 +65,9 @@ extension SimplePlayEngine {
    */
   public func connectEffect(audioUnit: AVAudioUnit, completion: @escaping (() -> Void) = {}) {
     defer { completion() }
+
+    audioUnit.auAudioUnit.maximumFramesToRender = maximumFramesToRender
+
     engine.disconnectNodeOutput(player)
     engine.attach(audioUnit)
     engine.connect(player, to: audioUnit, format: file.processingFormat)

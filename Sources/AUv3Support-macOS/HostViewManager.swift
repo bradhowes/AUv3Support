@@ -21,6 +21,7 @@ public final class HostViewManager: NSObject {
   private let log = Shared.logger("HostViewManager")
   private let config: HostViewConfig
   private let audioUnitLoader: AudioUnitLoader
+  private let engine: SimplePlayEngine
   private var restored = false
 
   private var userPresetsManager: UserPresetsManager?
@@ -53,8 +54,9 @@ public final class HostViewManager: NSObject {
     config: HostViewConfig
   ) {
     self.config = config
-    self.audioUnitLoader = .init(name: config.componentName, componentDescription: config.componentDescription,
-                                 loop: config.sampleLoop)
+    self.audioUnitLoader = .init(componentDescription: config.componentDescription)
+    self.engine = .init(sampleLoop: config.sampleLoop)
+
     super.init()
 
     config.playButton.target = self
@@ -130,6 +132,7 @@ extension HostViewManager: AudioUnitLoaderDelegate {
     presetsMenuManager.build()
 
     avAudioUnit = audioUnit
+    engine.connectEffect(audioUnit: audioUnit)
     connectFilterView(audioUnit, viewController)
 
     updateView()
@@ -144,7 +147,7 @@ extension HostViewManager: AudioUnitLoaderDelegate {
 extension HostViewManager {
 
   @IBAction private func togglePlay(_ sender: NSButton) {
-    let isPlaying = audioUnitLoader.togglePlayback()
+    let isPlaying = engine.startStop()
 
     config.playButton.state = isPlaying ? .on : .off
     config.playMenuItem.title = isPlaying ? "Stop" : "Play"
@@ -170,7 +173,7 @@ extension HostViewManager {
 extension HostViewManager: NSWindowDelegate {
 
   public func windowWillClose(_ notification: Notification) {
-    audioUnitLoader.cleanup()
+    engine.stop()
   }
 }
 

@@ -13,7 +13,7 @@ fileprivate class LoaderDelegate: AudioUnitLoaderDelegate {
     self.expectation = expectation
   }
 
-  func connected(audioUnit: AVAudioUnit, viewController: ViewController) {
+  func connected(audioUnit: AVAudioUnit, viewController: AUv3ViewController) {
     good = true
     expectation.fulfill()
   }
@@ -37,8 +37,7 @@ final class AudioUnitLoaderTests: XCTestCase {
     let acd = AudioComponentDescription(componentType: FourCharCode("aufx"), componentSubType: FourCharCode("zzzz"),
                                         componentManufacturer: FourCharCode("appl"), componentFlags: 0,
                                         componentFlagsMask: 0)
-    let audioUnitLoader = AudioUnitLoader(name: "testing", componentDescription: acd, loop: .sample1,
-                                          maxLocateAttempts: 2)
+    let audioUnitLoader = AudioUnitLoader(componentDescription: acd, maxLocateAttempts: 2)
     let exp = expectation(description: "failed")
     let delegate = LoaderDelegate(expectation: exp)
     audioUnitLoader.delegate = delegate
@@ -51,7 +50,7 @@ final class AudioUnitLoaderTests: XCTestCase {
 
   @MainActor
   func testConnected() throws {
-    let audioUnitLoader = AudioUnitLoader(name: "testing", componentDescription: acd, loop: .sample1)
+    let audioUnitLoader = AudioUnitLoader(componentDescription: acd)
     let exp = expectation(description: "good")
     let delegate = LoaderDelegate(expectation: exp)
     audioUnitLoader.delegate = delegate
@@ -60,13 +59,12 @@ final class AudioUnitLoaderTests: XCTestCase {
     XCTAssertTrue(delegate.good)
 
     XCTAssertNoThrow(audioUnitLoader.save())
-
-    audioUnitLoader.cleanup()
   }
 
   @MainActor
   func testPlaybackState() throws {
-    let audioUnitLoader = AudioUnitLoader(name: "testing", componentDescription: acd, loop: .sample1)
+    let audioUnitLoader = AudioUnitLoader(componentDescription: acd)
+    let engine = SimplePlayEngine(sampleLoop: .sample1)
     let exp = expectation(description: "failed")
     let delegate = LoaderDelegate(expectation: exp)
     audioUnitLoader.delegate = delegate
@@ -74,10 +72,10 @@ final class AudioUnitLoaderTests: XCTestCase {
     waitForExpectations(timeout: 90.0, handler: nil)
     XCTAssertTrue(delegate.good)
 
-    XCTAssertFalse(audioUnitLoader.isPlaying)
-    audioUnitLoader.togglePlayback()
-    XCTAssertTrue(audioUnitLoader.isPlaying)
-    audioUnitLoader.cleanup()
-    XCTAssertFalse(audioUnitLoader.isPlaying)
+    XCTAssertFalse(engine.isPlaying)
+    _ = engine.startStop()
+    XCTAssertTrue(engine.isPlaying)
+    _ = engine.startStop()
+    XCTAssertFalse(engine.isPlaying)
   }
 }

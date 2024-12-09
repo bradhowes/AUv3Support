@@ -19,7 +19,7 @@ class CALayerTests: XCTestCase {
 
   func testProperties() throws {
     let z = CALayer(color: .red, frame: .zero)
-    XCTAssertEqual(z.backgroundColor, Color.red.cgColor)
+    XCTAssertEqual(z.backgroundColor, AUv3Color.red.cgColor)
     XCTAssertEqual(z.frame, .zero)
   }
 }

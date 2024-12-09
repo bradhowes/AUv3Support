@@ -35,7 +35,7 @@ private final class Context {
   let control: MockSliderControl
   let altControl: MockSliderControl
   let editor: FloatParameterEditor
-  let label: Label?
+  let label: AUv3Label?
   var paramValue: AUValue = 0.0
   var paramExpectation: XCTestExpectation?
 
@@ -47,7 +47,7 @@ private final class Context {
     )
 
     tree = AUParameterTree.createTree(withChildren: [param])
-    label = withLabel ? Label() : nil
+    label = withLabel ? AUv3Label() : nil
     control = MockSliderControl(state: state, expectation: controlExpectation)
     editor = FloatParameterEditor(parameter: param, formatting: formatter(), rangedControl: control, label: label)
     control.editor = editor

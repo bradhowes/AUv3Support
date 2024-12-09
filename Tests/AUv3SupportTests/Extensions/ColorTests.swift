@@ -6,7 +6,7 @@ private let epsilon: CGFloat = 1.0e-7
 class ColorTests: XCTestCase {
 
   func testDarker() {
-    let color = Color.gray
+    let color = AUv3Color.gray
     let darker = color.darker
     var r1: CGFloat = 0.0, g1: CGFloat = 0.0, b1: CGFloat = 0.0, a1: CGFloat = 0.0
 #if os(macOS)
@@ -29,7 +29,7 @@ class ColorTests: XCTestCase {
   }
 
   func testLighter() {
-    let color = Color.gray
+    let color = AUv3Color.gray
     let lighter = color.lighter
     var r1: CGFloat = 0.0, g1: CGFloat = 0.0, b1: CGFloat = 0.0, a1: CGFloat = 0.0
 #if os(macOS)

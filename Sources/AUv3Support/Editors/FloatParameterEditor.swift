@@ -22,7 +22,7 @@ public final class FloatParameterEditor: AUParameterEditorBase {
 #endif
 
 #if os(macOS)
-  private var valueLabel: Label?
+  private var valueLabel: AUv3Label?
 #endif
 
   /**
@@ -154,7 +154,7 @@ extension FloatParameterEditor {
     label.delegate = self
     label.onFocusChange = onLabelFocusChanged
 
-    let valueLabel = Label(string: "")
+    let valueLabel = AUv3Label(string: "")
     label.superview?.addSubview(valueLabel)
     valueLabel.isEditable = false
     valueLabel.isSelectable = false
