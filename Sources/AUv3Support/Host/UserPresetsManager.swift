@@ -22,6 +22,9 @@ public protocol AUAudioUnitPresetsFacade: AnyObject {
 
   /// Delete the given user preset.
   func deleteUserPreset(_ preset: AUAudioUnitPreset) throws
+
+  /// Returns true if audio unit supports user presets
+  var supportsUserPresets: Bool { get }
 }
 
 extension AUAudioUnitPresetsFacade {
