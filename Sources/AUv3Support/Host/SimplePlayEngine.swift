@@ -3,17 +3,17 @@
 import AVFoundation
 
 /**
+ The loops that are available.
+ */
+public enum SampleLoop: String {
+  case sample1 = "sample1.wav"
+  case sample2 = "sample2.caf"
+}
+
+/**
  Wrapper around AVAudioEngine that manages its wiring with an AVAudioUnit instance.
  */
 public final class SimplePlayEngine: @unchecked Sendable {
-
-  /**
-   The loops that are available.
-   */
-  public enum SampleLoop: String {
-    case sample1 = "sample1.wav"
-    case sample2 = "sample2.caf"
-  }
 
   static let bundle = Bundle(for: SimplePlayEngine.self)
   static let bundleIdentifier = bundle.bundleIdentifier ?? "unknown"
@@ -67,6 +67,7 @@ extension SimplePlayEngine {
     defer { completion() }
 
     audioUnit.auAudioUnit.maximumFramesToRender = maximumFramesToRender
+    activeEffect = audioUnit
 
     engine.disconnectNodeOutput(player)
     engine.attach(audioUnit)
@@ -111,6 +112,10 @@ extension SimplePlayEngine {
       start()
     }
     return isPlaying
+  }
+
+  public func setBypass(_ bypass: Bool) {
+    activeEffect?.auAudioUnit.shouldBypassEffect = bypass
   }
 }
 
