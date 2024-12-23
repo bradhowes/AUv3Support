@@ -28,13 +28,13 @@ public enum AUParameterNodeDML {
   case param(AUParameter)
 
   public var group: AUParameterGroup? {
-    if case .group(let group) = self { return group }
-    return nil
+    guard case .group(let group) = self else { return nil }
+    return group
   }
 
   public var parameter: AUParameter? {
-    if case .param(let param) = self { return param }
-    return nil
+    guard case .param(let param) = self else { return nil }
+    return param
   }
 
   public subscript(dynamicMember identifier: String) -> AUParameterNodeDML? {
@@ -43,10 +43,9 @@ public enum AUParameterNodeDML {
       switch each {
       case let group as AUParameterGroup: return .group(group)
       case let param as AUParameter: return .param(param)
-      default: return nil // can never happen
+      default: break // can not happen
       }
     }
     return nil
   }
 }
-

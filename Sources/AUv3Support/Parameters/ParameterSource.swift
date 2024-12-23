@@ -3,8 +3,8 @@
 import CoreAudioKit
 
 /**
- Protocol for an entity that can provide an AUParameterTree and the parameters that are found in it. It also can provide
- a set of factory presets and the means to use them.
+ Protocol for an entity that can provide an AUParameterTree and the parameters that are found in it, such as a DSP
+ kernel. It can also provide a set of factory presets and the means to use them.
  */
 public protocol ParameterSource {
 

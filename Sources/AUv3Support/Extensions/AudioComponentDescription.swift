@@ -3,6 +3,21 @@
 import AudioToolbox
 
 extension AudioComponentDescription {
+
+  public init(
+    componentType: String,
+    componentSubType: String,
+    componentManufacturer: String
+  ) {
+    self.init(
+      componentType: FourCharCode(componentType),
+      componentSubType: FourCharCode(componentSubType),
+      componentManufacturer: FourCharCode(componentManufacturer),
+      componentFlags: 0,
+      componentFlagsMask: 0
+    )
+  }
+
   public var description: String {
     "<AudioComponentDescription type: '\(componentType.stringValue)' " +
     "subtype: '\(componentSubType.stringValue)' " +

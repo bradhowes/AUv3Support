@@ -1,7 +1,7 @@
 import CoreAudioKit
 
 /**
- Protocol for entities that can respond to get/set requests in the AUParameterTree.
+ Protocol for entities that can respond to get/set requests in the AUParameterTree, such as a DSP kernel.
  */
 public protocol AUParameterHandler {
 

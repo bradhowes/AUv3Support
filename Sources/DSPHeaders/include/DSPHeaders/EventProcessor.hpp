@@ -9,6 +9,7 @@
 #import <functional>
 #import <initializer_list>
 #import <string>
+#import <swift/bridging>
 #import <unordered_map>
 
 #import <AudioToolbox/AudioToolbox.h>
@@ -441,7 +442,7 @@ private:
   double sampleRate_{};
 
   ParameterMap parameters_{};
-};
+} SWIFT_CONFORMS_TO_PROTOCOL(AUv3Support.AudioRenderer);
 
 /**
  A semi-hacky way to obtain compile-time errors for a Kernel class that is not configured correctly.

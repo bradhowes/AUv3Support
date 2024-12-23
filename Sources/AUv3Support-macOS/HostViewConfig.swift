@@ -10,7 +10,7 @@ import AppKit
 public struct HostViewConfig {
   let componentName: String
   let componentDescription: AudioComponentDescription
-  let sampleLoop: SimplePlayEngine.SampleLoop
+  let sampleLoop: SampleLoop
 
   let playButton: NSButton
   let bypassButton: NSButton
@@ -31,7 +31,7 @@ public struct HostViewConfig {
     componentName: String,
     componentVersion: String,
     componentDescription: AudioComponentDescription,
-    sampleLoop: SimplePlayEngine.SampleLoop,
+    sampleLoop: SampleLoop,
     playButton: NSButton,
     bypassButton: NSButton,
     presetsButton: NSPopUpButton,
@@ -61,7 +61,7 @@ public struct HostViewConfig {
   public init(
     componentName: String,
     componentDescription: AudioComponentDescription,
-    sampleLoop: SimplePlayEngine.SampleLoop,
+    sampleLoop: SampleLoop,
     playButton: NSButton,
     bypassButton: NSButton,
     presetsButton: NSPopUpButton,

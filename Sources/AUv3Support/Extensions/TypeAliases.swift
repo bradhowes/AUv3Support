@@ -3,9 +3,11 @@
 import AudioUnit
 import os.log
 
-#if os(iOS)
+#if os(iOS) || os(visionOS)
 
 import UIKit
+import SwiftUI
+
 public typealias AUv3Color = UIColor
 public typealias AUv3Label = UILabel
 public typealias AUv3Slider = UISlider
@@ -14,6 +16,7 @@ public typealias AUv3Switch = UISwitch
 public typealias AUv3View = UIView
 public typealias AUv3Control = UIControl
 public typealias AUv3ViewController = UIViewController
+public typealias AUv3HostingController = UIHostingController
 
 extension UIView: ParameterAddressHolder {
   public var parameterAddress: UInt64 {
@@ -39,6 +42,8 @@ extension UISwitch: AUParameterValueProvider {
 #elseif os(macOS)
 
 import AppKit
+import SwiftUI
+
 public typealias AUv3Color = NSColor
 public typealias AUv3Label = FocusAwareTextField
 public typealias AUv3Slider = NSSlider
@@ -47,6 +52,14 @@ public typealias AUv3Switch = NSSwitch
 public typealias AUv3View = NSView
 public typealias AUv3Control = NSControl
 public typealias AUv3ViewController = NSViewController
+public typealias AUv3HostingController = NSHostingController
+
+extension NSView {
+
+  func bringSubviewToFront(_ view: NSView) {
+    // This function is a no-opp for macOS
+  }
+}
 
 public extension NSView {
 

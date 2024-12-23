@@ -3,27 +3,29 @@
 import Foundation
 import os.log
 
+extension Character {
+  var isPrintableASCII: Bool {
+    guard let ascii = asciiValue else { return false }
+    return 32..<127 ~= ascii
+  }
+}
+
 extension FourCharCode {
 
-  public init(stringLiteral value: StringLiteralType) {
-    var code: FourCharCode = 0
-    // Value has to consist of 4 printable ASCII characters, e.g. '420v'.
-    // Note: This implementation does not enforce printable range (32-126)
-    if value.count == 4 && value.utf8.count == 4 {
-      for byte in value.utf8 {
-        code = code << 8 + FourCharCode(byte)
-      }
-    }
+  public init(_ value: StringLiteralType) {
+    self = FourCharCode.validate(value: value)
+  }
+
+  private static func validate(value: StringLiteralType) -> Self {
+    guard value.count == 4,
+          value.utf8.count == 4,
+          value.allSatisfy(\.isPrintableASCII)
     else {
       os_log(.error, "FourCharCode: Can't initialize with '%s', only printable ASCII allowed. Setting to '????'.",
              value)
-      code = 0x3F3F3F3F // = '????'
+      return 0x3F3F3F3F // = '????'
     }
-    self = code
-  }
-  
-  public init(_ value: String) {
-    self = FourCharCode(stringLiteral: value)
+    return value.utf8.reduce(into: 0) { $0 = $0 << 8 + FourCharCode($1) }
   }
 }
 
@@ -40,9 +42,3 @@ extension FourCharCode {
     }
   }
 }
-
-#if hasFeature(RetroactiveAttribute)
-extension FourCharCode: @retroactive ExpressibleByStringLiteral {}
-#else
-extension FourCharCode: ExpressibleByStringLiteral {}
-#endif

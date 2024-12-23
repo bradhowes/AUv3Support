@@ -48,9 +48,9 @@ class BundleTests: XCTestCase {
     XCTAssertEqual("chor", bundle.auComponentSubtypeString)
     XCTAssertEqual("BRay", bundle.auComponentManufacturerString)
 
-    XCTAssertEqual("aufx", bundle.auComponentType)
-    XCTAssertEqual("chor", bundle.auComponentSubtype)
-    XCTAssertEqual("BRay", bundle.auComponentManufacturer)
+    XCTAssertEqual(FourCharCode("aufx"), bundle.auComponentType)
+    XCTAssertEqual(FourCharCode("chor"), bundle.auComponentSubtype)
+    XCTAssertEqual(FourCharCode("BRay"), bundle.auComponentManufacturer)
 
     XCTAssertEqual("SimplyChorusAU.appex", bundle.auExtensionName)
     XCTAssertEqual("1554960150", bundle.appStoreId)

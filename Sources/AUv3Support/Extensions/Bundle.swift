@@ -49,11 +49,11 @@ public extension AppExtensionBundleInfo {
   /// Obtain the manufacturer of the audio unit as a string
   var auComponentManufacturerString: String { info(for: "AU_COMPONENT_MANUFACTURER") }
   /// Obtain the type of the audio unit
-  var auComponentType: FourCharCode { FourCharCode(stringLiteral: info(for: "AU_COMPONENT_TYPE")) }
+  var auComponentType: FourCharCode { FourCharCode(info(for: "AU_COMPONENT_TYPE")) }
   /// Obtain the subtype of the audio unit
-  var auComponentSubtype: FourCharCode { FourCharCode(stringLiteral: info(for: "AU_COMPONENT_SUBTYPE")) }
+  var auComponentSubtype: FourCharCode { FourCharCode(info(for: "AU_COMPONENT_SUBTYPE")) }
   /// Obtain the manufacturer of the audio unit
-  var auComponentManufacturer: FourCharCode { FourCharCode(stringLiteral: info(for: "AU_COMPONENT_MANUFACTURER")) }
+  var auComponentManufacturer: FourCharCode { FourCharCode(info(for: "AU_COMPONENT_MANUFACTURER")) }
   /// Obtain the extension name
   var auExtensionName: String { auBaseName + "AU.appex" }
   /// Obtain the Apple Store ID for the component

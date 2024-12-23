@@ -1,3 +1,6 @@
+import AudioToolbox
+import SwiftUI
+
 /**
  An Observable wrapper for an AUParameter
 
@@ -10,6 +13,8 @@
 
  From Apple's code template
 */
+
+@available(iOS 17.0, *)
 @Observable
 @MainActor
 public final class ObservableAUParameter {
@@ -18,14 +23,12 @@ public final class ObservableAUParameter {
   private var editingState: EditingState = .inactive
 
   public var value: AUValue {
-    didSet {
-      guard editingState != .hostUpdate else { return }
-      updateParameterValue()
-    }
+    get { parameter.value }
+    set { if editingState != .hostUpdate { updateParameterValue(with: newValue) } }
   }
 
   public convenience init(parameter: AUParameterNodeDML) {
-    if case .parameter(let param) = parameter {
+    if case .param(let param) = parameter {
       self.init(parameter: param)
     } else {
       fatalError("unexpected AUParameterNodeDML type")
@@ -34,17 +37,17 @@ public final class ObservableAUParameter {
 
   public init(parameter: AUParameter) {
     self.parameter = parameter
-    self.observerToken = parameter.token(byAddingParameterObserver: self.parameterChanged(_:_:))
+    self.observerToken = parameter.token(byAddingParameterObserver: parameterChanged(_:_:))
   }
 
   private nonisolated func parameterChanged(_ address: AUParameterAddress, _ value: AUValue) {
-    guard address == self.parameter.address,
-          self.editingState == .inactive
-    else {
-      return
-    }
-
     DispatchQueue.main.async {
+      guard address == self.parameter.address,
+            self.editingState == .inactive
+      else {
+        return
+      }
+
       self.editingState = .hostUpdate
       self.value = value
       self.editingState = .inactive
@@ -69,11 +72,11 @@ public final class ObservableAUParameter {
       editingState = .began
     } else {
       editingState = .ended
-      updateParameterValue()
+      updateParameterValue(with: value)
     }
   }
 
-  private func updateParameterValue() {
+  private func updateParameterValue(with value: AUValue) {
     parameter.setValue(value, originator: observerToken, atHostTime: 0, eventType: resolveEventType())
   }
 
@@ -98,4 +101,3 @@ public final class ObservableAUParameter {
     case hostUpdate // change from external party such as a host via preset change
   }
 }
-

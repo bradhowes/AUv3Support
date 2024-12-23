@@ -153,7 +153,9 @@ struct BufferFacet {
 
       auto in = static_cast<AUValue*>(bufferList_->mBuffers[channel].mData) + offset;
       auto out = static_cast<AUValue*>(outputs->mBuffers[channel].mData) + offset;
-      memcpy(out, in, frameCount * sizeof(AUValue));
+      std::copy_n(in, frameCount, out);
+
+      // memcpy(out, in, frameCount * sizeof(AUValue));
     }
   }
 
