@@ -60,26 +60,6 @@ public final class FilterAudioUnit: AUAudioUnit, @unchecked Sendable {
   private lazy var _outputBusses: AUAudioUnitBusArray = .init(audioUnit: self, busType: .output, busses: [outputBus])
 
   /**
-   Create a new audio unit asynchronously.
-   
-   - parameter componentDescription: the component to instantiate
-   - parameter options: options for instantiation
-   - parameter completionHandler: closure to invoke upon creation or error
-   */
-  override public class func instantiate(
-    with componentDescription: AudioComponentDescription,
-    options: AudioComponentInstantiationOptions = [],
-    completionHandler: @escaping (AUAudioUnit?, Error?) -> Void
-  ) {
-    do {
-      let auAudioUnit = try FilterAudioUnit(componentDescription: componentDescription, options: options)
-      completionHandler(auAudioUnit, nil)
-    } catch {
-      completionHandler(nil, error)
-    }
-  }
-
-  /**
    Construct new instance, throwing exception if there is an error doing so.
    
    - parameter componentDescription: the component to instantiate
@@ -273,8 +253,8 @@ extension FilterAudioUnit {
    */
   override public func deallocateRenderResources() {
     precondition(kernel != nil)
-    super.deallocateRenderResources()
     kernel.deallocateRenderResources()
+    super.deallocateRenderResources()
   }
 
   /// Provide the rendering block that will provide rendered samples.
