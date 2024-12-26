@@ -3,6 +3,7 @@
 import AudioToolbox.AUAudioUnit
 import AVFoundation.AVAudioFormat
 import CoreAudioKit.AUViewController
+import DSPHeaders
 
 import os.log
 
@@ -42,6 +43,11 @@ public final class FilterAudioUnit: AUAudioUnit, @unchecked Sendable {
 
   /// The signal processing kernel that performs the rendering of audio samples.
   private var kernel: AudioRenderer!
+
+  /// A shim that provides a AUInternalRenderBlock value for the FilterAudioUnit. This is used due to issues with the
+  /// current Swift/C++ interop.
+  private var shim: DSPHeaders.RenderBlockShim!
+
   /// Runtime parameter definitions for the audio unit
   private var parameters: ParameterSource!
 
@@ -103,12 +109,13 @@ extension FilterAudioUnit {
   public func configure(parameters: ParameterSource, kernel: AudioRenderer) {
     self.parameters = parameters
     self.kernel = kernel
+    self.shim = DSPHeaders.RenderBlockShim(kernel.bridge())
 
     // Install handler that provides a value for an AUParameter in the parameter tree.
-    parameters.parameterTree.implementorValueProvider = self.kernel.parameterValueProviderBlock
+    parameters.parameterTree.implementorValueProvider = kernel.getParameterValueProviderBlock()
 
     // Install handler that updates an AUParameter in the parameter tree with a new value.
-    parameters.parameterTree.implementorValueObserver = self.kernel.parameterValueObserverBlock
+    parameters.parameterTree.implementorValueObserver = kernel.getParameterValueObserverBlock()
 
     // At start, configure effect to do something interesting. Hosts can and should update the effect state after it is
     // initialized via `fullState` attribute.
@@ -215,11 +222,8 @@ extension FilterAudioUnit {
 
   /// The bypass setting is bridged with the v2 property. We detect when it changes here and forward it to the kernel.
   override public var shouldBypassEffect: Bool {
-    didSet {
-      let value = shouldBypassEffect
-      kernel.setBypass(value)
-      os_log(.info, log: log, "shouldBypassEffect: %d", value)
-    }
+    get { kernel.bypass }
+    set { kernel.bypass = newValue }
   }
 
   /**
@@ -228,7 +232,10 @@ extension FilterAudioUnit {
    */
   override public func allocateRenderResources() throws {
     os_log(.info, log: log, "allocateRenderResources - BEGIN")
-    precondition(kernel != nil)
+
+    guard let kernel else {
+      throw NSError(domain: NSOSStatusErrorDomain, code: Int(kAudioUnitErr_FailedInitialization), userInfo: nil)
+    }
 
     try super.allocateRenderResources()
 
@@ -252,16 +259,13 @@ extension FilterAudioUnit {
    Rendering has stopped -- tear down stuff that was supporting it.
    */
   override public func deallocateRenderResources() {
-    precondition(kernel != nil)
     kernel.deallocateRenderResources()
     super.deallocateRenderResources()
   }
 
   /// Provide the rendering block that will provide rendered samples.
   override public var internalRenderBlock: AUInternalRenderBlock {
-    os_log(.info, log: log, "internalRenderBlock - BEGIN")
-    precondition(kernel != nil)
-    return kernel.internalRenderBlock
+    shim.internalRenderBlock()
   }
 }
 

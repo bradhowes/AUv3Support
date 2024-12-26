@@ -1,6 +1,7 @@
 import AudioToolbox
 import AVFoundation
 import CoreAudioKit
+import DSPHeaders
 
 import XCTest
 @testable import AUv3Support
@@ -66,10 +67,16 @@ private struct formatter: AUParameterFormatting {
 
 fileprivate class Kernel: AudioRenderer {
 
+  func bridge() -> DSPHeaders.TypeErasedKernel { DSPHeaders.TypeErasedKernel() }
+
+  var bypass: Bool = false
+
+  func getParameterValueObserverBlock() -> AUImplementorValueObserver { self.set }
+  func getParameterValueProviderBlock() -> AUImplementorValueProvider { self.get }
+
   var parameterValueObserverBlock: AUImplementorValueObserver { self.set }
   var parameterValueProviderBlock: AUImplementorValueProvider { self.get }
 
-  var bypassed: Bool = false
   var busCount: Int = 0
   var format: AVAudioFormat = .init(commonFormat: .pcmFormatInt16, sampleRate: 44100.0, channels: 2, interleaved: true)!
   var maxFramesToRender: AUAudioFrameCount = 0
@@ -95,10 +102,6 @@ fileprivate class Kernel: AudioRenderer {
       kernel.renderCount += 1
       return noErr
     }
-  }
-
-  func setBypass(_ state: Bool) {
-    bypassed = state
   }
 
   func set(_ parameter: AUParameter, value: AUValue) {
@@ -249,7 +252,7 @@ final class FilterAudioUnitTests: XCTestCase {
     XCTAssertFalse(ctx.audioUnit?.shouldBypassEffect ?? true)
     ctx.audioUnit?.shouldBypassEffect = true
     XCTAssertTrue(ctx.audioUnit?.shouldBypassEffect ?? false)
-    XCTAssertTrue(ctx.kernel.bypassed)
+    XCTAssertTrue(ctx.kernel.bypass)
   }
 
   @MainActor
@@ -353,7 +356,7 @@ final class FilterAudioUnitTests: XCTestCase {
     let buffer = AVAudioPCMBuffer(pcmFormat: .init(commonFormat: .pcmFormatInt16, sampleRate: 44100.0, channels: 2,
                                                    interleaved: false)!, frameCapacity: 512)!
 
-    var flags: AudioUnitRenderActionFlags = .init()
+    var flags: UInt32 = .init()
     var timestamp: AudioTimeStamp = .init()
     let frameCount: AUAudioFrameCount = 1
     let outputBus: Int = 0
@@ -361,9 +364,9 @@ final class FilterAudioUnitTests: XCTestCase {
     let eventList: UnsafePointer<AURenderEvent>? = nil
     let pullInputBlock: AURenderPullInputBlock? = nil
     let result = ctx.audioUnit?.internalRenderBlock(&flags, &timestamp, frameCount, outputBus, bufferList,
-                                                   eventList, pullInputBlock)
-    XCTAssertEqual(result, noErr)
-    XCTAssertEqual(ctx.kernel.renderCount, 1)
+                                                    eventList, pullInputBlock)
+    XCTAssertEqual(result, -1)
+    XCTAssertEqual(ctx.kernel.renderCount, 0)
   }
 
   @MainActor

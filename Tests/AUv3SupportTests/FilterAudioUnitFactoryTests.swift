@@ -1,6 +1,7 @@
 import AudioToolbox
 import AVFoundation
 import CoreAudioKit
+import DSPHeaders
 
 import XCTest
 @testable import AUv3Support
@@ -31,10 +32,13 @@ fileprivate class Parameters: ParameterSource {
 
 fileprivate class Kernel: AudioRenderer {
 
-  var parameterValueObserverBlock: AUImplementorValueObserver { self.set }
-  var parameterValueProviderBlock: AUImplementorValueProvider { self.get }
+  func bridge() -> DSPHeaders.TypeErasedKernel { DSPHeaders.TypeErasedKernel() }
 
-  var bypassed: Bool = false
+  var bypass: Bool = false
+
+  func getParameterValueObserverBlock() -> AUImplementorValueObserver { self.set }
+  func getParameterValueProviderBlock() -> AUImplementorValueProvider { self.get }
+
   var busCount: Int = 0
   var format: AVAudioFormat = .init(commonFormat: .pcmFormatInt16, sampleRate: 44100.0, channels: 2, interleaved: true)!
   var maxFramesToRender: AUAudioFrameCount = 0
@@ -60,10 +64,6 @@ fileprivate class Kernel: AudioRenderer {
       kernel.renderCount += 1
       return noErr
     }
-  }
-
-  func setBypass(_ state: Bool) {
-    bypassed = state
   }
 
   func set(_ parameter: AUParameter, value: AUValue) {
@@ -103,8 +103,11 @@ final class FilterAudioUnitFactoryTests: XCTestCase {
   func testCreate() throws {
     let parameters = Parameters()
     let kernel = Kernel()
-    let audioUnit = try FilterAudioUnitFactory.create(componentDescription: acd, parameters: parameters, kernel: kernel,
-                                                  viewConfigurationManager: nil)
+    let audioUnit = try FilterAudioUnitFactory.create(
+      componentDescription: acd, parameters: parameters,
+      kernel: kernel,
+      viewConfigurationManager: nil
+    )
     XCTAssertNotNil(audioUnit)
   }
 }

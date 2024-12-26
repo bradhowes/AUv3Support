@@ -23,7 +23,7 @@ public:
     if (intrusiveReferenceCounter_ < 2) {
       delete this;
     } else {
-      --intrusiveReferenceCount_;
+      --intrusiveReferenceCounter_;
     }
   }
 

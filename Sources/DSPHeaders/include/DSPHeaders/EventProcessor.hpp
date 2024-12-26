@@ -9,7 +9,6 @@
 #import <functional>
 #import <initializer_list>
 #import <string>
-#import <swift/bridging>
 #import <unordered_map>
 
 #import <AudioToolbox/AudioToolbox.h>
@@ -88,15 +87,15 @@ public:
       facets_.emplace_back();
     }
 
-    // Extra facet to use for input buffer used by a `pullInputBlock`
+    // Extra facet at end is reserved for `pullInputBlock` processing to hold input samples.
     facets_.emplace_back();
 
-    // Setup facets to have the right channel count so we do not allocate while rendering
+    // Setup facets to have the right channel count so we do not allocate while rendering.
     for (auto& entry : facets_) {
       entry.setChannelCount(channelCount);
     }
 
-    // Setup sample buffers to have the right format and capacity
+    // Setup sample buffers to have the right format and capacity. This is constant as long as rendering is active.
     for (auto& entry : buffers_) {
       entry.allocate(format, maxFramesToRender);
     }
@@ -442,7 +441,7 @@ private:
   double sampleRate_{};
 
   ParameterMap parameters_{};
-} SWIFT_CONFORMS_TO_PROTOCOL(AUv3Support.AudioRenderer);
+};
 
 /**
  A semi-hacky way to obtain compile-time errors for a Kernel class that is not configured correctly.

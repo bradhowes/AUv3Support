@@ -10,12 +10,12 @@ public protocol AUParameterHandler {
 
    @returns block that takes an `AUParameter` pointer, and an `AUValue`.
    */
-  var parameterValueObserverBlock: AUImplementorValueObserver { get }
+  func getParameterValueObserverBlock() -> AUImplementorValueObserver
 
   /**
    Obtain a block that can safely obtain kernel parameter values.
 
    @returns block that takes an `AUParameter` pointer and returns an `AUValue`.
    */
-  var parameterValueProviderBlock: AUImplementorValueProvider { get }
+  func getParameterValueProviderBlock() -> AUImplementorValueProvider
 }

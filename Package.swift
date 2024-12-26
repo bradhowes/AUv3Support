@@ -138,10 +138,10 @@ let package = Package(
     ),
     .target(
       name: "AUv3Support",
-      dependencies: [],
+      dependencies: ["DSPHeaders"],
       exclude: [],
       resources: [.process("Resources")],
-      swiftSettings: [.define("APPLICATION_EXTENSION_API_ONLY")]
+      swiftSettings: [.define("APPLICATION_EXTENSION_API_ONLY"), .interoperabilityMode(.Cxx)]
     ),
     .target(
       name: "AUv3Support-iOS-only",
@@ -152,7 +152,7 @@ let package = Package(
       dependencies: ["AUv3Support"],
       exclude: ["README.md"],
       resources: [.process("Resources")],
-      swiftSettings: [.define("APPLICATION_EXTENSION_API_ONLY")]
+      swiftSettings: [.define("APPLICATION_EXTENSION_API_ONLY"), .interoperabilityMode(.Cxx)]
     ),
     .target(
       name: "AUv3Support-macOS-only",
@@ -162,26 +162,29 @@ let package = Package(
       name: "AUv3Support-macOS",
       dependencies: ["AUv3Support"],
       exclude: ["README.md"],
-      swiftSettings: [.define("APPLICATION_EXTENSION_API_ONLY")]
+      swiftSettings: [.define("APPLICATION_EXTENSION_API_ONLY"), .interoperabilityMode(.Cxx)]
     ),
     .testTarget(
       name: "AUv3SupportTests",
       dependencies: ["AUv3Support"],
-      resources: [.copy("Resources")]
+      resources: [.copy("Resources")],
+      swiftSettings: [.define("APPLICATION_EXTENSION_API_ONLY"), .interoperabilityMode(.Cxx)]
     ),
     .testTarget(
       name: "AUv3Support-iOSTests",
       dependencies: [
         .targetItem(name: "AUv3Support-iOS-only", condition: .when(platforms: [.iOS])),
         "AUv3Support"
-      ]
+      ],
+      swiftSettings: [.define("APPLICATION_EXTENSION_API_ONLY"), .interoperabilityMode(.Cxx)]
     ),
     .testTarget(
       name: "AUv3Support-macOSTests",
       dependencies: [
         .targetItem(name: "AUv3Support-macOS-only", condition: .when(platforms: [.macOS])),
         "AUv3Support"
-      ]
+      ],
+      swiftSettings: [.define("APPLICATION_EXTENSION_API_ONLY"), .interoperabilityMode(.Cxx)]
     ),
     .testTarget(
       name: "DSPHeadersTests",
@@ -194,14 +197,16 @@ let package = Package(
       dependencies: [
         .targetItem(name: "AUv3Support-iOS", condition: .when(platforms: [.iOS])),
         "AUv3Support"
-      ]
+      ],
+      swiftSettings: [.define("APPLICATION_EXTENSION_API_ONLY"), .interoperabilityMode(.Cxx)]
     ),
     .testTarget(
       name: "AUv3Support-macOS-only-tests",
       dependencies: [
         .targetItem(name: "AUv3Support-macOS", condition: .when(platforms: [.macOS])),
         "AUv3Support"
-      ]
+      ],
+      swiftSettings: [.define("APPLICATION_EXTENSION_API_ONLY"), .interoperabilityMode(.Cxx)]
     )
   ],
   cxxLanguageStandard: .cxx2b

@@ -6,6 +6,9 @@ import AudioUnit
 @testable import AUv3Support
 
 fileprivate class MockAudioUnit: NSObject, AUAudioUnitPresetsFacade {
+
+  let supportsUserPresets: Bool = true
+
   static let log = Shared.logger("SubSystem", "Category")
   private let log = MockAudioUnit.log
 

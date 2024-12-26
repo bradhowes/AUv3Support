@@ -18,7 +18,7 @@ import SwiftUI
 @Observable
 @MainActor
 public final class ObservableAUParameter {
-  private let parameter: AUParameter
+  public let parameter: AUParameter
   private var observerToken: AUParameterObserverToken?
   private var editingState: EditingState = .inactive
 
@@ -35,7 +35,8 @@ public final class ObservableAUParameter {
     }
   }
 
-  public init(parameter: AUParameter) {
+  public init(parameter: AUParameter?) {
+    guard let parameter else { fatalError("nil AUParameter is not supported") }
     self.parameter = parameter
     self.observerToken = parameter.token(byAddingParameterObserver: parameterChanged(_:_:))
   }

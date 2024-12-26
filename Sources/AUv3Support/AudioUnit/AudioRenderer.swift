@@ -2,9 +2,12 @@
 
 import AudioToolbox.AUAudioUnitImplementation
 import AVFoundation.AVAudioFormat
+import DSPHeaders
 
 /**
- Protocol for a Swift/Obj-C++ kernel that can perform audio sample rendering.
+ Protocol for a Swift/Obj-C++ kernel that can perform audio sample rendering. There is an issue providing an
+ AUInternalRenderBlock value from conforming instances, so there is a `TypeErasedKernel` value that is used by a
+ `RenderBlockShim` to provide one for the `FilterAudioUnit`.
  */
 public protocol AudioRenderer: AUParameterHandler {
 
@@ -23,16 +26,15 @@ public protocol AudioRenderer: AUParameterHandler {
   func deallocateRenderResources()
 
   /**
-   Obtain the internal render block that is used for rendering and processing events.
+   Obtain a type-erased kernel that can be used where Swift/Obj-C++ interop breaks down, such as when the
+   AUInternalRenderBlock typing gets munged.
 
-   - returns: the render block to use
+   - returns: an instance of `TypeErasedKernel`
    */
-  var internalRenderBlock: AUInternalRenderBlock { get }
+  func bridge() -> DSPHeaders.TypeErasedKernel
 
   /**
-   Set the bypass attribute. When enabled, audio is passed through unchanged by the filter.
-
-   - parameter state: new state of bypass
+   Provide a bypass attribute for the audio unit. When enabled, audio is passed through unchanged by the filter.
    */
-  func setBypass(_ state: Bool)
+  var bypass: Bool { get set }
 }
