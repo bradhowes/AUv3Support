@@ -43,7 +43,8 @@ public enum FilterAudioUnitFactory {
     kernel: AudioRenderer,
     viewConfigurationManager: AudioUnitViewConfigurationManager? = nil
   ) throws -> FilterAudioUnit {
-    let audioUnit = try create(componentDescription: componentDescription, viewConfigurationManager: viewConfigurationManager)
+    let audioUnit = try create(componentDescription: componentDescription,
+                               viewConfigurationManager: viewConfigurationManager)
     audioUnit.configure(parameters: parameters, kernel: kernel)
     return audioUnit
   }
