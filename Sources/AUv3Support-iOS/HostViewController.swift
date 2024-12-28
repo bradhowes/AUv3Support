@@ -63,8 +63,8 @@ public final class HostViewController: UIViewController {
   public var auAudioUnit: AUAudioUnit? { avAudioUnit?.auAudioUnit }
   public var audioUnitViewController: UIViewController?
 
+  private let engine = SimplePlayEngine()
   private var audioUnitLoader: AudioUnitLoader?
-  private var engine: SimplePlayEngine?
   private var restored = false
 
   @IBOutlet private var playButton: UIButton!
@@ -130,7 +130,7 @@ If you delete this app from your device, the AUv3 component will no longer be av
 applications.
 """
 
-    engine = SimplePlayEngine(sampleLoop: config.sampleLoop)
+    engine.setSampleLoop(config.sampleLoop)
     audioUnitLoader = .init(componentDescription: config.componentDescription)
     audioUnitLoader?.delegate = self
     applyTheme()
@@ -168,7 +168,7 @@ applications.
 extension HostViewController {
 
   @IBAction public func togglePlay(_ sender: UIButton) {
-    let isPlaying = engine?.startStop() ?? false
+    let isPlaying = engine.startStop()
     bypassButton.isEnabled = isPlaying
     playButton.isSelected = isPlaying
     setBypassState(false)
@@ -209,7 +209,7 @@ extension HostViewController: AudioUnitLoaderDelegate {
   public func connected(audioUnit: AVAudioUnit, viewController: UIViewController) {
     userPresetsManager = .init(for: audioUnit.auAudioUnit)
     avAudioUnit = audioUnit
-    engine?.connectEffect(audioUnit: audioUnit)
+    engine.connectEffect(audioUnit: audioUnit)
     audioUnitViewController = viewController
     connectFilterView(audioUnit, viewController)
     connectParametersToControls(audioUnit.auAudioUnit)

@@ -10,17 +10,15 @@
 #import <AudioUnit/AudioUnit.h>
 #import <AVFoundation/AVFoundation.h>
 
-#import "DSPHeaders/BufferFacet.hpp"
-
 namespace DSPHeaders {
 
 /**
  Maintains a buffer of PCM samples which can be used to save samples from an upstream node. Internally uses an
  `AVAudioPCMBuffer` to deal with specifics involving the audio format.
  */
-struct SampleBuffer {
+struct BusSampleBuffer {
 
-  SampleBuffer() noexcept {}
+  BusSampleBuffer() noexcept {}
 
   /**
    Set the format of the buffer to use.

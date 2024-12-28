@@ -5,7 +5,8 @@ class SimplePlayEngineTests: XCTestCase {
 
   @MainActor
   func testStartStop() {
-    let spe = SimplePlayEngine(sampleLoop: .sample1)
+    let spe = SimplePlayEngine()
+    spe.setSampleLoop(.sample1)
     XCTAssertFalse(spe.isPlaying)
     spe.start()
     XCTAssertTrue(spe.isPlaying)

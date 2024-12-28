@@ -20,9 +20,15 @@ public final class SimplePlayEngine: @unchecked Sendable {
 
   private let engine = AVAudioEngine()
   private let player = AVAudioPlayerNode()
-  private var activeEffect: AVAudioUnit?
-  private let file: AVAudioFile
   private let stateChangeQueue = DispatchQueue(label: "SimplePlayEngine")
+
+  private var activeEffect: AVAudioUnit? {
+    didSet { wireAudioPath() }
+  }
+
+  public var file: AVAudioFile? {
+    didSet { wireAudioPath() }
+  }
 
   /// True if engine is currently playing the audio file.
   public var isPlaying: Bool { stateChangeQueue.sync { player.isPlaying } }
@@ -45,13 +51,40 @@ public final class SimplePlayEngine: @unchecked Sendable {
 
   /**
    Create new audio processing setup, with an audio file player for a signal source.
-   - parameter audioFileName: the name of the audio resource to play
    */
-  public init(sampleLoop: SampleLoop) {
-    print("new SimplePlayEngine")
-    self.file = Self.audioFileResource(name: sampleLoop.rawValue)
+  public init() {
     engine.attach(player)
-    engine.connect(player, to: engine.mainMixerNode, format: file.processingFormat)
+  }
+
+  /**
+   Setup to play the given sample loop.
+
+   - parameter sampleLoop: the audio resource to play
+   */
+  public func setSampleLoop(_ sampleLoop: SampleLoop) {
+    self.file = Self.audioFileResource(name: sampleLoop.rawValue)
+  }
+
+  @discardableResult
+  private func wireAudioPath() -> Bool {
+    guard let file else { return false }
+    if let activeEffect {
+      activeEffect.auAudioUnit.maximumFramesToRender = maximumFramesToRender
+      engine.attach(activeEffect)
+      engine.disconnectNodeOutput(player)
+      engine.connect(player, to: activeEffect, format: file.processingFormat)
+      engine.connect(activeEffect, to: engine.mainMixerNode, format: file.processingFormat)
+    } else {
+      engine.disconnectNodeOutput(player)
+      engine.connect(player, to: engine.mainMixerNode, format: file.processingFormat)
+    }
+
+    do {
+      try engine.start()
+      return true
+    } catch {
+      return false
+    }
   }
 }
 
@@ -63,21 +96,9 @@ extension SimplePlayEngine {
    - parameter audioUnit: the audio unit to install
    - parameter completion: closure to call when finished
    */
-  public func connectEffect(audioUnit: AVAudioUnit, completion: @escaping (() -> Void) = {}) {
-    defer { completion() }
-
-    audioUnit.auAudioUnit.maximumFramesToRender = maximumFramesToRender
+  public func connectEffect(audioUnit: AVAudioUnit, completion: @escaping ((Bool) -> Void) = {_ in}) {
     activeEffect = audioUnit
-
-    engine.disconnectNodeOutput(player)
-    engine.attach(audioUnit)
-    engine.connect(player, to: audioUnit, format: file.processingFormat)
-    engine.connect(audioUnit, to: engine.mainMixerNode, format: file.processingFormat)
-    do {
-      try engine.start()
-    } catch {
-      fatalError("failed to start AVAudioEngine")
-    }
+    completion(wireAudioPath())
   }
 
   /**
@@ -160,6 +181,7 @@ extension SimplePlayEngine {
    Start playing the audio resource and play it again once it is done.
    */
   private func beginLoop() {
+    guard let file else { return }
     player.scheduleFile(file, at: nil) {
       self.stateChangeQueue.async {
         if self.player.isPlaying {

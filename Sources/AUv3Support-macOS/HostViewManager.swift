@@ -55,7 +55,8 @@ public final class HostViewManager: NSObject {
   ) {
     self.config = config
     self.audioUnitLoader = .init(componentDescription: config.componentDescription)
-    self.engine = .init(sampleLoop: config.sampleLoop)
+    self.engine = .init()
+    self.engine.setSampleLoop(.sample1)
 
     super.init()
 

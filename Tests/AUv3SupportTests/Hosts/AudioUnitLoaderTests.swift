@@ -64,7 +64,8 @@ final class AudioUnitLoaderTests: XCTestCase {
   @MainActor
   func testPlaybackState() throws {
     let audioUnitLoader = AudioUnitLoader(componentDescription: acd)
-    let engine = SimplePlayEngine(sampleLoop: .sample1)
+    let engine = SimplePlayEngine()
+    engine.setSampleLoop(.sample1)
     let exp = expectation(description: "failed")
     let delegate = LoaderDelegate(expectation: exp)
     audioUnitLoader.delegate = delegate
