@@ -2,9 +2,10 @@
 
 #pragma once
 
-#include <cassert>
-#include <cmath>
-#include <vector>
+#import <cassert>
+#import <cmath>
+#import <span>
+#import <vector>
 
 #import <AudioToolbox/AudioToolbox.h>
 
@@ -14,6 +15,10 @@ namespace DSPHeaders {
  Grouping of audio buffers that are always worked on together as a bus. Most of the time, a bus will have 1 (mono) or
  two (stereo) channels of audio. There are methods specific to mono and stereo as well as general-purpose methods for
  treating them all the same or as alternating variations like stereo but as even (0/L) and odd (1/R) pairs.
+
+ Note that this class only holds a refernce to the collection that is used. The collection must not go out of scope
+ while an instance of this class exists. In `EventProcessor` it is only used to pass the sample pointers to the
+ kernel for rendering.
  */
 class BusBuffers {
 public:

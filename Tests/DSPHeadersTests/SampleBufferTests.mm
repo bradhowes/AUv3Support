@@ -4,7 +4,6 @@
 #import <vector>
 
 #import "DSPHeaders/EventProcessor.hpp"
-#import "DSPHeaders/SampleBuffer.hpp"
 
 using namespace DSPHeaders;
 
@@ -26,7 +25,7 @@ static AUAudioFrameCount maxFrames = 100;
 }
 
 - (void)testInit {
-  SampleBuffer buffer;
+  BusSampleBuffer buffer;
   XCTAssertEqual(buffer.capacity(), size_t(0));
   XCTAssertEqual(buffer.mutableAudioBufferList(), nullptr);
 

@@ -3,8 +3,8 @@
 This package contains various C++ classes that are useful when rendering audio samples for an AUv3 audio unit.
 
 * `Biquad` -- collection of routines used to create bi-quad filters in different configurations
-* `BufferFacet` --  provides a simple `std::vector` view of an `AudioBufferList` where each entry in the vector is a
-pointer to a stream of `AUValue` values for a given channel.
+* `BusBufferFacet` --  provides a simple `std::vector` view of an `AudioBufferList` where each entry in the vector is a
+pointer to a stream of `AUValue` values for a given bus channel.
 * `BusBuffers` -- collection of buffers per bus entity
 * `ConstMath` -- collection of routines that perform compile-time math operations
 * `DelayBuffer` -- a circular-buffer that holds past audio samples that can be retrieved at a time offset
@@ -13,7 +13,8 @@ pointer to a stream of `AUValue` values for a given channel.
 class that takes a 'kernel' type which defines the actual operations to perform within an AUv3 context.
 * `LFO` -- low-frequency oscillator class with parameters to control rate and waveform type
 * `PhaseShifter` -- an all-pass filter that performs phase shifting across a predefined set of frequencies.
-* `SampleBuffer` -- fixed-size buffer of samples. Light-weight wrapper around the `AVAudioPCMBuffer` class.
+* `BusSampleBuffer` -- set of N-channel fixed-sized sample buffers. Light-weight wrapper around the `AVAudioPCMBuffer`
+ class.
 
 Originally, this was a C++ headers-only package, but now there is a `DSPHeaders.mm` file that contains various lookup
 table generators that are run at compile time to fill the coefficient lookup tables used by the cubic 4-order

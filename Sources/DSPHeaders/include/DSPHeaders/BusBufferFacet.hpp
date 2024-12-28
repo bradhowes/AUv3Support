@@ -5,8 +5,9 @@
 #import <string>
 
 #import <os/log.h>
-#import <AudioToolbox/AudioToolbox.h>
-
+#import <AudioToolbox/AUAudioUnit.h>
+#import <algorithm>
+#import <span>
 #import <vector>
 
 #import "DSPHeaders/BusBuffers.hpp"
@@ -14,14 +15,18 @@
 namespace DSPHeaders {
 
 /**
- Provides a simple view of an N-channel AudioBufferList as a collection of AUValue pointers.
+ Provides a simple view of an N-channel `AudioBufferList` as a vector of `AUValue` pointers. This is much easier to work
+ with in a kernel than an `AudioBufferList` instance. In `EventProcessor`, the `AudioBufferList` value comes from a
+ `BusSampleBuffer` instance, but this is not required here.
+
+ Supports in-place rendering where the input buffer is used for rendering and is overwritten with output samples.
  */
-struct BufferFacet {
+struct BusBufferFacet {
 
   /**
    Construct a new instance.
    */
-  BufferFacet() noexcept {}
+  BusBufferFacet() noexcept {}
 
   /**
    Set the expected number of channels to support during rendering. The goal is to not encounter any memory
@@ -77,7 +82,7 @@ struct BufferFacet {
   void setOffset(AUAudioFrameCount offset) {
     validateBufferList();
     for (size_t channel = 0; channel < pointers_.size(); ++channel) {
-      pointers_[channel] = static_cast<AUValue*>(bufferList_->mBuffers[channel].mData) + offset;
+      pointers_[channel] = getBufferPointer(channel, offset);
     }
   }
 
@@ -119,7 +124,7 @@ struct BufferFacet {
    @param pullInputBlock the function to call to do the pulling
    */
   AUAudioUnitStatus pullInput(AudioUnitRenderActionFlags* actionFlags, AudioTimeStamp const* timestamp,
-                              AVAudioFrameCount frameCount, NSInteger inputBusNumber,
+                              AUAudioFrameCount frameCount, NSInteger inputBusNumber,
                               AURenderPullInputBlock pullInputBlock) noexcept {
     if (pullInputBlock == nullptr) [[unlikely]] {
       return kAudioUnitErr_NoConnection;
@@ -142,7 +147,7 @@ struct BufferFacet {
    @param offset the offset to apply before writing
    @param frameCount the number of samples to write
    */
-  void copyInto(BufferFacet& destination, AUAudioFrameCount offset, AUAudioFrameCount frameCount) const {
+  void copyInto(BusBufferFacet& destination, AUAudioFrameCount offset, AUAudioFrameCount frameCount) const {
     validateBufferList();
     auto outputs = destination.bufferList_;
     for (UInt32 channel = 0; channel < bufferList_->mNumberBuffers; ++channel) {
@@ -150,12 +155,21 @@ struct BufferFacet {
         // nothing to do since input buffer is being used for output buffer (in-place rendering).
         continue;
       }
-
-      auto in = static_cast<AUValue*>(bufferList_->mBuffers[channel].mData) + offset;
-      auto out = static_cast<AUValue*>(outputs->mBuffers[channel].mData) + offset;
+      auto in = getBufferPointer(channel, offset);
+      auto out = destination.getBufferPointer(channel, offset);
       std::copy_n(in, frameCount, out);
+    }
+  }
 
-      // memcpy(out, in, frameCount * sizeof(AUValue));
+  /**
+   Set the sample values to zero for the next N frames. This is used when there is no upstream node to pull from.
+
+   @param frameCount the number of frames to clear
+   */
+  void clear(AUAudioFrameCount frameCount) noexcept {
+    for (UInt32 channel = 0; channel < bufferList_->mNumberBuffers; ++channel) {
+      auto pos = getBufferPointer(channel, 0);
+      std::fill(pos, pos + frameCount, AUValue(0.0));
     }
   }
 
@@ -168,6 +182,10 @@ struct BufferFacet {
   }
 
 private:
+
+  AUValue* getBufferPointer(size_t channel, AUAudioFrameCount offset) const noexcept {
+    return static_cast<AUValue*>(bufferList_->mBuffers[channel].mData) + offset;
+  }
 
   void validateBufferList() const {
     if (bufferList_ == nullptr) [[unlikely]] {

@@ -4,7 +4,6 @@
 #import <vector>
 
 #import "DSPHeaders/EventProcessor.hpp"
-#import "DSPHeaders/BufferFacet.hpp"
 
 using namespace DSPHeaders;
 
@@ -27,9 +26,9 @@ static AUAudioFrameCount maxFrames = 100;
 }
 
 - (void)testMono {
-  SampleBuffer buffer;
+  BusSampleBuffer buffer;
   buffer.allocate(monoFormat, maxFrames);
-  BufferFacet facet;
+  BusBufferFacet facet;
   facet.setChannelCount(1);
   facet.assignBufferList(buffer.mutableAudioBufferList());
   XCTAssertEqual(1, facet.channelCount());
@@ -38,9 +37,9 @@ static AUAudioFrameCount maxFrames = 100;
 }
 
 - (void)testStereo {
-  SampleBuffer buffer;
+  BusSampleBuffer buffer;
   buffer.allocate(stereoFormat, maxFrames);
-  BufferFacet facet;
+  BusBufferFacet facet;
   facet.setChannelCount(2);
   facet.assignBufferList(buffer.mutableAudioBufferList());
   XCTAssertEqual(2, facet.channelCount());
@@ -49,12 +48,12 @@ static AUAudioFrameCount maxFrames = 100;
 }
 
 - (void)testChannelCount {
-  SampleBuffer monoBuffer;
+  BusSampleBuffer monoBuffer;
   monoBuffer.allocate(monoFormat, maxFrames);
-  SampleBuffer stereoBuffer;
+  BusSampleBuffer stereoBuffer;
   stereoBuffer.allocate(stereoFormat, maxFrames);
 
-  BufferFacet facet;
+  BusBufferFacet facet;
   facet.setChannelCount(1);
   XCTAssertNoThrow(facet.assignBufferList(monoBuffer.mutableAudioBufferList()));
 
@@ -66,12 +65,12 @@ static AUAudioFrameCount maxFrames = 100;
 }
 
 - (void)testFrameCount {
-  SampleBuffer monoBuffer;
+  BusSampleBuffer monoBuffer;
   monoBuffer.allocate(monoFormat, maxFrames);
-  SampleBuffer stereoBuffer;
+  BusSampleBuffer stereoBuffer;
   stereoBuffer.allocate(stereoFormat, maxFrames);
 
-  BufferFacet facet;
+  BusBufferFacet facet;
   facet.setChannelCount(1);
   facet.assignBufferList(monoBuffer.mutableAudioBufferList());
   facet.setFrameCount(10);
@@ -85,10 +84,10 @@ static AUAudioFrameCount maxFrames = 100;
 }
 
 - (void)testOffset {
-  SampleBuffer stereoBuffer;
+  BusSampleBuffer stereoBuffer;
   stereoBuffer.allocate(stereoFormat, maxFrames);
 
-  BufferFacet facet;
+  BusBufferFacet facet;
   facet.setChannelCount(2);
   facet.assignBufferList(stereoBuffer.mutableAudioBufferList());
   BusBuffers bb1{facet.busBuffers()};
@@ -118,9 +117,9 @@ static AUAudioFrameCount maxFrames = 100;
 }
 
 - (void)testAPI {
-  SampleBuffer stereoBuffer;
+  BusSampleBuffer stereoBuffer;
   stereoBuffer.allocate(stereoFormat, maxFrames);
-  BufferFacet facet;
+  BusBufferFacet facet;
   facet.setChannelCount(2);
   facet.assignBufferList(stereoBuffer.mutableAudioBufferList());
 

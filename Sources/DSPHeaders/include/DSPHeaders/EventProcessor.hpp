@@ -8,12 +8,14 @@
 #import <cassert>
 #import <functional>
 #import <initializer_list>
+#import <ranges>
 #import <string>
 #import <unordered_map>
 
 #import <AudioToolbox/AudioToolbox.h>
 
-#import "DSPHeaders/SampleBuffer.hpp"
+#import "DSPHeaders/BusBufferFacet.hpp"
+#import "DSPHeaders/BusSampleBuffer.hpp"
 #import "DSPHeaders/BusBuffers.hpp"
 #import "DSPHeaders/Parameters/Base.hpp"
 #import "DSPHeaders/Concepts.hpp"
@@ -45,7 +47,7 @@ public:
   /**
    Construct new instance.
    */
-  EventProcessor() noexcept : derived_{static_cast<KernelType&>(*this)}, buffers_{}, facets_{} {}
+  EventProcessor() noexcept : derived_{static_cast<KernelType&>(*this)} {}
 
   /**
    Set the bypass mode.
@@ -77,32 +79,29 @@ public:
     sampleRate_ = format.sampleRate;
     treeBasedRampDuration_ = AUAudioFrameCount(floor(0.02 * sampleRate_));
 
-    auto channelCount{[format channelCount]};
+    auto channelCount{format.channelCount};
 
     // We want an internal buffer for each bus that we can generate output on. This is not strictly required since we
     // will be rendering one bus at a time, but doing so allows us to process the samples "in-place" and pass the buffer
     // to the audio unit without having to make a copy for the next element in the signal processing chain.
-    while (buffers_.size() < size_t(busCount)) {
-      buffers_.emplace_back();
-      facets_.emplace_back();
+    while (outputBusses_.size() < size_t(busCount)) {
+      outputBusses_.emplace_back();
+      outputFacets_.emplace_back();
     }
 
     // Extra facet at end is reserved for `pullInputBlock` processing to hold input samples.
-    facets_.emplace_back();
+    // facets_.emplace_back();
 
     // Setup facets to have the right channel count so we do not allocate while rendering.
-    for (auto& entry : facets_) {
-      entry.setChannelCount(channelCount);
-    }
+    for (auto& facet : outputFacets_) facet.setChannelCount(channelCount);
+    inputFacet_.setChannelCount(channelCount);
 
     // Setup sample buffers to have the right format and capacity. This is constant as long as rendering is active.
-    for (auto& entry : buffers_) {
-      entry.allocate(format, maxFramesToRender);
-    }
+    for (auto& entry : outputBusses_) entry.allocate(format, maxFramesToRender);
 
     // Link the output buffers with their corresponding facets. This only needs to be done once.
-    for (size_t busIndex = 0; busIndex < buffers_.size(); ++busIndex) {
-      facets_[busIndex].assignBufferList(buffers_[busIndex].mutableAudioBufferList());
+    for (auto pair : std::views::zip(outputFacets_, outputBusses_)) {
+      std::get<0>(pair).assignBufferList(std::get<1>(pair).mutableAudioBufferList());
     }
 
     setRendering(true);
@@ -116,14 +115,8 @@ public:
    */
   void deallocateRenderResources() noexcept {
     setRendering(false);
-
-    for (auto& entry : facets_) {
-      if (entry.isLinked()) entry.unlink();
-    }
-
-    for (auto& entry : buffers_) {
-      entry.release();
-    }
+    for (auto& facet : outputFacets_) if (facet.isLinked()) facet.unlink();
+    for (auto& bus : outputBusses_) bus.release();
   }
 
   /**
@@ -135,9 +128,7 @@ public:
    @returns `true` if the parameter is valid
    */
   bool setParameterValue(AUParameterAddress address, AUValue value) noexcept {
-    return isRendering()
-    ? setPendingParameterValue(address, value)
-    : setImmediateParameterValue(address, value, 0);
+    return isRendering() ? setPendingParameterValue(address, value) : setImmediateParameterValue(address, value, 0);
   }
 
   /**
@@ -148,13 +139,11 @@ public:
    @returns the value for the parameter
    */
   AUValue getParameterValue(AUParameterAddress address) noexcept {
-    return isRendering()
-    ? getPendingParameterValue(address)
-    : getImmediateParameterValue(address);
+    return isRendering() ? getPendingParameterValue(address) : getImmediateParameterValue(address);
   }
 
   /**
-   Process events and render a given number of frames. Events and rendering are interleaved if necessary so that
+   Process events and render a given number of frames. Events and rendering are interleaved when necessary so that
    event times align with samples.
 
    @param timestamp the timestamp of the first sample or the first event
@@ -168,39 +157,36 @@ public:
                                      AudioBufferList* output, const AURenderEvent* realtimeEventListHead,
                                      AURenderPullInputBlock pullInputBlock) noexcept {
     size_t outputBusIndex = size_t(outputBusNumber);
-    assert(outputBusIndex < buffers_.size());
+    assert(outputBusIndex < outputBusses_.size());
 
     // Get a buffer to use to read into if there is a `pullInputBlock`. We will also modify it in-place if necessary
     // use it for an output buffer if necessary.
-    auto& outputBusBuffer{buffers_[outputBusIndex]};
-    if (frameCount > outputBusBuffer.capacity()) [[unlikely]] {
+    auto& outputBus{outputBusses_[outputBusIndex]};
+    if (frameCount > outputBus.capacity()) [[unlikely]] {
       return kAudioUnitErr_TooManyFramesToProcess;
     }
 
     // Setup the rendering destination to properly use the internal buffer or the buffer attached to `output`.
-    facets_[outputBusIndex].assignBufferList(output, outputBusBuffer.mutableAudioBufferList());
-    facets_[outputBusIndex].setFrameCount(frameCount);
+    outputFacets_[outputBusIndex].assignBufferList(output, outputBus.mutableAudioBufferList());
+    outputFacets_[outputBusIndex].setFrameCount(frameCount);
 
     if (pullInputBlock) [[likely]] {
 
-      // Pull input samples from upstream. Use same output buffer to perform in-place rendering.
-      BufferFacet& input{inputFacet()};
-      input.assignBufferList(output, outputBusBuffer.mutableAudioBufferList());
-      input.setFrameCount(frameCount);
+      // Pull input samples from upstream. If the output buffer we are given has no storage assigned to it, then we
+      // will use our own and perform in-place rendering of the samples. This is detected and handled in the
+      // `assignBufferList` method.
+      inputFacet_.assignBufferList(output, outputBus.mutableAudioBufferList());
+      inputFacet_.setFrameCount(frameCount);
 
       AudioUnitRenderActionFlags actionFlags = 0;
-      auto status = input.pullInput(&actionFlags, timestamp, frameCount, outputBusNumber, pullInputBlock);
+      auto status = inputFacet_.pullInput(&actionFlags, timestamp, frameCount, outputBusNumber, pullInputBlock);
       if (status != noErr) [[unlikely]] {
         return status;
       }
     } else {
 
-      // Clear the output buffer before use when there is no input data. Important if we are in bypass mode.
-      UInt32 byteSize = frameCount * sizeof(AUValue);
-      for (UInt32 index = 0; index < output->mNumberBuffers; ++index) {
-        auto& buf{output->mBuffers[index]};
-        memset(buf.mData, 0, byteSize);
-      }
+      // Clear the output buffer before use when there is no input data.
+      outputFacets_[outputBusIndex].clear(frameCount);
     }
 
     // Apply any paramter changes posted by the UI
@@ -257,7 +243,7 @@ protected:
    @param bus the bus to whose buffers will be pointed to
    @returns BusBuffers instance
    */
-  BusBuffers busBuffers(size_t bus) noexcept { return facets_[bus].busBuffers(); }
+  BusBuffers busBuffers(size_t bus) noexcept { return outputFacets_[bus].busBuffers(); }
 
   /**
    Visit registered parameters and see if they have a change pending from the AUParameterTree.
@@ -321,8 +307,6 @@ private:
       derived_.doRenderingStateChanged(isRendering());
     }
   }
-
-  BufferFacet& inputFacet() noexcept { assert(!facets_.empty()); return facets_.back(); }
 
   void render(NSInteger outputBusNumber, AudioTimeStamp const* timestamp, AUAudioFrameCount frameCount,
               AURenderEvent const* events) noexcept {
@@ -395,22 +379,18 @@ private:
     // such as MIDI messages. We will generate in total `frameCount` + `processedFrameCount` samples, but maybe not in
     // one shot. As a result, we must adjust buffer pointers by the number of processed samples so far before we
     // let the kernel render into our buffers.
-    for (size_t busIndex = 0; busIndex < buffers_.size(); ++busIndex) {
-      auto& facet{facets_[busIndex]};
-      facet.setOffset(processedFrameCount);
-    }
+    for (auto& facet : outputFacets_) facet.setOffset(processedFrameCount);
 
-    auto& input{inputFacet()};
     if (isBypassed()) {
       // If we have input samples from an upstream node, either use the sample buffers directly or copy samples over
       // to the output buffer. Otherwise, we have already zero'd out the output buffer, so we are done.
-      if (input.isLinked()) {
-        input.copyInto(facets_[outputBusIndex], processedFrameCount, frameCount);
+      if (inputFacet_.isLinked()) {
+        inputFacet_.copyInto(outputFacets_[outputBusIndex], processedFrameCount, frameCount);
       }
       return;
     }
 
-    auto& output{facets_[outputBusIndex]};
+    auto& outputFacet{outputFacets_[outputBusIndex]};
 
     // If ramping one or more parameters, we must render one frame at a time. Since this is more expensive than the
     // non-ramp case, we only do it when necessary.
@@ -419,19 +399,20 @@ private:
       rampRemaining_ -= rampCount;
       frameCount -= rampCount;
       for (; rampCount > 0; --rampCount) {
-        derived_.doRendering(outputBusNumber, input.busBuffers(), output.busBuffers(), 1);
+        derived_.doRendering(outputBusNumber, inputFacet_.busBuffers( ), outputFacet.busBuffers(), 1);
       }
     }
 
     // Non-ramping case. NOTE: do not use else since we could end a ramp while still having frameCount > 0.
     if (frameCount > 0) {
-      derived_.doRendering(outputBusNumber, input.busBuffers(), output.busBuffers(), frameCount);
+      derived_.doRendering(outputBusNumber, inputFacet_.busBuffers(), outputFacet.busBuffers(), frameCount);
     }
   }
 
   KernelType& derived_;
-  std::vector<SampleBuffer> buffers_;
-  std::vector<BufferFacet> facets_;
+  std::vector<BusSampleBuffer> outputBusses_{};
+  std::vector<BusBufferFacet> outputFacets_{};
+  BusBufferFacet inputFacet_{};
   AUAudioFrameCount treeBasedRampDuration_{0};
   AUAudioFrameCount rampRemaining_{0};
 

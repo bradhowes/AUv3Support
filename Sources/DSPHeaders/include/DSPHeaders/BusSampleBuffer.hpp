@@ -13,11 +13,16 @@
 namespace DSPHeaders {
 
 /**
- Maintains a buffer of PCM samples which can be used to save samples from an upstream node. Internally uses an
- `AVAudioPCMBuffer` to deal with specifics involving the audio format.
+ Maintains a collection of PCM samples which can be used to store samples from an upstream node and to save rendered
+ samples. Internally uses an `AVAudioPCMBuffer` to deal with specifics involving the audio format. Note that this
+ represents N channel buffers, where the number of channels is set by the audio format's channel layout definition.
+ All channel buffers will hold the same number of frames / samples.
  */
 struct BusSampleBuffer {
 
+  /**
+   Initialize new instance that has no capacity.
+   */
   BusSampleBuffer() noexcept {}
 
   /**
@@ -45,9 +50,9 @@ struct BusSampleBuffer {
   }
   
   /**
-   Update the buffer to reflect that has or will hold frameCount frames. NOTE: this value must be <= max value given in
-   the `allocate` method.
-   
+   Update the buffer to reflect that has or will hold frameCount frames. NOTE: this value must be \<= the max value
+   given in the `allocate` method.
+
    @param frameCount the number of frames to expect to place in the buffer
    */
   void setFrameCount(AVAudioFrameCount frameCount) noexcept {
@@ -70,7 +75,7 @@ struct BusSampleBuffer {
   }
 
 private:
-  AUAudioFrameCount maxFramesToRender_;
+  AUAudioFrameCount maxFramesToRender_{0};
   AVAudioPCMBuffer* buffer_{nullptr};
   AudioBufferList* mutableAudioBufferList_{nullptr};
 };
