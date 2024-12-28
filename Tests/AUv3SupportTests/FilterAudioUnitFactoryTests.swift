@@ -34,7 +34,9 @@ fileprivate class Kernel: AudioRenderer {
 
   func bridge() -> DSPHeaders.TypeErasedKernel { DSPHeaders.TypeErasedKernel() }
 
-  var bypass: Bool = false
+  var bypass = false
+  func getBypass() -> Bool { return bypass }
+  func setBypass(_ value: Bool) { bypass = value }
 
   func getParameterValueObserverBlock() -> AUImplementorValueObserver { self.set }
   func getParameterValueProviderBlock() -> AUImplementorValueProvider { self.get }

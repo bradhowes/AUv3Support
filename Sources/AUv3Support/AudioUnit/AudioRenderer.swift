@@ -33,8 +33,7 @@ public protocol AudioRenderer: AUParameterHandler {
    */
   func bridge() -> DSPHeaders.TypeErasedKernel
 
-  /**
-   Provide a bypass attribute for the audio unit. When enabled, audio is passed through unchanged by the filter.
-   */
-  var bypass: Bool { get set }
+  func getBypass() -> Bool
+
+  func setBypass(_ bypass: Bool)
 }
