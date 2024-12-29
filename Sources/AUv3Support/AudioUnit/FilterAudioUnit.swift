@@ -49,7 +49,7 @@ public final class FilterAudioUnit: AUAudioUnit, @unchecked Sendable {
   private var shim: DSPHeaders.RenderBlockShim!
 
   /// Runtime parameter definitions for the audio unit
-  private var parameters: ParameterSource!
+  public private(set) var parameters: ParameterSource!
 
   /// The associated view controller for the audio unit that shows the controls
   public weak var viewConfigurationManager: AudioUnitViewConfigurationManager?

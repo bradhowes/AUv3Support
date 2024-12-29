@@ -116,7 +116,7 @@ let flags = [
   "-x", "objective-c++", // treat source files as Obj-C++ files
 ]
 
-let useUnsafeFlags: Bool = ProcessInfo.processInfo.environment["USE_UNSAFE_FLAGS"] != nil
+let useUnsafeFlags: Bool = false // ProcessInfo.processInfo.environment["USE_UNSAFE_FLAGS"] != nil
 let cxxSettings: [CXXSetting] = useUnsafeFlags ? [.unsafeFlags(flags, .when(configuration: .debug))] : []
 
 NSLog("--- compiling with UNSAFE C++ flags: %d", useUnsafeFlags)
@@ -134,7 +134,8 @@ let package = Package(
     .target(
       name: "DSPHeaders",
       exclude: ["README.md"],
-      cxxSettings: cxxSettings
+      cxxSettings: cxxSettings,
+      swiftSettings: [.define("APPLICATION_EXTENSION_API_ONLY"), .interoperabilityMode(.Cxx)]
     ),
     .target(
       name: "AUv3Support",
