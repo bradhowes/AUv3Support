@@ -17,6 +17,7 @@ public typealias AUv3View = UIView
 public typealias AUv3Control = UIControl
 public typealias AUv3ViewController = UIViewController
 public typealias AUv3HostingController = UIHostingController
+public typealias AUv3ViewControllerRepresentable = UIViewControllerRepresentable
 
 extension UIView: ParameterAddressHolder {
   public var parameterAddress: UInt64 {
@@ -53,24 +54,25 @@ public typealias AUv3View = NSView
 public typealias AUv3Control = NSControl
 public typealias AUv3ViewController = NSViewController
 public typealias AUv3HostingController = NSHostingController
+public typealias AUv3ViewControllerRepresentable = NSViewControllerRepresentable
 
 extension NSView {
 
-  func bringSubviewToFront(_ view: NSView) {
+  public func bringSubviewToFront(_ view: NSView) {
     // This function is a no-opp for macOS
   }
 }
 
-public extension NSView {
+extension NSView {
 
   /// Replicate UIKit API
-  func setNeedsDisplay() { needsDisplay = true }
+  public func setNeedsDisplay() { needsDisplay = true }
 
   /// Replicate UIKit API
-  func setNeedsLayout() { needsLayout = true }
+  public func setNeedsLayout() { needsLayout = true }
 
   /// Replicate the `backgroundColor` property found in `UIView`.
-  var backgroundColor: NSColor? {
+  public var backgroundColor: NSColor? {
     get {
       guard let colorRef = self.layer?.backgroundColor else { return nil }
       return NSColor(cgColor: colorRef)
@@ -92,9 +94,9 @@ extension NSControl: ParameterAddressHolder {
   }
 }
 
-public extension NSTextField {
+extension NSTextField {
   /// Replicate the `text` property found in `UILabel`.
-  var text: String? {
+  public var text: String? {
     get { self.stringValue }
     set { self.stringValue = newValue ?? "" }
   }
