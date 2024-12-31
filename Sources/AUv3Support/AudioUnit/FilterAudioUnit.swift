@@ -54,12 +54,6 @@ public final class FilterAudioUnit: AUAudioUnit, @unchecked Sendable {
   /// The associated view controller for the audio unit that shows the controls
   public weak var viewConfigurationManager: AudioUnitViewConfigurationManager?
 
-  /// The active preset in use. This is the backing value for the `currentPreset` property.
-  private var _currentPreset: AUAudioUnitPreset? {
-    willSet { willChangeValue(for: \.currentPreset) }
-    didSet { didChangeValue(for: \.currentPreset) }
-  }
-
   private var inputBus: AUAudioUnitBus
   private var outputBus: AUAudioUnitBus
   private lazy var _inputBusses: AUAudioUnitBusArray = .init(audioUnit: self, busType: .input, busses: [inputBus])
@@ -151,34 +145,16 @@ extension FilterAudioUnit {
   /// on AUAudioUnit functionality to change the `AUParameter` values in the `AUParameterTree` via the `fullState`
   /// property.
   @objc dynamic override public var currentPreset: AUAudioUnitPreset? {
-    get {
-      return _currentPreset
-    }
-    set {
-      guard _currentPreset != newValue else { return }
-
-      if let preset = newValue {
+    didSet {
+      if let preset = currentPreset {
         if preset.number >= 0 {
-          _currentPreset = preset
           parameters.useFactoryPreset(preset)
-          return
         }
         else if let state = try? presetState(for: preset) {
           fullState = state
           parameters.useUserPreset(from: state)
-          return
         }
       }
-      _currentPreset = nil
-    }
-  }
-
-  /**
-   Clear `currentPreset` if it holds a factory preset.
-   */
-  public func clearCurrentPresetIfFactoryPreset() {
-    if let preset = _currentPreset, preset.number >= 0 {
-      _currentPreset = nil
     }
   }
 
@@ -191,7 +167,7 @@ extension FilterAudioUnit {
       // our own format and rely on that instead of the binary blob that AUAudioUnit provides us.
       var value = super.fullState ?? [String: Any]()
       parameters.storeParameters(into: &value)
-      if let preset = _currentPreset {
+      if let preset = currentPreset {
 
         // Record into the state the active preset name and number. This will allow us to recover it later when given
         // a fullState dictionary.
@@ -202,12 +178,11 @@ extension FilterAudioUnit {
     }
     set {
       super.fullState = newValue
-
       if let state = newValue,
          let name = state[kAUPresetNameKey] as? String,
          let number = state[kAUPresetNumberKey] as? NSNumber {
-        if _currentPreset?.number != number.intValue {
-          _currentPreset = AUAudioUnitPreset(number: number.intValue, name: name)
+        if currentPreset?.number != number.intValue {
+          currentPreset = AUAudioUnitPreset(number: number.intValue, name: name)
         }
       } else {
         currentPreset = nil

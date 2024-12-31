@@ -26,6 +26,8 @@ public final class SimplePlayEngine: @unchecked Sendable {
     didSet { wireAudioPath() }
   }
 
+  public var isConnected: Bool { activeEffect != nil }
+
   public var file: AVAudioFile? {
     didSet { wireAudioPath() }
   }
@@ -106,7 +108,6 @@ extension SimplePlayEngine {
    */
   public func start() {
     stateChangeQueue.sync {
-      print("starting SimplePlayEngine")
       self.startPlaying()
     }
   }
@@ -116,7 +117,6 @@ extension SimplePlayEngine {
    */
   public func stop() {
     stateChangeQueue.sync {
-      print("stopping SimplePlayEngine")
       self.stopPlaying()
     }
   }
