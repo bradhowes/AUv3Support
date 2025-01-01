@@ -2,7 +2,7 @@ import AudioUnit
 import XCTest
 @testable import AUv3Support
 
-private class MockAudioUnit: AUAudioUnitPresetsFacade {
+private class MockAudioUnit: NSObject, AUAudioUnitPresetsFacade {
   let supportsUserPresets: Bool = true
 
   static let log = Shared.logger("SubSystem", "Category")
