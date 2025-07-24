@@ -289,7 +289,7 @@ extension FilterAudioUnit {
 extension FilterAudioUnit {
 
   override public func parametersForOverview(withCount: Int) -> [NSNumber] {
-    parameters.parameters[0..<withCount].map { NSNumber(value: $0.address) }
+    parameters.parameters[0..<max(1, min(withCount, parameters.parameters.count))].map { NSNumber(value: $0.address) }
   }
 
   override public func supportedViewConfigurations(_ available: [AUAudioUnitViewConfiguration]) -> IndexSet {
