@@ -323,7 +323,7 @@ private:
         return;
       }
 
-      auto framesThisSegment = AUAudioFrameCount(std::max(events->head.eventSampleTime - now, zero));
+      auto framesThisSegment = AUAudioFrameCount(events->head.eventSampleTime < now ? 0 : events->head.eventSampleTime - now);
       if (framesThisSegment > 0) [[likely]] {
         renderFrames(outputBusNumber, framesThisSegment, frameCount - framesRemaining);
         framesRemaining -= framesThisSegment;
