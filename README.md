@@ -5,6 +5,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-A31F34.svg)](https://opensource.org/licenses/MIT)
 
 # Overview
+> **NOTE**: this package being deprecated in favor of the more modern version at [auv3-support][auv3-support]. The new version
+supports SwiftUI instead of UIKit/AppKit as is found here.
 
 Swift package containing useful code for AUv3 app extensions. There are four products so far in this package:
 
@@ -224,3 +226,4 @@ on first-time launch.
 Not great, but not too cumbersome to use now. And it is nice to have abstracted out all of the common functionality my
 audio unit apps share.
 
+[auv3-support]: https://github.com/bradhowes/auv3-support
