@@ -24,6 +24,7 @@ Swift package containing useful code for AUv3 app extensions. There are four pro
 - [DSPHeaders](Sources/DSPHeaders) -- collection of C++17 headers for classes that are useful when creating AUv3
   kernels. These were written specifically for use in a audio unit render thread, so there should be no memory
   allocations done once a render thread is started.
+  **NOTE**: a newer version of this code is available in its [own repo][dsph].
   
 The [EventProcessor](Sources/DSPHeaders/include/DSPHeaders/EventProcessor.hpp) template in the DSPHeaders product serves
 as the basis for all AUv3 filter _kernels_. You only need to define your own `doRendering` method to perform the sample
@@ -227,3 +228,4 @@ Not great, but not too cumbersome to use now. And it is nice to have abstracted 
 audio unit apps share.
 
 [auv3-support]: https://github.com/bradhowes/auv3-support
+[dsph]: https://github.com/bradhowes/DSPHeaders
