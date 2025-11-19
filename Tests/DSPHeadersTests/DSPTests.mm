@@ -61,21 +61,33 @@ using namespace DSPHeaders;
 }
 
 - (void)testParabolicSineSpeed {
+  std::array<double, 360000> thetas;
+  for (long index = 0; index < thetas.size(); ++index) {
+    thetas[index] = 2.0 * M_PI * index / double(thetas.size()) - M_PI;
+  }
+
   [self measureBlock:^{
     double sum = 0.0;
-    for (int index = 0; index < 3600000.0; ++index) {
-      auto theta = 2.0 * M_PI * index / 3600000.0 - M_PI;
-      sum += DSP::parabolicSine(theta);
+    for (auto loop = 0; loop < 100; ++loop) {
+      for (long index = 0; index < thetas.size(); ++index) {
+        sum += DSP::parabolicSine(thetas[index]);
+      }
     }
   }];
 }
 
 - (void)testSinSpeed {
+  std::array<double, 360000> thetas;
+  for (long index = 0; index < thetas.size(); ++index) {
+    thetas[index] = 2.0 * M_PI * index / double(thetas.size()) - M_PI;
+  }
+
   [self measureBlock:^{
     double sum = 0.0;
-    for (int index = 0; index < 3600000.0; ++index) {
-      auto theta = 2.0 * M_PI * index / 3600000.0 - M_PI;
-      sum += std::sin(theta);
+    for (auto loop = 0; loop < 100; ++loop) {
+      for (int index = 0; index < thetas.size(); ++index) {
+        sum += std::sin(thetas[index]);
+      }
     }
   }];
 }

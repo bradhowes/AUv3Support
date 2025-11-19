@@ -33,32 +33,44 @@ using namespace DSPHeaders::Parameters;
 
 - (void)testRamping {
   auto param = Float(2);
-  param.setImmediate(1.0, 4);
+  AUAudioFrameCount rampDuration{4};
+  param.setImmediate(1.0, rampDuration);
   XCTAssertEqual(param.getImmediate(), 1.0);
   XCTAssertEqual(param.frameValue(), 0.25);
+  param.checkForValueChange(rampDuration);
   XCTAssertEqual(param.getImmediate(), 1.0);
-  XCTAssertEqual(param.frameValue(), 0.50);
+  XCTAssertEqual(param.frameValue(), 0.5);
+  param.checkForValueChange(rampDuration);
   XCTAssertEqual(param.frameValue(), 0.75);
+  param.checkForValueChange(rampDuration);
+  XCTAssertEqual(param.frameValue(), 1.0);
+  param.checkForValueChange(rampDuration);
   XCTAssertEqual(param.frameValue(), 1.0);
   XCTAssertEqual(param.getImmediate(), 1.0);
 }
 
 - (void)testReRamping {
   auto param = Float(3);
-  param.setImmediate(1.0, 4);
+  AUAudioFrameCount rampDuration{4};
+  param.setImmediate(1.0, rampDuration);
   XCTAssertEqual(param.frameValue(), 0.25);
+  param.checkForValueChange(rampDuration);
   XCTAssertEqual(param.frameValue(), 0.50);
   param.setImmediate(0.0, 4);
   XCTAssertEqual(param.frameValue(), 0.375);
+  param.checkForValueChange(rampDuration);
   XCTAssertEqual(param.frameValue(), 0.250);
+  param.checkForValueChange(rampDuration);
   XCTAssertEqual(param.frameValue(), 0.125);
+  param.checkForValueChange(rampDuration);
   XCTAssertEqual(param.frameValue(), 0.000);
   XCTAssertEqual(param.getImmediate(), 0.0);
 }
 
 - (void)testStopRamping {
   auto param = Float(4);
-  param.setImmediate(1.0, 4);
+  AUAudioFrameCount rampDuration{4};
+  param.setImmediate(1.0, rampDuration);
   XCTAssertEqual(param.getImmediate(), 1.0);
   XCTAssertEqual(param.frameValue(), 0.25);
   XCTAssertEqual(param.getImmediate(), 1.0);
@@ -67,25 +79,27 @@ using namespace DSPHeaders::Parameters;
   XCTAssertEqual(param.getImmediate(), 1.0);
 }
 
-- (void)testAdvanceControl {
-  auto param = Float(5);
-  param.setImmediate(1.0, 4);
-  XCTAssertEqual(param.frameValue(), 0.25);
-  XCTAssertEqual(param.frameValue(false), 0.25);
-  XCTAssertEqual(param.frameValue(), 0.50);
-  XCTAssertEqual(param.frameValue(false), 0.50);
-  XCTAssertEqual(param.frameValue(false), 0.50);
-  XCTAssertEqual(param.frameValue(true), 0.75);
-}
-
 - (void)testPending {
   auto param = Float(6);
+  AUAudioFrameCount rampDuration{4};
   param.setPending(124.0);
   XCTAssertEqualWithAccuracy(param.getPending(), 124.0, epsilon);
-  XCTAssertEqualWithAccuracy(param.getImmediate(), 0.0, epsilon);
-  param.checkForPendingChange(20);
   XCTAssertEqualWithAccuracy(param.getImmediate(), 124.0, epsilon);
-  XCTAssertEqualWithAccuracy(param.frameValue(), 124.0 / 20.0, epsilon);
+  XCTAssertFalse(param.isRamping());
+  param.checkForValueChange(rampDuration);
+  XCTAssertEqualWithAccuracy(param.getImmediate(), 124.0, epsilon);
+  XCTAssertEqualWithAccuracy(param.getPending(), 124.0, epsilon);
+  XCTAssertEqualWithAccuracy(param.frameValue(), 31.0, epsilon);
+  XCTAssertTrue(param.isRamping());
+  param.checkForValueChange(rampDuration);
+  XCTAssertEqualWithAccuracy(param.frameValue(), 62.0, epsilon);
+  XCTAssertTrue(param.isRamping());
+  param.checkForValueChange(rampDuration);
+  XCTAssertEqualWithAccuracy(param.frameValue(), 93, epsilon);
+  XCTAssertTrue(param.isRamping());
+  param.checkForValueChange(rampDuration);
+  XCTAssertEqualWithAccuracy(param.frameValue(), 124.0, epsilon);
+  XCTAssertFalse(param.isRamping());
 }
 
 @end

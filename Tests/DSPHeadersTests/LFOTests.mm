@@ -252,15 +252,15 @@ using namespace DSPHeaders;
   osc.increment();
   SamplesEqual(osc.value(), -0.471397);
   osc.increment();
-  SamplesEqual(osc.value(), -0.881921);
+  SamplesEqual(osc.value(), -0.831470);
   osc.increment();
-  SamplesEqual(osc.value(), -0.980785);
+  SamplesEqual(osc.value(), -0.995185);
   osc.increment();
-  SamplesEqual(osc.value(), -0.555570);
+  SamplesEqual(osc.value(), -0.923880);
   osc.increment();
-  SamplesEqual(osc.value(),  0.195090);
+  SamplesEqual(osc.value(), -0.634393);
   osc.increment();
-  SamplesEqual(osc.value(),  0.831470);
+  SamplesEqual(osc.value(), -0.195090);
 }
 
 

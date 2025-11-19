@@ -39,7 +39,9 @@ using namespace DSPHeaders;
 
   freq.setImmediate(2.0, 2);
   SamplesEqual(phi.value(), 0.375);
+  freq.checkForValueChange(2);
   SamplesEqual(phi.value(), 0.5);
+  freq.checkForValueChange(2);
   SamplesEqual(phi.value(), 0.5);
 }
 

@@ -13,7 +13,7 @@ struct MockEffect : public EventProcessor<MockEffect>
 {
   using super = EventProcessor<MockEffect>;
 
-  MockEffect() : super() {
+  MockEffect() : super("mock") {
     registerParameter(param_);
   }
 
@@ -35,12 +35,12 @@ struct MockEffect : public EventProcessor<MockEffect>
     return address == 1 ? param_.getPending() : 0.0;
   }
 
-  void doRendering(NSInteger outputBusNumber, BusBuffers, BusBuffers, AUAudioFrameCount frameCount) {
+  void doRendering(BusBuffers, BusBuffers, AUAudioFrameCount frameCount) {
     paramValues_.push_back(param_.frameValue());
     frameCounts_.push_back(frameCount);
   }
 
-  void checkForTreeBasedParameterChanges() { super::checkForTreeBasedParameterChanges(); }
+  bool checkForTreeBasedParameterChanges() { return super::checkForParameterValueChanges(); }
 
   Parameters::Float param_{1, 0.0};
   std::vector<AUAudioFrameCount> paramValues_{};
@@ -222,12 +222,12 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
   XCTAssertEqual(status, 0);
   XCTAssertEqual(self.effect->param_.getImmediate(), 10.0);
   XCTAssertEqual(self.effect->param_.getPending(), 10.0);
-  XCTAssertEqual(self.effect->frameCounts_.size(), 5);
-  XCTAssertEqual(self.effect->frameCounts_[0], 1);
-  XCTAssertEqual(self.effect->frameCounts_[1], 1);
-  XCTAssertEqual(self.effect->frameCounts_[2], 1);
-  XCTAssertEqual(self.effect->frameCounts_[3], 1);
-  XCTAssertEqual(self.effect->frameCounts_[4], 508);
+  XCTAssertEqual(self.effect->frameCounts_.size(), 1);
+  XCTAssertEqual(self.effect->frameCounts_[0], 512);
+//  XCTAssertEqual(self.effect->frameCounts_[1], 1);
+//  XCTAssertEqual(self.effect->frameCounts_[2], 1);
+//  XCTAssertEqual(self.effect->frameCounts_[3], 1);
+//  XCTAssertEqual(self.effect->frameCounts_[4], 508);
 }
 
 - (void)testUIRampingDuration {
@@ -240,35 +240,29 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
   outputData->mBuffers[0].mData = nil;
   outputData->mBuffers[1].mData = nil;
 
-  // Set a parameter that ramps for 4 samples
+  AUAudioFrameCount rampDuration = 32;
+  self.effect->deallocateRenderResources();
+  self.effect->setRenderingFormat(1, format, maxFrames, rampDuration);
+
+  // Set a parameter that ramps for 32 render cycle
   self.effect->param_.setPending(882.0);
   XCTAssertEqual(self.effect->param_.getPending(), 882.0);
-  XCTAssertEqual(self.effect->param_.getImmediate(), 0.0);
+  XCTAssertEqual(self.effect->param_.getImmediate(), 882.0);
+  XCTAssertEqual(self.effect->param_.frameValue(), 0.0);
   XCTAssertTrue(self.effect->param_.canRamp());
 
   XCTAssertEqual(self.effect->rampRemaining(), 0);
-  XCTAssertEqual(self.effect->treeBasedRampDuration(), 882);
+  XCTAssertEqual(self.effect->treeBasedRampDuration(), rampDuration);
 
-  // Do rendering for 512 samples. Expectation is all are 1-sample render calls since we ramp for 882.
   auto status = self.effect->processAndRender(&timestamp, frames, 0, outputData, nullptr, mockPullInput);
   XCTAssertEqual(status, 0);
   XCTAssertTrue(self.effect->isRamping());
-  XCTAssertEqual(self.effect->frameCounts_.size(), 512);
-  XCTAssertEqual(self.effect->frameCounts_[0], 1);
-  XCTAssertEqual(self.effect->rampRemaining(), 882 - 512);
-  XCTAssertEqualWithAccuracy(self.effect->param_.frameValue(false), 512.0, 1.0e-6);
+  XCTAssertEqual(self.effect->frameCounts_.size(), 1);
+  XCTAssertEqual(self.effect->frameCounts_[0], 512);
+  XCTAssertEqual(self.effect->frameCounts_[self.effect->frameCounts_.size() - 1], 512);
+  XCTAssertEqual(self.effect->rampRemaining(), 31);
+  XCTAssertEqualWithAccuracy(self.effect->param_.frameValue(), 27.562500, 1.0e-6);
   self.effect->frameCounts_.clear();
-
-  // Do rendering for 512 samples. Expectation is 370 are 1-sample render calls (882 - 512) and 1 is 142.
-  status = self.effect->processAndRender(&timestamp, frames, 0, outputData, nullptr, mockPullInput);
-  XCTAssertEqual(status, 0);
-  XCTAssertFalse(self.effect->isRamping());
-  XCTAssertEqual(self.effect->frameCounts_.size(), 371);
-  XCTAssertEqual(self.effect->frameCounts_[0], 1);
-  XCTAssertEqual(self.effect->frameCounts_[369], 1);
-  XCTAssertEqual(self.effect->frameCounts_[370], 142);
-  XCTAssertFalse(self.effect->isRamping());
-  XCTAssertEqualWithAccuracy(self.effect->param_.frameValue(false), 882.0, 1.0e-6);
 }
 
 - (void)testRampingDurationClearedOnRenderStateChange {
@@ -294,9 +288,8 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
   // Do 2 frames. Should be split into 2 1-frame render calls.
   auto status = self.effect->processAndRender(&timestamp, 2, 0, outputData, eventList, mockPullInput);
   XCTAssertEqual(status, 0);
-  XCTAssertEqual(self.effect->frameCounts_.size(), 2);
-  XCTAssertEqual(self.effect->frameCounts_[0], 1);
-  XCTAssertEqual(self.effect->frameCounts_[1], 1);
+  XCTAssertEqual(self.effect->frameCounts_.size(), 1);
+  XCTAssertEqual(self.effect->frameCounts_[0], 2);
 
   // Stop / start rendering
   self.effect->deallocateRenderResources();
@@ -305,16 +298,15 @@ AURenderPullInputBlock mockPullInput = ^(AudioUnitRenderActionFlags* actionFlags
   // Do 10 frames. Should be done as 1 10-frame render call.
   status = self.effect->processAndRender(&timestamp, 10, 0, outputData, nullptr, mockPullInput);
   XCTAssertEqual(status, 0);
-  XCTAssertEqual(self.effect->frameCounts_.size(), 3);
-  XCTAssertEqual(self.effect->frameCounts_[0], 1);
-  XCTAssertEqual(self.effect->frameCounts_[1], 1);
-  XCTAssertEqual(self.effect->frameCounts_[2], 10);
+  XCTAssertEqual(self.effect->frameCounts_.size(), 2);
+  XCTAssertEqual(self.effect->frameCounts_[0], 2);
+  XCTAssertEqual(self.effect->frameCounts_[1], 10);
 }
 
 - (void)testDetectParameterChange {
   self.effect->param_.setPending(123.5);
   XCTAssertEqualWithAccuracy(self.effect->param_.getPending(), 123.5, epsilon);
-  XCTAssertEqual(self.effect->param_.getImmediate(), 0.0);
+  XCTAssertEqual(self.effect->param_.getImmediate(), 123.5);
   XCTAssertFalse(self.effect->isRamping());
   self.effect->checkForTreeBasedParameterChanges();
   XCTAssertTrue(self.effect->isRamping());
@@ -332,11 +324,11 @@ struct MockEffectWithRenderingStateChanged : public EventProcessor<MockEffectWit
 {
   using super = EventProcessor<MockEffectWithRenderingStateChanged>;
 
-  MockEffectWithRenderingStateChanged() : super() { registerParameters({param1_, param2_}); }
-
-  void doRendering(NSInteger outputBusNumber, BusBuffers, BusBuffers, AUAudioFrameCount frameCount) {}
+  MockEffectWithRenderingStateChanged() : super("mock") { registerParameters({param1_, param2_}); }
+  bool isRendering() const { return super::isRendering(); }
+  void doRendering(BusBuffers, BusBuffers, AUAudioFrameCount frameCount) {}
   void doRenderingStateChanged(bool rendering) { ++renderingStateChanges_; }
-  void checkForTreeBasedParameterChanges() { super::checkForTreeBasedParameterChanges(); }
+  bool checkForTreeBasedParameterChanges() { return super::checkForParameterValueChanges(); }
 
   Parameters::Float param1_{0, 0.0};
   Parameters::Float param2_{1, 0.0};
@@ -362,14 +354,22 @@ ValidatedKernel<MockEffectWithRenderingStateChanged> _mockEffectWithRenderingSta
   AUAudioFrameCount maxFrames = 512;
   effect->setRenderingFormat(1, format, maxFrames);
 
+  XCTAssertTrue(effect->isRendering());
+  XCTAssertEqual(effect->treeBasedRampDuration(), 16);
+
   effect->setParameterValue(0, 123.45);
   effect->setParameterValue(1, 987);
+
+  XCTAssertTrue(effect->checkForTreeBasedParameterChanges());
+  XCTAssertTrue(effect->isRamping());
+  XCTAssertEqualWithAccuracy(effect->param1_.frameValue(), 7.715625, 0.00001);
+  XCTAssertEqualWithAccuracy(effect->param2_.frameValue(), 61.687500, 0.00001);
+
   effect->checkForTreeBasedParameterChanges();
   XCTAssertTrue(effect->isRamping());
-  XCTAssertEqualWithAccuracy(effect->param1_.frameValue(), 0.139967, 0.00001);
-  XCTAssertEqualWithAccuracy(effect->param1_.frameValue(), 0.279933, 0.00001);
-  XCTAssertEqualWithAccuracy(effect->param2_.frameValue(), 1.119028, 0.00001);
-  XCTAssertEqualWithAccuracy(effect->param2_.frameValue(), 2.238075, 0.00001);
+  XCTAssertEqualWithAccuracy(effect->param1_.frameValue(), 15.431250, 0.00001);
+  XCTAssertEqualWithAccuracy(effect->param2_.frameValue(), 123.375000, 0.00001);
+
   effect->deallocateRenderResources();
   XCTAssertFalse(effect->isRamping());
   XCTAssertEqualWithAccuracy(effect->param1_.frameValue(), 123.45, 0.00001);
@@ -381,11 +381,11 @@ struct MockEffectWithMIDI : public EventProcessor<MockEffectWithMIDI>
 {
   using super = EventProcessor<MockEffectWithMIDI>;
 
-  MockEffectWithMIDI() : super() { registerParameter(param_); }
+  MockEffectWithMIDI() : super("mock") { registerParameter(param_); }
 
   void doMIDIEvent(const AUMIDIEvent&) { midiEvents_ += 1; }
 
-  void doRendering(NSInteger outputBusNumber, BusBuffers, BusBuffers, AUAudioFrameCount frameCount) {}
+  void doRendering(BusBuffers, BusBuffers, AUAudioFrameCount frameCount) {}
 
   Parameters::Float param_{0};
   int midiEvents_{0};

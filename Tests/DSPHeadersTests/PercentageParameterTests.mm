@@ -41,15 +41,23 @@ using namespace DSPHeaders::Parameters;
 
   param.setPending(25.0);
   XCTAssertEqual(param.getPending(), 25.0);
-  XCTAssertEqual(param.getImmediate(), 50.0);
-  XCTAssertEqual(param.frameValue(), 0.5);
+  XCTAssertEqual(param.getImmediate(), 25.0);
+  param.checkForValueChange(2);
+  XCTAssertEqual(param.frameValue(), 0.375);
 
-  XCTAssertTrue(param.checkForPendingChange(4));
-  XCTAssertEqual(param.frameValue(), 0.437500);
-  XCTAssertEqual(param.frameValue(), 0.375000);
+  XCTAssertFalse(param.checkForValueChange(2));
+  XCTAssertEqual(param.frameValue(), 0.25);
+  XCTAssertFalse(param.checkForValueChange(2));
+  XCTAssertEqual(param.frameValue(), 0.25);
 
   param.setImmediate(16, 0);
   XCTAssertEqualWithAccuracy(param.frameValue(), 0.16, epsilon);
+
+  param.setImmediate(19, 1);
+  XCTAssertEqualWithAccuracy(param.frameValue(), 0.19, epsilon);
+
+  param.setImmediate(20, 2);
+  XCTAssertEqualWithAccuracy(param.frameValue(), 0.195, epsilon);
 }
 
 @end
