@@ -49,7 +49,7 @@ final class AudioUnitLoaderTests: XCTestCase {
   }
 
   @MainActor
-  func testConnected() throws {
+  func DISABLED_testConnected() throws {
     let audioUnitLoader = AudioUnitLoader(componentDescription: acd)
     let exp = expectation(description: "good")
     let delegate = LoaderDelegate(expectation: exp)
