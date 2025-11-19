@@ -68,6 +68,7 @@ public final class AudioUnitLoader: @unchecked Sendable {
   private var hasUpdates = false
 
   public let lastState = UserDefaults.standard.dictionary(forKey: lastStateKey)
+  private let log = Shared.logger("AudioUnitLoader")
 
   /**
    Create a new instance that will hopefully create a new AUAudioUnit and a view controller for its control view.
@@ -77,6 +78,7 @@ public final class AudioUnitLoader: @unchecked Sendable {
    */
   public init(componentDescription: AudioComponentDescription,
               delayBeforeNextLocateAttempt: Double = 0.2, maxLocateAttempts: Int = 50) {
+    os_log(.info, log: log, "init - %{public}s", componentDescription.description)
     self.delayBeforeNextLocateAttempt = delayBeforeNextLocateAttempt
     self.remainingLocateAttempts = maxLocateAttempts
     self.componentDescription = componentDescription
@@ -97,6 +99,9 @@ public final class AudioUnitLoader: @unchecked Sendable {
   }
 
   private func registrationsChanged() {
+    if !self.hasUpdates {
+      os_log(.info, log: log, "registrationsChanged")
+    }
     self.hasUpdates = true
   }
 
@@ -106,12 +111,14 @@ public final class AudioUnitLoader: @unchecked Sendable {
    updates and try again.
    */
   private func locate() {
+    os_log(.info, log: log, "locate")
     let components = AVAudioUnitComponentManager.shared().components(matching: searchCriteria)
 
     for (_, each) in components.enumerated() {
       if each.audioComponentDescription.componentManufacturer == self.componentDescription.componentManufacturer,
          each.audioComponentDescription.componentType == self.componentDescription.componentType,
          each.audioComponentDescription.componentSubType == self.componentDescription.componentSubType {
+        os_log(.info, log: log, "found match - %{public}s", each.audioComponentDescription.description)
         DispatchQueue.global(qos: .background).async {
           self.createAudioUnit(each.audioComponentDescription)
         }
@@ -125,10 +132,12 @@ public final class AudioUnitLoader: @unchecked Sendable {
   private func scheduleCheck() {
     remainingLocateAttempts -= 1
     if remainingLocateAttempts <= 0 {
+      os_log(.info, log: log, "scheduleCheck - no more attempts")
       creationError = .componentNotFound
       return
     }
 
+    os_log(.info, log: log, "scheduleCheck - scheduling new check")
     Timer.scheduledTimer(withTimeInterval: delayBeforeNextLocateAttempt, repeats: false) { _ in
       DispatchQueue.global(qos: .background).async {
         self.retryLocate();
@@ -137,6 +146,7 @@ public final class AudioUnitLoader: @unchecked Sendable {
   }
 
   private func retryLocate() {
+    os_log(.info, log: log, "retryLocate - %{public}s", self.hasUpdates ? "true" : "false")
     if self.hasUpdates {
       self.hasUpdates = false
       self.locate()
@@ -150,6 +160,7 @@ public final class AudioUnitLoader: @unchecked Sendable {
    */
   private func createAudioUnit(_ componentDescription: AudioComponentDescription) {
     precondition(avAudioUnit == nil)
+    os_log(.info, log: log, "createAudioUnit - %{public}s", componentDescription.description)
 
 #if os(macOS)
     let options: AudioComponentInstantiationOptions = .loadInProcess
@@ -181,6 +192,7 @@ public final class AudioUnitLoader: @unchecked Sendable {
    - parameter avAudioUnit: the AVAudioUnit that was instantiated
    */
   private func createViewController(_ avAudioUnit: AVAudioUnit) {
+    os_log(.info, log: log, "createViewController")
     avAudioUnit.auAudioUnit.requestViewController { [weak self] controller in
       guard let self = self else { return }
       guard let controller = controller else {
@@ -199,6 +211,7 @@ public final class AudioUnitLoader: @unchecked Sendable {
    - parameter viewController: the view controller that was created
    */
   private func wireAudioUnit(_ avAudioUnit: AVAudioUnit, _ viewController: AUv3ViewController) {
+    os_log(.info, log: log, "wireAudioUnit")
     self.avAudioUnit = avAudioUnit
     self.viewController = viewController
     notifyDelegate()
@@ -206,8 +219,10 @@ public final class AudioUnitLoader: @unchecked Sendable {
 
   private func notifyDelegate() {
     if let creationError = creationError {
+      os_log(.info, log: log, "notifyDelegate - failed: %{public}s", creationError.description)
       DispatchQueue.main.async { self.delegate?.failed(error: creationError) }
     } else if let avAudioUnit = avAudioUnit, let viewController = viewController {
+      os_log(.info, log: log, "notifyDelegate - connected")
       DispatchQueue.main.async { self.delegate?.connected(audioUnit: avAudioUnit, viewController: viewController) }
     }
   }
