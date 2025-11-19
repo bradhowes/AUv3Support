@@ -1,4 +1,4 @@
-// Copyright © 2022-2024 Brad Howes. All rights reserved.
+// Copyright © 2022-2025 Brad Howes. All rights reserved.
 
 #pragma once
 
@@ -35,7 +35,12 @@ public:
 
    Note: this should only be invoked when the render thread is not running.
    */
-  void stopRamping() noexcept { rampRemaining_ = 0; }
+  void stopRamping() noexcept {
+    if (rampRemaining_ > 0) {
+      rampRemaining_ = 0;
+      value_ = pendingValue_.load(std::memory_order_relaxed);
+    }
+  }
 
   /// @returns true if ramping is in effect
   bool isRamping() const noexcept { return rampRemaining_ > 0; }
@@ -48,69 +53,66 @@ public:
    */
   void setPending(AUValue value) noexcept {
     pendingValue_.store(transformIn_(value), std::memory_order_relaxed);
+    // Stop any active ramping to allow a new ramp to begin.
+    rampRemaining_ = 0;
   }
 
   /**
    Obtain the last value set via `setPending`.
 
-   @returns last unsafe value set
+   @returns last pending value set
    */
   AUValue getPending() const noexcept { return transformOut_(pendingValue_.load(std::memory_order_relaxed)); }
 
   /**
    Set a new value that comes from the render thread via `AURenderEventParameter` or `AURenderEventParameterRamp`.
+   Since we are in the render thread, we can safely set the ramping now.
 
    @param value the new value to use
    @param duration the number of frames to transition over
    */
   void setImmediate(AUValue value, AUAudioFrameCount duration) noexcept {
     value = transformIn_(value);
-    startRamp(value, duration);
     pendingValue_.store(value, std::memory_order_relaxed);
+    startRamp(value, duration);
   }
 
   /**
-   Obtain the current parameter value. Note that if ramping is in effect, this returns the final value at the end of
-   ramping. One must use `frameValue` to obtain the ramped value.
+   Obtain the last value set via `setImmediate`. Note that this is the same as `getPending`.
 
-   @return the current parameter value
+   @return the last pending value set
    */
-  AUValue getImmediate() const noexcept { return transformOut_(value_); }
+  AUValue getImmediate() const noexcept { return transformOut_(pendingValue_.load(std::memory_order_relaxed)); }
 
   /**
-   Check if there is a new value to ramp to from the AUParameterTree.
+   Check if there is a new value to ramp to that was set via `setPending`.
 
    @param duration the number of frames to transition over
    */
-  bool checkForPendingChange(AUAudioFrameCount duration) noexcept {
+  bool checkForValueChange(AUAudioFrameCount duration) noexcept {
     auto pending = pendingValue_.load(std::memory_order_relaxed);
+
+    // Nothing changed.
     if (pending == value_) [[likely]] {
       return false;
     }
+
+    // Ramping already in-progress
+    if (rampRemaining_ > 0) [[unlikely]] {
+      value_ = --rampRemaining_ > 0 ? (value_ + rampDelta_) : pending;
+      return false;
+    }
+
     startRamp(pending, duration);
-    return canRamp_;
+    return rampRemaining_ > 0;
   }
 
   /**
-   Fetch the current value, incrementing the internal value if ramping is in effect. NOTE: unlike `get` this is not an
-   idempotent operation if ramping is in effect. Thus, during rendering, one must cache this value if multiple channels
-   will be processed for the same frame or make sure to call with `false` value to keep from advancing to the next
-   value.
+   Fetch the current -- possibly ramping -- value.
 
-   Should only be called from the rendering thread.
-
-   @param advance if true (default), update the underlying value when ramping; otherwise, keep as-is.
    @return the current parameter value
    */
-  AUValue frameValue(bool advance = true) noexcept {
-    auto remaining = rampRemaining_ - AUAudioFrameCount((advance && rampRemaining_) ? 1 : 0);
-    auto value = remaining * rampDelta_ + value_;
-    rampRemaining_ = remaining;
-    return value;
-  }
-
-  /// @return the parameter value after any ramping that might be in effect (render thread)
-  AUValue finalValue() const noexcept { return value_; }
+  AUValue frameValue() const noexcept { return value_; }
 
 protected:
 
@@ -133,11 +135,14 @@ protected:
 private:
 
   void startRamp(AUValue pendingValue, AUAudioFrameCount duration) noexcept {
-    if (canRamp_ && duration) {
-      rampDelta_ = (frameValue(false) - pendingValue) / AUValue(duration);
+    if (canRamp_ && duration > 1) {
+      rampDelta_ = (pendingValue - value_) / AUValue(duration);
+    } else {
+      duration = 1;
+      rampDelta_ = pendingValue - value_;
     }
-    rampRemaining_ = duration;
-    value_ = pendingValue;
+    rampRemaining_ = duration - 1;
+    value_ += rampDelta_;
   }
 
   /// The address of the parameter.

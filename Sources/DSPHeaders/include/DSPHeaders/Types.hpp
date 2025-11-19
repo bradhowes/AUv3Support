@@ -1,9 +1,6 @@
-//
-//  Types.hpp.cpp
-//  AUv3Support
-//
-//  Created by Brad Howes on 12/1/24.
-//
+// Copyright © 2024-2025 Brad Howes. All rights reserved.
+
+#import <type_traits>
 
 #import "DSPHeaders/Concepts.hpp"
 

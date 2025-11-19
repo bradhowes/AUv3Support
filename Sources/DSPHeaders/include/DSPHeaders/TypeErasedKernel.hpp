@@ -1,3 +1,5 @@
+// Copyright © 2024-2025 Brad Howes. All rights reserved.
+
 #pragma once
 
 #import <AudioToolbox/AudioToolbox.h>

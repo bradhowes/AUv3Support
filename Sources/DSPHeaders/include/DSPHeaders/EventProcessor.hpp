@@ -1,4 +1,4 @@
-// Copyright © 2021-2024 Brad Howes. All rights reserved.
+// Copyright © 2021-2025 Brad Howes. All rights reserved.
 
 #pragma once
 
@@ -33,7 +33,8 @@ namespace DSPHeaders {
  the `doRendering` method.
 
  - doRendering -- perform rendering of samples
- - doSetImmediateParameterValue [optional] -- set a parameter value from within the render loop
+ - doSetImmediateParameterValue [optional] -- set a parameter value from within the render loop. The default action
+ is to invoke the parameter's setImmediate method.
  - doSetPendingParameterValue [optional] -- set a paramete value from outside render loop (AUParameterTree)
  - doGetImmediateParameterValue [optional] -- read parameter value set by render loop
  - doGetPendingParameterValue [optional] -- read parameter value set outside render loop (AUParameterTree)
@@ -48,7 +49,8 @@ public:
   /**
    Construct new instance.
    */
-  EventProcessor() noexcept : derived_{static_cast<KernelType&>(*this)} {}
+  EventProcessor(std::string name) noexcept
+  : log_{os_log_create(name.c_str(), "Kernel")}, derived_{static_cast<KernelType&>(*this)} {}
 
   /**
    Set the bypass mode.
@@ -58,16 +60,16 @@ public:
 
    @param bypass if true disable filter processing and just copy samples from input to output
    */
-  void setBypass(bool bypass) noexcept { bypassed_.store(bypass, std::memory_order_relaxed); }
+  inline void setBypass(bool bypass) noexcept { bypassed_.store(bypass, std::memory_order_relaxed); }
 
   /// @returns true if effect is bypassed
-  bool isBypassed() const noexcept { return bypassed_.load(std::memory_order_relaxed); }
+  inline bool isBypassed() const noexcept { return bypassed_.load(std::memory_order_relaxed); }
 
   /// @returns true if actively rendering samples
-  bool isRendering() const noexcept { return rendering_.load(std::memory_order_relaxed); }
+  inline bool isRendering() const noexcept { return rendering_.load(std::memory_order_relaxed); }
 
   /// @returns true if actively ramping one or more parameters
-  bool isRamping() const noexcept { return rampRemaining_ > 0; }
+  inline bool isRamping() const noexcept { return rampRemaining_ > 0; }
 
   /**
    Update kernel and buffers to support the given format.
@@ -75,10 +77,12 @@ public:
    @param busCount the number of busses being used in the audio processing flow
    @param format the sample format to expect
    @param maxFramesToRender the maximum number of frames to expect on input
+   @param treeBasedRampDuration the number of frames to ramp a parameter value change
    */
-  void setRenderingFormat(NSInteger busCount, AVAudioFormat* format, AUAudioFrameCount maxFramesToRender) noexcept {
+  void setRenderingFormat(NSInteger busCount, AVAudioFormat* _Nonnull format,
+                          AUAudioFrameCount maxFramesToRender, AUAudioFrameCount treeBasedRampDuration = 16) noexcept {
     sampleRate_ = format.sampleRate;
-    treeBasedRampDuration_ = AUAudioFrameCount(floor(0.02 * sampleRate_));
+    treeBasedRampDuration_ = treeBasedRampDuration;
 
     auto channelCount{format.channelCount};
 
@@ -109,7 +113,7 @@ public:
   }
 
   /// @returns current sample rate that is in effect
-  double sampleRate() const noexcept { return sampleRate_; }
+  inline double sampleRate() const noexcept { return sampleRate_; }
 
   /**
    Rendering has stopped. Free up any resources it used.
@@ -128,7 +132,7 @@ public:
    @param value the new value for the parameter
    @returns `true` if the parameter is valid
    */
-  bool setParameterValue(AUParameterAddress address, AUValue value) noexcept {
+  inline bool setParameterValue(AUParameterAddress address, AUValue value) noexcept {
     return isRendering() ? setPendingParameterValue(address, value) : setImmediateParameterValue(address, value, 0);
   }
 
@@ -139,7 +143,7 @@ public:
    @param address the address of the parameter
    @returns the value for the parameter
    */
-  AUValue getParameterValue(AUParameterAddress address) noexcept {
+  inline AUValue getParameterValue(AUParameterAddress address) noexcept {
     return isRendering() ? getPendingParameterValue(address) : getImmediateParameterValue(address);
   }
 
@@ -154,9 +158,12 @@ public:
    @param realtimeEventListHead pointer to the first AURenderEvent (may be null)
    @param pullInputBlock the closure to call to obtain upstream samples
    */
-  AUAudioUnitStatus processAndRender(const AudioTimeStamp* timestamp, UInt32 frameCount, NSInteger outputBusNumber,
-                                     AudioBufferList* output, const AURenderEvent* realtimeEventListHead,
-                                     AURenderPullInputBlock pullInputBlock) noexcept {
+  AUAudioUnitStatus processAndRender(const AudioTimeStamp* _Nonnull timestamp,
+                                     UInt32 frameCount,
+                                     NSInteger outputBusNumber,
+                                     AudioBufferList* _Nonnull output,
+                                     const AURenderEvent* _Nullable realtimeEventListHead,
+                                     AURenderPullInputBlock _Nullable pullInputBlock) noexcept {
     size_t outputBusIndex = size_t(outputBusNumber);
     assert(outputBusIndex < outputBusses_.size());
 
@@ -191,7 +198,7 @@ public:
     }
 
     // Apply any paramter changes posted by the UI
-    checkForTreeBasedParameterChanges();
+    checkForParameterValueChanges();
     render(outputBusNumber, timestamp, frameCount, realtimeEventListHead);
 
     return noErr;
@@ -211,7 +218,7 @@ protected:
    @param rendering if true the host is "transport" is moving and we are expected to render samples.
    */
   void setRendering(bool rendering) noexcept {
-    if (rendering != rendering_) {
+    if (rendering != rendering_) [[likely]] {
       rendering_.store(rendering, std::memory_order_relaxed);
       renderingStateChanged();
     }
@@ -248,86 +255,84 @@ protected:
 
   /**
    Visit registered parameters and see if they have a change pending from the AUParameterTree.
+
+   @returns true if there is was a new change
    */
-  void checkForTreeBasedParameterChanges() noexcept {
+  bool checkForParameterValueChanges() noexcept {
     auto changed = false;
     for (auto param : parameters_) {
-      changed |= param.second.get().checkForPendingChange(treeBasedRampDuration_);
+      changed |= param.second.get().checkForValueChange(treeBasedRampDuration_);
     }
 
-    if (changed && treeBasedRampDuration_ > rampRemaining_) {
-      rampRemaining_ = treeBasedRampDuration_;
+    if (changed) {
+      rampRemaining_ = std::max(treeBasedRampDuration_ - 1, rampRemaining_);
+    } else if (rampRemaining_ > 0) {
+      rampRemaining_ -= 1;
     }
+
+    return changed;
   }
+
+  os_log_t _Nonnull log_;
 
 private:
 
   bool setPendingParameterValue(AUParameterAddress address, AUValue value) noexcept {
-    if constexpr (HasSetPendingParameterValue<KernelType>) {
-      return derived_.doSetPendingParameterValue(address, value);
-    } else {
-      auto pos = parameters_.find(address);
-      return pos != parameters_.end() ? pos->second.get().setPending(value), true : false;
-    }
+    os_log_info(log_, "setPendingParameterValue - %llu %f", address, value);
+    if constexpr (HasSetPendingParameterValue<KernelType>) return derived_.doSetPendingParameterValue(address, value);
+    auto pos = parameters_.find(address);
+    return pos != parameters_.end() ? pos->second.get().setPending(value), true : false;
   }
 
   bool setImmediateParameterValue(AUParameterAddress address, AUValue value, AUAudioFrameCount duration) noexcept {
-    if constexpr (HasSetImmediateParameterValue<KernelType>) {
+    os_log_info(log_, "setImmediateParameterValue - %llu %f", address, value);
+    if constexpr (HasSetImmediateParameterValue<KernelType>)
       return derived_.doSetImmediateParameterValue(address, value, duration);
-    } else {
-      auto pos = parameters_.find(address);
-      return pos != parameters_.end() ? pos->second.get().setImmediate(value, duration), true : false;
-    }
+    auto pos = parameters_.find(address);
+    return pos != parameters_.end() ? pos->second.get().setImmediate(value, duration), true : false;
   }
 
   AUValue getPendingParameterValue(AUParameterAddress address) const noexcept {
-    if constexpr (HasGetPendingParameterValue<KernelType>) {
-      return derived_.doGetPendingParameterValue(address);
-    } else {
-      auto pos = parameters_.find(address);
-      return pos != parameters_.end() ? pos->second.get().getPending() : 0.0;
-    }
+    if constexpr (HasGetPendingParameterValue<KernelType>) return derived_.doGetPendingParameterValue(address);
+    auto pos = parameters_.find(address);
+    return pos != parameters_.end() ? pos->second.get().getPending() : 0.0;
   }
 
   AUValue getImmediateParameterValue(AUParameterAddress address) const noexcept {
-    if constexpr (HasGetImmediateParameterValue<KernelType>) {
-      return derived_.doGetImmediateParameterValue(address);
-    } else {
-      auto pos = parameters_.find(address);
-      return pos != parameters_.end() ? pos->second.get().getPending() : 0.0;
-    }
+    if constexpr (HasGetImmediateParameterValue<KernelType>) return derived_.doGetImmediateParameterValue(address);
+    auto pos = parameters_.find(address);
+    return pos != parameters_.end() ? pos->second.get().getImmediate() : 0.0;
   }
 
   void renderingStateChanged() noexcept {
-    for (auto param : parameters_) {
-      param.second.get().stopRamping();
-    }
+    for (auto param : parameters_) param.second.get().stopRamping();
     rampRemaining_ = 0;
-
-    if constexpr (HasRenderingStateChangedT<KernelType>) {
-      derived_.doRenderingStateChanged(isRendering());
-    }
+    if constexpr (HasRenderingStateChangedT<KernelType>) derived_.doRenderingStateChanged(isRendering());
   }
 
-  void render(NSInteger outputBusNumber, AudioTimeStamp const* timestamp, AUAudioFrameCount frameCount,
-              AURenderEvent const* events) noexcept {
-    auto zero = AUEventSampleTime(0);
+  void render(NSInteger outputBusNumber, AudioTimeStamp const* _Nonnull timestamp, AUAudioFrameCount frameCount,
+              AURenderEvent const* _Nullable events) noexcept {
+    auto& outputFacet{outputFacets_[size_t(outputBusNumber)]};
     auto now = AUEventSampleTime(timestamp->mSampleTime);
     auto framesRemaining = frameCount;
 
-    while (framesRemaining > 0) {
+    while (framesRemaining > 0) [[likely]] {
 
       // Short-circuit if there are no more events to interleave
       if (events == nullptr) [[likely]] {
-        renderFrames(outputBusNumber, framesRemaining, frameCount - framesRemaining);
+        makeFrames(outputFacet, framesRemaining, frameCount - framesRemaining);
         return;
       }
 
-      auto framesThisSegment = AUAudioFrameCount(events->head.eventSampleTime < now ? 0 : events->head.eventSampleTime - now);
-      if (framesThisSegment > 0) [[likely]] {
-        renderFrames(outputBusNumber, framesThisSegment, frameCount - framesRemaining);
-        framesRemaining -= framesThisSegment;
-        now += AUEventSampleTime(framesThisSegment);
+      // See if there are frames to process before the next event. Here "time" is measured in samples, so we just need
+      // to change type to convert between the two.
+      auto eventSampleTime = events->head.eventSampleTime;
+      auto framesBefore = AUAudioFrameCount(eventSampleTime < now ? 0 : eventSampleTime - now);
+
+      if (framesBefore > 0) [[likely]] {
+        makeFrames(outputFacet, framesBefore, frameCount - framesRemaining);
+        framesRemaining -= framesBefore;
+        now += AUEventSampleTime(framesBefore);
       }
 
       // Process the events for the current time
@@ -337,28 +342,29 @@ private:
 
   void processEventParameterChange(const AUParameterEvent& event, AUAudioFrameCount duration) noexcept {
     if (setImmediateParameterValue(event.parameterAddress, event.value, duration)) {
-      rampRemaining_ = std::max(duration, rampRemaining_);
+      rampRemaining_ = std::max(duration - 1, rampRemaining_);
     }
   }
 
-  AURenderEvent const* processEventsUntil(AUEventSampleTime now, AURenderEvent const* event) noexcept {
-    // See http://devnotes.kymatica.com/auv3_parameters.html for some nice details and advice about parameter event
-    // processing.
+  AURenderEvent const* _Nullable processEventsUntil(AUEventSampleTime now,
+                                                    AURenderEvent const* _Nonnull event) noexcept {
     while (event != nullptr && event->head.eventSampleTime <= now) {
       switch (event->head.eventType) {
         case AURenderEventParameter:
+          os_log_info(log_, "AURenderEventParameter - %llu %f", event->parameter.parameterAddress,
+                      event->parameter.value);
           processEventParameterChange(event->parameter, treeBasedRampDuration_);
           break;
 
         case AURenderEventParameterRamp:
+          os_log_info(log_, "AURenderEventParameterRamp - %llu %f %d", event->parameter.parameterAddress,
+                      event->parameter.value, event->parameter.rampDurationSampleFrames);
           processEventParameterChange(event->parameter, event->parameter.rampDurationSampleFrames);
           break;
 
         case AURenderEventMIDI:
         case AURenderEventMIDISysEx:
-          if constexpr (HasMIDIEventV1<KernelType>) {
-            derived_.doMIDIEvent(event->MIDI);
-          }
+          if constexpr (HasMIDIEventV1<KernelType>) derived_.doMIDIEvent(event->MIDI);
           break;
 
         case AURenderEventMIDIEventList:
@@ -373,41 +379,25 @@ private:
     return event;
   }
 
-  void renderFrames(NSInteger outputBusNumber, AUAudioFrameCount frameCount, AUAudioFrameCount processedFrameCount) {
-    size_t outputBusIndex = size_t(outputBusNumber);
-
-    // This method can be called multiple times during one `processAndRender` call due to interleaved audio events
+  inline void makeFrames(BusBufferFacet& outputFacet, AUAudioFrameCount frameCount, AUAudioFrameCount processed) {
+    // This method may be called multiple times during one `processAndRender` call due to interleaved audio events
     // such as MIDI messages. We will generate in total `frameCount` + `processedFrameCount` samples, but maybe not in
     // one shot. As a result, we must adjust buffer pointers by the number of processed samples so far before we
     // let the kernel render into our buffers.
-    for (auto& facet : outputFacets_) facet.setOffset(processedFrameCount);
+    for (auto& facet : outputFacets_) facet.setOffset(processed);
+    isBypassed() ? bypassedFrames(outputFacet, frameCount, processed) : renderedFrames(outputFacet, frameCount);
+  }
 
-    if (isBypassed()) {
-      // If we have input samples from an upstream node, either use the sample buffers directly or copy samples over
-      // to the output buffer. Otherwise, we have already zero'd out the output buffer, so we are done.
-      if (inputFacet_.isLinked()) {
-        inputFacet_.copyInto(outputFacets_[outputBusIndex], processedFrameCount, frameCount);
-      }
-      return;
+  inline void bypassedFrames(BusBufferFacet& outputFacet, AUAudioFrameCount frameCount, AUAudioFrameCount processed) {
+    // If we have input samples from an upstream node, either use the sample buffers directly or copy samples over
+    // to the output buffer. Otherwise, we have already zero'd out the output buffer, so we are done.
+    if (inputFacet_.isLinked()) {
+      inputFacet_.copyInto(outputFacet, processed, frameCount);
     }
+  }
 
-    auto& outputFacet{outputFacets_[outputBusIndex]};
-
-    // If ramping one or more parameters, we must render one frame at a time. Since this is more expensive than the
-    // non-ramp case, we only do it when necessary.
-    if (isRamping()) {
-      auto rampCount = std::min(rampRemaining_, frameCount);
-      rampRemaining_ -= rampCount;
-      frameCount -= rampCount;
-      for (; rampCount > 0; --rampCount) {
-        derived_.doRendering(outputBusNumber, inputFacet_.busBuffers( ), outputFacet.busBuffers(), 1);
-      }
-    }
-
-    // Non-ramping case. NOTE: do not use else since we could end a ramp while still having frameCount > 0.
-    if (frameCount > 0) {
-      derived_.doRendering(outputBusNumber, inputFacet_.busBuffers(), outputFacet.busBuffers(), frameCount);
-    }
+  inline void renderedFrames(BusBufferFacet& outputFacet, AUAudioFrameCount frameCount) {
+    derived_.doRendering(inputFacet_.busBuffers(), outputFacet.busBuffers(), frameCount);
   }
 
   KernelType& derived_;
@@ -428,7 +418,7 @@ private:
 /**
  A semi-hacky way to obtain compile-time errors for a Kernel class that is not configured correctly.
  Ideally this would be part of the `EventProcessor` template but that is not possible due to the use
- of CRTP since the traits defined in `KernelT` require a complete type, but the use of CRTP results
+ of CRTP since the traits defined in `T` require a complete type, but the use of CRTP results
  in an incomplete type until the type is closed.
  ```
  ValidatedKernel<MyKernel> _;
