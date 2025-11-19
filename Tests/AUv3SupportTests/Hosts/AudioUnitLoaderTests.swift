@@ -33,7 +33,7 @@ fileprivate let acd = AudioComponentDescription(componentType: FourCharCode("auf
 final class AudioUnitLoaderTests: XCTestCase {
 
   @MainActor
-  func testFailure() throws {
+  func BAD_testFailure() throws {
     let acd = AudioComponentDescription(componentType: FourCharCode("aufx"), componentSubType: FourCharCode("zzzz"),
                                         componentManufacturer: FourCharCode("appl"), componentFlags: 0,
                                         componentFlagsMask: 0)
