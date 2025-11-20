@@ -3,8 +3,7 @@ import AVKit
 import XCTest
 @testable import AUv3Support
 
-@MainActor
-fileprivate class LoaderDelegate: AudioUnitLoaderDelegate {
+fileprivate final class LoaderDelegate: AudioUnitLoaderDelegate {
 
   let expectation: XCTestExpectation
   var good: Bool = false
@@ -30,9 +29,9 @@ fileprivate let acd = AudioComponentDescription(componentType: FourCharCode("auf
                                                 componentFlags: 0,
                                                 componentFlagsMask: 0)
 
+@MainActor
 final class AudioUnitLoaderTests: XCTestCase {
 
-  @MainActor
   func testFailure() throws {
     let acd = AudioComponentDescription(componentType: FourCharCode("aufx"), componentSubType: FourCharCode("zzzz"),
                                         componentManufacturer: FourCharCode("appl"), componentFlags: 0,
@@ -48,8 +47,7 @@ final class AudioUnitLoaderTests: XCTestCase {
     XCTAssertNoThrow(audioUnitLoader.save())
   }
 
-  @MainActor
-  func DISABLED_testConnected() throws {
+  func testConnected() throws {
     let audioUnitLoader = AudioUnitLoader(componentDescription: acd)
     let exp = expectation(description: "good")
     let delegate = LoaderDelegate(expectation: exp)
@@ -61,7 +59,6 @@ final class AudioUnitLoaderTests: XCTestCase {
     XCTAssertNoThrow(audioUnitLoader.save())
   }
 
-  @MainActor
   func testPlaybackState() throws {
     let audioUnitLoader = AudioUnitLoader(componentDescription: acd)
     let engine = SimplePlayEngine()
