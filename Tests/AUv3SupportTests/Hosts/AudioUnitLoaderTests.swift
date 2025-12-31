@@ -36,10 +36,9 @@ final class AudioUnitLoaderTests: XCTestCase {
     let acd = AudioComponentDescription(componentType: FourCharCode("aufx"), componentSubType: FourCharCode("zzzz"),
                                         componentManufacturer: FourCharCode("appl"), componentFlags: 0,
                                         componentFlagsMask: 0)
-    let audioUnitLoader = AudioUnitLoader(componentDescription: acd, maxLocateAttempts: 2)
     let exp = expectation(description: "failed")
     let delegate = LoaderDelegate(expectation: exp)
-    audioUnitLoader.delegate = delegate
+    let audioUnitLoader = AudioUnitLoader(componentDescription: acd, maxLocateAttempts: 2, delegate: delegate)
 
     waitForExpectations(timeout: 60.0, handler: nil)
     XCTAssertFalse(delegate.good)
@@ -48,10 +47,9 @@ final class AudioUnitLoaderTests: XCTestCase {
   }
 
   func testConnected() throws {
-    let audioUnitLoader = AudioUnitLoader(componentDescription: acd)
     let exp = expectation(description: "good")
     let delegate = LoaderDelegate(expectation: exp)
-    audioUnitLoader.delegate = delegate
+    let audioUnitLoader = AudioUnitLoader(componentDescription: acd, delegate: delegate)
 
     waitForExpectations(timeout: 90.0, handler: nil)
     XCTAssertTrue(delegate.good)
@@ -60,12 +58,11 @@ final class AudioUnitLoaderTests: XCTestCase {
   }
 
   func testPlaybackState() throws {
-    let audioUnitLoader = AudioUnitLoader(componentDescription: acd)
-    let engine = SimplePlayEngine()
-    engine.setSampleLoop(.sample1)
     let exp = expectation(description: "failed")
     let delegate = LoaderDelegate(expectation: exp)
-    audioUnitLoader.delegate = delegate
+    let audioUnitLoader = AudioUnitLoader(componentDescription: acd, delegate: delegate)
+    let engine = SimplePlayEngine()
+    engine.setSampleLoop(.sample1)
 
     waitForExpectations(timeout: 90.0, handler: nil)
     XCTAssertTrue(delegate.good)
@@ -75,5 +72,7 @@ final class AudioUnitLoaderTests: XCTestCase {
     XCTAssertTrue(engine.isPlaying)
     _ = engine.startStop()
     XCTAssertFalse(engine.isPlaying)
+
+    XCTAssertNoThrow(audioUnitLoader.save())
   }
 }

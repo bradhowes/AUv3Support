@@ -131,8 +131,7 @@ applications.
 """
 
     engine.setSampleLoop(config.sampleLoop)
-    audioUnitLoader = .init(componentDescription: config.componentDescription)
-    audioUnitLoader?.delegate = self
+    audioUnitLoader = .init(componentDescription: config.componentDescription, delegate: self)
     applyTheme()
 
     instructions.isHidden = !showInstructions

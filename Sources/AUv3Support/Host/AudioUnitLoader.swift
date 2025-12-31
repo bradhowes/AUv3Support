@@ -54,7 +54,7 @@ public final class AudioUnitLoader: @unchecked Sendable {
   private static let lastStateKey = "lastStateKey"
 
   /// Delegate to signal when everything is wired up.
-  public weak var delegate: AudioUnitLoaderDelegate? { didSet { notifyDelegate() } }
+  private weak var delegate: AudioUnitLoaderDelegate? { didSet { notifyDelegate() } }
 
   private var avAudioUnit: AVAudioUnit?
   private var auAudioUnit: AUAudioUnit? { avAudioUnit?.auAudioUnit }
@@ -76,8 +76,12 @@ public final class AudioUnitLoader: @unchecked Sendable {
    - parameter componentDescription: the definition of the AUAudioUnit to create
    - parameter loop: the loop to play when the engine is playing
    */
-  public init(componentDescription: AudioComponentDescription,
-              delayBeforeNextLocateAttempt: Double = 0.2, maxLocateAttempts: Int = 50) {
+  public init(
+    componentDescription: AudioComponentDescription,
+    delayBeforeNextLocateAttempt: Double = 0.2,
+    maxLocateAttempts: Int = 50,
+    delegate: AudioUnitLoaderDelegate? = nil
+  ) {
     os_log(.info, log: log, "init - %{public}s", componentDescription.description)
     self.delayBeforeNextLocateAttempt = delayBeforeNextLocateAttempt
     self.remainingLocateAttempts = maxLocateAttempts
@@ -87,7 +91,7 @@ public final class AudioUnitLoader: @unchecked Sendable {
                                                     componentManufacturer: 0,
                                                     componentFlags: 0,
                                                     componentFlagsMask: 0)
-
+    self.delegate = delegate
     let name = AVAudioUnitComponentManager.registrationsChangedNotification
     notificationRegistration = NotificationCenter.default.addObserver(forName: name, object: nil, queue: nil) { _ in
       DispatchQueue.global(qos: .background).async {
