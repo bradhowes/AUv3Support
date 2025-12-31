@@ -54,18 +54,15 @@ public final class AudioUnitLoader: @unchecked Sendable {
   private static let lastStateKey = "lastStateKey"
 
   /// Delegate to signal when everything is wired up.
-  private weak var delegate: AudioUnitLoaderDelegate? { didSet { notifyDelegate() } }
-
+  private weak var delegate: AudioUnitLoaderDelegate?
   private var avAudioUnit: AVAudioUnit?
   private var auAudioUnit: AUAudioUnit? { avAudioUnit?.auAudioUnit }
   private var viewController: AUv3ViewController?
   private let componentDescription: AudioComponentDescription
-  private let searchCriteria: AudioComponentDescription
   private var creationError: AudioUnitLoaderError? { didSet { notifyDelegate() } }
   private var remainingLocateAttempts: Int
   private let delayBeforeNextLocateAttempt: Double
   private var notificationRegistration: NSObjectProtocol?
-  private var hasUpdates = false
 
   public let lastState = UserDefaults.standard.dictionary(forKey: lastStateKey)
   private let log = Shared.logger("AudioUnitLoader")
@@ -86,27 +83,11 @@ public final class AudioUnitLoader: @unchecked Sendable {
     self.delayBeforeNextLocateAttempt = delayBeforeNextLocateAttempt
     self.remainingLocateAttempts = maxLocateAttempts
     self.componentDescription = componentDescription
-    self.searchCriteria = AudioComponentDescription(componentType: componentDescription.componentType,
-                                                    componentSubType: 0,
-                                                    componentManufacturer: 0,
-                                                    componentFlags: 0,
-                                                    componentFlagsMask: 0)
     self.delegate = delegate
-    let name = AVAudioUnitComponentManager.registrationsChangedNotification
-    notificationRegistration = NotificationCenter.default.addObserver(forName: name, object: nil, queue: nil) { _ in
-      DispatchQueue.global(qos: .background).async {
-        self.registrationsChanged()
-      }
-    }
 
-    self.locate()
-  }
-
-  private func registrationsChanged() {
-    if !self.hasUpdates {
-      os_log(.info, log: log, "registrationsChanged")
+    DispatchQueue.global(qos: .background).async { [weak self] in
+      self?.locate()
     }
-    self.hasUpdates = true
   }
 
   /**
@@ -116,20 +97,14 @@ public final class AudioUnitLoader: @unchecked Sendable {
    */
   private func locate() {
     os_log(.info, log: log, "locate")
-    let components = AVAudioUnitComponentManager.shared().components(matching: searchCriteria)
-
+    let components = AVAudioUnitComponentManager.shared().components(matching: componentDescription)
     for (_, each) in components.enumerated() {
-      if each.audioComponentDescription.componentManufacturer == self.componentDescription.componentManufacturer,
-         each.audioComponentDescription.componentType == self.componentDescription.componentType,
-         each.audioComponentDescription.componentSubType == self.componentDescription.componentSubType {
-        os_log(.info, log: log, "found match - %{public}s", each.audioComponentDescription.description)
-        DispatchQueue.global(qos: .background).async {
-          self.createAudioUnit(each.audioComponentDescription)
-        }
-        return
+      os_log(.info, log: log, "found match - %{public}s", each.audioComponentDescription.description)
+      DispatchQueue.global(qos: .background).async { [weak self] in
+        self?.createAudioUnit(each.audioComponentDescription)
       }
+      return
     }
-
     scheduleCheck()
   }
 
@@ -141,21 +116,16 @@ public final class AudioUnitLoader: @unchecked Sendable {
       return
     }
 
-    os_log(.info, log: log, "scheduleCheck - scheduling new check")
-    Timer.scheduledTimer(withTimeInterval: delayBeforeNextLocateAttempt, repeats: false) { _ in
-      DispatchQueue.global(qos: .background).async {
-        self.retryLocate();
-      }
-    }
-  }
+    os_log(.info, log: log, "scheduleCheck - scheduling new check - %f", delayBeforeNextLocateAttempt)
 
-  private func retryLocate() {
-    os_log(.info, log: log, "retryLocate - %{public}s", self.hasUpdates ? "true" : "false")
-    if self.hasUpdates {
-      self.hasUpdates = false
-      self.locate()
-    } else {
-      self.scheduleCheck()
+    // Need to switch to main thread for Timer to work properly.
+    DispatchQueue.main.async {
+      Timer.scheduledTimer(withTimeInterval: self.delayBeforeNextLocateAttempt, repeats: false) { [weak self] _ in
+        if let self {
+          os_log(.info, log: log, "scheduleCheck - calling locate")
+          self.locate();
+        }
+      }
     }
   }
 
@@ -184,8 +154,8 @@ public final class AudioUnitLoader: @unchecked Sendable {
         return
       }
 
-      DispatchQueue.main.async {
-        self.createViewController(avAudioUnit)
+      DispatchQueue.main.async { [weak self] in
+        self?.createViewController(avAudioUnit)
       }
     }
   }
@@ -222,6 +192,7 @@ public final class AudioUnitLoader: @unchecked Sendable {
   }
 
   private func notifyDelegate() {
+    os_log(.info, log: log, "notifyDelegate")
     if let creationError = creationError {
       os_log(.info, log: log, "notifyDelegate - failed: %{public}s", creationError.description)
       DispatchQueue.main.async { self.delegate?.failed(error: creationError) }

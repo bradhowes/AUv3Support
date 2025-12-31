@@ -47,13 +47,15 @@ fileprivate class Parameters: ParameterSource {
   var factoryPresets: [AUAudioUnitPreset] = [.init(number: 0, name: "Preset 1"), .init(number: 1, name: "Preset 2")]
 
   func useFactoryPreset(_ preset: AUAudioUnitPreset) {
+    let param0 = parameterTree.parameter(withAddress: 123)
+    let param1 = parameterTree.parameter(withAddress: 456)
     switch preset.number {
     case 0:
-      parameters[0].setValue(10.0, originator: nil)
-      parameters[1].setValue(11.0, originator: nil)
+      param0?.setValue(10.0, originator: nil)
+      param1?.setValue(11.0, originator: nil)
     case 1:
-      parameters[0].setValue(20.0, originator: nil)
-      parameters[1].setValue(21.0, originator: nil)
+      param0?.setValue(20.0, originator: nil)
+      param1?.setValue(21.0, originator: nil)
     default: break
     }
   }
@@ -167,9 +169,13 @@ private final class Context {
     audioUnit = try FilterAudioUnit(componentDescription: acd)
     audioUnit?.configure(parameters: parameters, kernel: kernel)
     control = MockControl()
-//    editor = FloatParameterEditor(parameter: parameters.parameters[0],
-//                                  formatting: formatter(), rangedControl: control,
-//                                  label: nil)
+
+    parameters.parameterTree.implementorValueProvider = kernel.getParameterValueProviderBlock()
+    parameters.parameterTree.implementorValueObserver = kernel.getParameterValueObserverBlock()
+
+    editor = FloatParameterEditor(parameter: parameters.parameters[0],
+                                  formatting: formatter(), rangedControl: control,
+                                  label: nil)
   }
 }
 
@@ -308,7 +314,6 @@ final class FilterAudioUnitTests: XCTestCase {
 
   @MainActor
   func testUseFactoryPreset() throws {
-    try XCTSkipIf(true, "Broken")
     let ctx = try Context()
     ctx.control.expectation = expectation(description: "control updated")
     XCTAssertEqual(ctx.kernel.firstParam, 10.0)

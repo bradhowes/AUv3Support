@@ -75,13 +75,16 @@ class HostViewControllerTests: XCTestCase {
   func testAlwaysShowInstructions() {
     let defaults = UserDefaults(suiteName: "\(NSTemporaryDirectory())\(UUID())")!
     defaults.set("v1.2.3", forKey: HostViewController.showedInitialAlertKey)
+    defaults.synchronize()
     do {
       let config = makeConfig(alwaysShowNotice: true, defaults: defaults)
       let hvc = HostViewController()
       hvc.setConfig(config)
       XCTAssertTrue(hvc.showInstructions)
-      XCTAssertTrue(hvc.showInstructions)
     }
+
+    defaults.synchronize()
+
     do {
       let config = makeConfig(alwaysShowNotice: false, defaults: defaults)
       let hvc = HostViewController()
