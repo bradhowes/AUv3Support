@@ -1,13 +1,13 @@
 PLATFORM_IOS = iOS Simulator,name=iPad mini (A17 Pro)
 PLATFORM_MACOS = macOS
 XCCOV = xcrun xccov view --report --only-targets
-SCHEME = 'AUv3-Support'
+SCHEME = 'AUv3Support-Package'
 BUILD_FLAGS = -skipMacroValidation -skipPackagePluginValidation -enableCodeCoverage YES -scheme $(SCHEME)
 XCB = | xcbeautify --renderer github-actions
 
 default: report
 
-report: percentage-iOS # percentage-macOS
+report: percentage-iOS percentage-macOS
 	@if [[ -n "$$GITHUB_ENV" ]]; then \
         echo "PERCENTAGE=$$(< percentage_iOS.txt)" >> $$GITHUB_ENV; \
     fi

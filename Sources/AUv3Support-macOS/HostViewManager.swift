@@ -20,7 +20,7 @@ public protocol HostViewManagerDelegate: AnyObject {
 public final class HostViewManager: NSObject {
   private let log = Shared.logger("HostViewManager")
   private let config: HostViewConfig
-  private let audioUnitLoader: AudioUnitLoader
+  private lazy var audioUnitLoader: AudioUnitLoader = .init(componentDescription: config.componentDescription, delegate: self)
   private let engine: SimplePlayEngine
   private var restored = false
 
@@ -54,7 +54,6 @@ public final class HostViewManager: NSObject {
     config: HostViewConfig
   ) {
     self.config = config
-    self.audioUnitLoader = .init(componentDescription: config.componentDescription)
     self.engine = .init()
     self.engine.setSampleLoop(.sample1)
 
@@ -71,8 +70,6 @@ public final class HostViewManager: NSObject {
 
     config.bypassMenuItem.target = self
     config.bypassMenuItem.isEnabled = false
-
-    self.audioUnitLoader.delegate = self
 
     NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil,
                                            queue: nil) { _ in

@@ -268,7 +268,9 @@ extension FloatParameterEditor {
       label.animator().alphaValue = 1.0
       valueLabel.animator().alphaValue = 0.0
     }) {
-      valueLabel.isHidden = true
+      DispatchQueue.main.async {
+        valueLabel.isHidden = true
+      }
     }
 #endif
   }
