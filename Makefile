@@ -9,7 +9,7 @@ default: report
 
 report: percentage-iOS # percentage-macOS
 	@if [[ -n "$$GITHUB_ENV" ]]; then \
-        echo "PERCENTAGE=$$(< percentage_macOS.txt)" >> $$GITHUB_ENV; \
+        echo "PERCENTAGE=$$(< percentage_iOS.txt)" >> $$GITHUB_ENV; \
     fi
 
 percentage-iOS: coverage-iOS
