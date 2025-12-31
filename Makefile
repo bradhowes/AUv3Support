@@ -4,9 +4,9 @@ XCCOV = xcrun xccov view --report --only-targets
 SCHEME = 'AUv3Support-Package'
 BUILD_FLAGS = -skipMacroValidation -skipPackagePluginValidation -enableCodeCoverage YES -scheme $(SCHEME)
 
-ifeq ($(GITHUB_ENV),)
+#ifeq ($(GITHUB_ENV),)
 XCB = | xcbeautify --renderer github-actions
-endif
+#endif
 
 default: report
 
