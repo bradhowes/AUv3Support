@@ -84,10 +84,7 @@ public final class AudioUnitLoader: @unchecked Sendable {
     self.remainingLocateAttempts = maxLocateAttempts
     self.componentDescription = componentDescription
     self.delegate = delegate
-
-    DispatchQueue.global(qos: .background).async { [weak self] in
-      self?.locate()
-    }
+    DispatchQueue.global(qos: .userInitiated).async { self.locate() }
   }
 
   /**
@@ -100,7 +97,7 @@ public final class AudioUnitLoader: @unchecked Sendable {
     let components = AVAudioUnitComponentManager.shared().components(matching: componentDescription)
     for (_, each) in components.enumerated() {
       os_log(.info, log: log, "found match - %{public}s", each.audioComponentDescription.description)
-      DispatchQueue.global(qos: .background).async { [weak self] in
+      DispatchQueue.global(qos: .userInitiated).async { [weak self] in
         self?.createAudioUnit(each.audioComponentDescription)
       }
       return
