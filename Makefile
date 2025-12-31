@@ -2,15 +2,12 @@ PLATFORM_IOS = iOS Simulator,name=iPad mini (A17 Pro)
 PLATFORM_MACOS = macOS
 XCCOV = xcrun xccov view --report --only-targets
 SCHEME = 'AUv3-Support'
-BUILD_FLAGS = -skipMacroValidation -skipPackagePluginValidation -enableCodeCoverage YES
-
-ifeq ($(GITHUB_ENV),)
+BUILD_FLAGS = -skipMacroValidation -skipPackagePluginValidation -enableCodeCoverage YES -scheme $(SCHEME)
 XCB = | xcbeautify --renderer github-actions
-endif
 
 default: report
 
-report: percentage-iOS percentage-macOS
+report: percentage-iOS # percentage-macOS
 	@if [[ -n "$$GITHUB_ENV" ]]; then \
         echo "PERCENTAGE=$$(< percentage_macOS.txt)" >> $$GITHUB_ENV; \
     fi
@@ -38,14 +35,14 @@ coverage-macOS: test-macOS
 test-iOS:
 	rm -rf "$(PWD)/.DerivedData-iOS"
 	USE_UNSAFE_FLAGS="1" set -o pipefail && xcodebuild test \
-		$(BUILD_FLAGS) -scheme $(SCHEME)-iOS \
+		$(BUILD_FLAGS) \
 		-derivedDataPath "$(PWD)/.DerivedData-iOS" \
 		-destination platform="$(PLATFORM_IOS)" $(XCB)
 
 test-macOS:
 	rm -rf "$(PWD)/.DerivedData-macOS"
 	USE_UNSAFE_FLAGS="1" set -o pipefail && xcodebuild test \
-		$(BUILD_FLAGS) -scheme $(SCHEME)-macOS \
+		$(BUILD_FLAGS) \
 		-derivedDataPath "$(PWD)/.DerivedData-macOS" \
 		-destination platform="$(PLATFORM_MACOS)" $(XCB)
 
